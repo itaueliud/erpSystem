@@ -215,6 +215,7 @@ function NotificationsSection({ notifs, refetch }: { notifs: any[]; refetch?: ()
     </div>
   );
 }
+void NotificationsSection;
 
 // ─── Shared: Service Amounts ──────────────────────────────────────────────────
 function ServiceAmountsSection({ amounts, refetch }: { amounts: any[]; refetch: () => void }) {
@@ -668,14 +669,6 @@ function CFODashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
   const nav = CFO_NAV.map(n => n.id === 'notifications' ? { ...n, badge: notifs.filter((x: any) => !x.read).length } : n);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const approvePayment = async (id: string) => {
-    try { const { apiClient } = await import('../../shared/api/apiClient'); await apiClient.post(`/api/v1/payments/approvals/${id}/approve`, {}); refetch(['payments']); } catch { /* silent */ }
-  };
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const rejectPayment = async (id: string) => {
-    const reason = prompt('Rejection reason:'); if (!reason) return;
-    try { const { apiClient } = await import('../../shared/api/apiClient'); await apiClient.post(`/api/v1/payments/approvals/${id}/reject`, { reason }); refetch(['payments']); } catch { /* silent */ }
-  };
   const handleTechFunding = async (id: string, action: 'approve' | 'reject') => {
     try { const { apiClient } = await import('../../shared/api/apiClient'); await apiClient.patch(`/api/v1/tech-funding-requests/${id}/${action}`, {}); refetch(['techRequests']); } catch { /* silent */ }
   };

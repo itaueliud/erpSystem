@@ -180,8 +180,17 @@ export class AuthenticationService {
         lastActivity: new Date(),
       };
 
-      // Store session in Redis (8-hour TTL)
-      await sessionCache.setSession(sessionId, sessionData);
+      // Store session in Redis (8-hour TTL).
+      // In development, allow login to proceed if Redis is unavailable.
+      try {
+        await sessionCache.setSession(sessionId, sessionData);
+      } catch (sessionErr) {
+        if (isDev) {
+          logger.warn('Session cache unavailable in development; continuing with JWT-only session', { sessionErr });
+        } else {
+          throw sessionErr;
+        }
+      }
 
       // Generate JWT token
       const token = this.generateToken(user.id, sessionId, user.role, user.email);
@@ -258,15 +267,28 @@ export class AuthenticationService {
     try {
       const payload = jwt.verify(token, this.jwtSecret) as TokenPayload;
 
-      // Check if session exists in Redis
-      const sessionExists = await sessionCache.exists(payload.sessionId);
-      if (!sessionExists) {
-        logger.warn('Token validation failed: session not found', { sessionId: payload.sessionId });
-        return null;
-      }
+      const isDev = process.env.NODE_ENV === 'development';
+      try {
+        // Check if session exists in Redis
+        const sessionExists = await sessionCache.exists(payload.sessionId);
+        if (!sessionExists) {
+          if (isDev) {
+            logger.warn('Session not found in cache during development; accepting JWT payload', { sessionId: payload.sessionId });
+            return payload;
+          }
+          logger.warn('Token validation failed: session not found', { sessionId: payload.sessionId });
+          return null;
+        }
 
-      // Update session activity
-      await sessionCache.updateActivity(payload.sessionId);
+        // Update session activity
+        await sessionCache.updateActivity(payload.sessionId);
+      } catch (sessionErr) {
+        if (isDev) {
+          logger.warn('Session validation skipped in development because cache is unavailable', { sessionErr });
+          return payload;
+        }
+        throw sessionErr;
+      }
 
       return payload;
     } catch (error) {
@@ -476,7 +498,15 @@ export class AuthenticationService {
       };
 
       // Store session in Redis (8-hour TTL)
-      await sessionCache.setSession(sessionId, sessionData);
+      try {
+        await sessionCache.setSession(sessionId, sessionData);
+      } catch (sessionErr) {
+        if (process.env.NODE_ENV === 'development') {
+          logger.warn('Session cache unavailable in development; continuing with JWT-only session', { sessionErr });
+        } else {
+          throw sessionErr;
+        }
+      }
 
       // Generate JWT token
       const token = this.generateToken(
@@ -639,7 +669,15 @@ export class AuthenticationService {
       };
 
       // Store session in Redis (8-hour TTL)
-      await sessionCache.setSession(sessionId, sessionData);
+      try {
+        await sessionCache.setSession(sessionId, sessionData);
+      } catch (sessionErr) {
+        if (process.env.NODE_ENV === 'development') {
+          logger.warn('Session cache unavailable in development; continuing with JWT-only session', { sessionErr });
+        } else {
+          throw sessionErr;
+        }
+      }
 
       // Store GitHub access token in cache for API calls (8-hour TTL)
       await cacheService.set(`github_token:${user.id}`, accessToken, 8 * 60 * 60);

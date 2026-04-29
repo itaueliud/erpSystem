@@ -120,6 +120,7 @@ function NotificationsSection({ notifs, refetch }: { notifs: any[]; refetch?: ()
     </div>
   );
 }
+void NotificationsSection;
 
 // ─── Shared: Payment Request Form ────────────────────────────────────────────
 function PaymentRequestForm({ projects, themeHex, onSubmitted }: { projects: any[]; themeHex: string; onSubmitted?: () => void }) {
@@ -251,7 +252,6 @@ function COODashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
   const notifs = data.notifications || [];
   const clients = data.clients || [];
 
-  const _unread = notifs.filter((n: any) => !n.read).length;
   const nav = COO_NAV;
 
   const submitBudget = async (e: React.FormEvent) => {
@@ -383,7 +383,7 @@ function COODashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
                   {(row.status === 'PENDING' || !row.status) && (
                     <PortalButton size="sm" variant="danger" onClick={async () => {
                       if (!window.confirm('Cancel this budget request?')) return;
-                      try { const { apiClient } = await import('../../shared/api/apiClient'); await apiClient.post(`/api/v1/budget-requests/${id}/reject`, {}); refetch(['budgetRequests']); } catch { /* silent */ }
+                      try { const { apiClient } = await import('../../shared/api/apiClient'); await apiClient.post(`/api/v1/budget-requests/${_id}/reject`, {}); refetch(['budgetRequests']); } catch { /* silent */ }
                     }}>Cancel</PortalButton>
                   )}
                 </div>
@@ -397,7 +397,7 @@ function COODashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
               { key: 'amount', label: 'Amount', render: v => (v || 0).toLocaleString() },
               { key: 'description', label: 'Description' },
               { key: 'status', label: 'Status', render: v => <StatusBadge status={v || 'PENDING'} /> },
-              { key: 'id', label: 'Actions', render: (id, row: any) => (
+              { key: 'id', label: 'Actions', render: (_id, row: any) => (
                 <PortalButton size="sm" variant="secondary" onClick={() => alert(`Expense Report\n\nCategory: ${row.category}\nAmount: KSh ${(row.amount || 0).toLocaleString()}\nDescription: ${row.description || '—'}\nStatus: ${row.status || 'PENDING'}`)}>View</PortalButton>
               )},
             ]} rows={expenseReports} emptyMessage="No expense reports" />
@@ -754,7 +754,6 @@ function CTODashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
   const techRequests = data.techRequests || [];
   const notifs = data.notifications || [];
 
-  const _unread = notifs.filter((n: any) => !n.read).length;
   const nav = CTO_NAV;
 
   const ongoing   = projects.filter((p: any) => projectDisplayStatus(p) === 'ACTIVE').length;

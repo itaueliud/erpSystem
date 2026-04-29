@@ -7,7 +7,6 @@ import { useMultiPortalData } from '../../shared/utils/usePortalData';
 import { AFRICAN_COUNTRIES } from '../../shared/utils/africanCountries';
 import ChatPanel from '../../shared/components/chat/ChatPanel';
 import { TRAINERS_FAQS } from '../../shared/data/portalFAQs';
-import PlotConnectProperties from '../../shared/components/plotconnect/PlotConnectProperties';
 
 const theme = PORTAL_THEMES.trainers;
 const cardCls = 'rounded-2xl p-5';
@@ -171,6 +170,7 @@ function NotificationsSection({ notifs, refetch }: { notifs: any[]; refetch?: ()
     </div>
   );
 }
+void NotificationsSection;
 
 // ─── TRAINER Dashboard ────────────────────────────────────────────────────────
 const TRAINER_NAV = [

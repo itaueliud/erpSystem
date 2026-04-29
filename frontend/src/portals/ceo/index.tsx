@@ -705,6 +705,7 @@ function PlotConnectReview({ properties, onRefetch }: { properties: any[]; onRef
     </div>
   );
 }
+void PlotConnectReview;
 
 // ─── Section: Operations ──────────────────────────────────────────────────────
 function OperationsSection({ data, refetch: _refetch }: { data: any; refetch: (k?: string[]) => void }) {

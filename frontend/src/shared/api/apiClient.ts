@@ -27,7 +27,12 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    if (error.response?.status === 401) {
+    const requestUrl = error.config?.url ?? '';
+    const isAuthLoginRequest = requestUrl.includes('/api/v1/auth/login');
+
+    // For failed login attempts, let the login form display the backend error.
+    // Global redirect here would erase the message and cause a confusing flash.
+    if (error.response?.status === 401 && !isAuthLoginRequest) {
       localStorage.removeItem('tst_token');
       localStorage.removeItem('tst_user');
       window.location.href = '/login';

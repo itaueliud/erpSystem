@@ -253,8 +253,8 @@ export class AuthenticationService {
       email,
     };
 
-    const options: jwt.SignOptions = {
-      expiresIn: this.jwtExpiresIn as jwt.SignOptions['expiresIn'], // 8h from config
+    const options = {
+      expiresIn: this.jwtExpiresIn as any, // 8h from config
     };
     
     return jwt.sign(payload, this.jwtSecret, options);

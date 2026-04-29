@@ -1,0 +1,8 @@
+declare module 'passport';
+declare module 'bcrypt';
+declare module 'speakeasy';
+declare module 'qrcode';
+declare module 'swagger-jsdoc';
+declare module 'swagger-ui-express';
+declare module 'cookie-parser';
+declare module 'compression';

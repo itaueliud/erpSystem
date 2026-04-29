@@ -9,6 +9,10 @@ declare global {
       permissions: string[];
       sessionId: string;
     }
+
+    interface Request {
+      user?: User;
+    }
   }
 }
 

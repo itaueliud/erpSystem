@@ -12,6 +12,29 @@ import logger from '../utils/logger';
 const POLL_INTERVAL_MS = 30_000;
 const isProduction = process.env.NODE_ENV === 'production';
 const sandboxAutoComplete = process.env.DARAJA_SANDBOX_AUTO_COMPLETE === 'true' && !isProduction;
+let marketerTableMissing = false;
+
+async function ensureMarketerTableExists(): Promise<boolean> {
+  if (marketerTableMissing) return false;
+  try {
+    const exists = await db.query<{ exists: string | null }>(
+      `SELECT to_regclass('public.marketer_properties') AS exists`
+    );
+    const found = !!exists.rows[0]?.exists;
+    if (!found) {
+      marketerTableMissing = true;
+      logger.warn('[PaymentPoller] marketer_properties table is missing; skipping poller until migrations are applied');
+    }
+    return found;
+  } catch (err: any) {
+    if (err?.code === '42P01') {
+      marketerTableMissing = true;
+      logger.warn('[PaymentPoller] marketer_properties table is missing; skipping poller until migrations are applied');
+      return false;
+    }
+    throw err;
+  }
+}
 
 if (process.env.DARAJA_SANDBOX_AUTO_COMPLETE === 'true' && isProduction) {
   // Log a loud warning — never silently auto-complete payments in production
@@ -20,6 +43,7 @@ if (process.env.DARAJA_SANDBOX_AUTO_COMPLETE === 'true' && isProduction) {
 
 // ── Auto-complete: mark all AWAITING properties as PAID immediately ───────────
 async function autoCompleteAll(): Promise<void> {
+  if (!(await ensureMarketerTableExists())) return;
   try {
     const rows = await db.query(
       `SELECT id, property_name FROM marketer_properties
@@ -54,6 +78,11 @@ async function autoCompleteAll(): Promise<void> {
       logger.info(`[PaymentPoller] SANDBOX AUTO-COMPLETE: property "${r.property_name}" marked PAID`);
     }
   } catch (err: any) {
+    if (err?.code === '42P01') {
+      marketerTableMissing = true;
+      logger.warn('[PaymentPoller] marketer_properties table is missing; skipping poller until migrations are applied');
+      return;
+    }
     logger.error('[PaymentPoller] Auto-complete error', { err: err.message });
   }
 }
@@ -102,6 +131,7 @@ async function resolveProperty(id: string, checkoutRequestId: string): Promise<v
 }
 
 async function pollPendingPayments(): Promise<void> {
+  if (!(await ensureMarketerTableExists())) return;
   if (sandboxAutoComplete) {
     await autoCompleteAll();
     return;
@@ -130,6 +160,11 @@ async function pollPendingPayments(): Promise<void> {
          AND created_at < NOW() - INTERVAL '24 hours'`
     ).catch((err: any) => logger.error('[PaymentPoller] Failed to expire stale payments', { err: err.message }));
   } catch (err: any) {
+    if (err?.code === '42P01') {
+      marketerTableMissing = true;
+      logger.warn('[PaymentPoller] marketer_properties table is missing; skipping poller until migrations are applied');
+      return;
+    }
     logger.error('[PaymentPoller] Poll cycle error', { err: err.message });
   }
 }

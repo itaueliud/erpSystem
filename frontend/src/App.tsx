@@ -12,18 +12,42 @@ const CLevelPortal     = lazy(() => import('./portals/clevel'));
 const OperationsPortal = lazy(() => import('./portals/operations'));
 const TechnologyPortal = lazy(() => import('./portals/technology'));
 const AgentsPortal     = lazy(() => import('./portals/agents'));
-const TrainersPortal   = lazy(() => import('./portals/trainers'));
 
 // Allowed roles per portal path
 const PORTAL_ROLES: Record<string, string[]> = {
-  '/ceo':        ['CEO'],
-  '/executive':  ['CFO', 'CoS', 'EA'],
-  '/clevel':     ['COO', 'CTO'],
-  '/operations': ['OPERATIONS_USER', 'COO'],
-  '/technology': ['TECH_STAFF', 'DEVELOPER', 'CTO'],
-  '/agents':     ['AGENT'],
-  '/trainers':   ['HEAD_OF_TRAINERS', 'TRAINER'],
+  '/gatewayalpha':  ['CEO'],
+  '/gatewaydelta':  ['CFO', 'CoS', 'EA', 'CFO_ASSISTANT'],
+  '/gatewaysigma':  ['COO', 'CTO'],
+  '/gatewaynexus':  ['OPERATIONS_USER', 'HEAD_OF_TRAINERS', 'TRAINER'],
+  '/gatewayvertex': ['TECH_STAFF', 'DEVELOPER'],
+  '/gatewaypulse':  ['AGENT'],
 };
+
+const PORTAL_GATEWAYS: Record<string, string> = {
+  ceo: '/gatewayalpha',
+  executive: '/gatewaydelta',
+  clevel: '/gatewaysigma',
+  operations: '/gatewaynexus',
+  technology: '/gatewayvertex',
+  agents: '/gatewaypulse',
+};
+
+function resolveStandaloneGateway(): string | null {
+  const envPortal = (import.meta.env.VITE_STANDALONE_PORTAL as string | undefined)?.trim().toLowerCase();
+  if (envPortal && PORTAL_GATEWAYS[envPortal]) {
+    return PORTAL_GATEWAYS[envPortal];
+  }
+
+  const host = window.location.hostname.toLowerCase();
+  if (host.includes('erp-ceo-portal')) return '/gatewayalpha';
+  if (host.includes('erp-executive-portal')) return '/gatewaydelta';
+  if (host.includes('erp-clevel-portal')) return '/gatewaysigma';
+  if (host.includes('erp-operations-portal')) return '/gatewaynexus';
+  if (host.includes('erp-technology-portal')) return '/gatewayvertex';
+  if (host.includes('erp-agents-portal')) return '/gatewaypulse';
+
+  return null;
+}
 
 function LoadingSpinner() {
   return (
@@ -68,34 +92,33 @@ function PortalGuard({ portalPath, children }: { portalPath: string; children: R
 }
 
 function App() {
+  const standaloneGateway = resolveStandaloneGateway();
+
   return (
     <BrowserRouter>
       <Suspense fallback={<LoadingSpinner />}>
         <Routes>
-          <Route path="/" element={<PortalHome />} />
+          <Route path="/" element={standaloneGateway ? <Navigate to={standaloneGateway} replace /> : <PortalHome />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 
-          <Route path="/ceo" element={
-            <PortalGuard portalPath="/ceo"><CEOPortal /></PortalGuard>
+          <Route path="/gatewayalpha" element={
+            <PortalGuard portalPath="/gatewayalpha"><CEOPortal /></PortalGuard>
           } />
-          <Route path="/executive" element={
-            <PortalGuard portalPath="/executive"><ExecutivePortal /></PortalGuard>
+          <Route path="/gatewaydelta" element={
+            <PortalGuard portalPath="/gatewaydelta"><ExecutivePortal /></PortalGuard>
           } />
-          <Route path="/clevel" element={
-            <PortalGuard portalPath="/clevel"><CLevelPortal /></PortalGuard>
+          <Route path="/gatewaysigma" element={
+            <PortalGuard portalPath="/gatewaysigma"><CLevelPortal /></PortalGuard>
           } />
-          <Route path="/operations" element={
-            <PortalGuard portalPath="/operations"><OperationsPortal /></PortalGuard>
+          <Route path="/gatewaynexus" element={
+            <PortalGuard portalPath="/gatewaynexus"><OperationsPortal /></PortalGuard>
           } />
-          <Route path="/technology" element={
-            <PortalGuard portalPath="/technology"><TechnologyPortal /></PortalGuard>
+          <Route path="/gatewayvertex" element={
+            <PortalGuard portalPath="/gatewayvertex"><TechnologyPortal /></PortalGuard>
           } />
-          <Route path="/agents" element={
-            <PortalGuard portalPath="/agents"><AgentsPortal /></PortalGuard>
-          } />
-          <Route path="/trainers" element={
-            <PortalGuard portalPath="/trainers"><TrainersPortal /></PortalGuard>
+          <Route path="/gatewaypulse" element={
+            <PortalGuard portalPath="/gatewaypulse"><AgentsPortal /></PortalGuard>
           } />
 
           {/* Catch-all → home */}

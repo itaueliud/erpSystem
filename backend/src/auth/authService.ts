@@ -169,23 +169,6 @@ export class AuthenticationService {
         }
       }
       // If CEO, always skip 2FA logic and proceed
-            userId: user.id,
-            email: user.email,
-            role: user.role,
-            permissions: user.permissions || [],
-            fullName: user.full_name,
-            departmentId: user.department_id,
-          },
-          300 // 5 minutes
-        );
-
-        return {
-          success: false,
-          requires2FA: true,
-          tempUserId: user.id,
-          error: '2FA verification required',
-        };
-      }
 
       // Generate session ID
       const sessionId = crypto.randomUUID();

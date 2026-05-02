@@ -16,6 +16,7 @@ const LOGIN_LOCKOUT_SECONDS = 15 * 60; // 15 minutes
 export interface LoginCredentials {
   email: string;
   password: string;
+  portal?: string;
 }
 
 export interface AuthResult {
@@ -127,11 +128,27 @@ export class AuthenticationService {
         };
       }
 
-      // Completely BYPASS 2FA for CEO role (for portal patch)
+      // Completely BYPASS 2FA for Executive portal logins
+      const normalizedPortal = (credentials.portal || '').toLowerCase().trim();
+      const isExecutivePortalLogin =
+        normalizedPortal === 'executive' ||
+        normalizedPortal === '/executive' ||
+        normalizedPortal === 'delta' ||
+        normalizedPortal === '/delta';
+
+      if (isExecutivePortalLogin) {
+        logger.warn('Bypassing 2FA for executive portal login', {
+          email: credentials.email,
+          role: user.role,
+          portal: credentials.portal,
+        });
+      }
+
+      // Completely BYPASS 2FA for CEO role (legacy behavior)
       const MANDATORY_2FA_ROLES = ['CEO', 'CoS', 'CFO', 'EA'];
       const isDev = process.env.NODE_ENV === 'development';
 
-      if (user.role !== 'CEO') {
+      if (!isExecutivePortalLogin && user.role !== 'CEO') {
         const requires2FA = user.two_fa_enabled || (!isDev && MANDATORY_2FA_ROLES.includes(user.role));
         if (requires2FA) {
           // If 2FA is mandatory but not yet set up, force setup (production only)

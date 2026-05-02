@@ -34,7 +34,7 @@ githubClient.configureOAuth();
  */
 router.post('/login', loginRateLimiter, async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, portal } = req.body;
 
     // Validate input
     if (!email || !password) {
@@ -44,7 +44,7 @@ router.post('/login', loginRateLimiter, async (req: Request, res: Response) => {
     }
 
     // Attempt login
-    const result = await authService.login({ email, password });
+    const result = await authService.login({ email, password, portal });
 
     if (!result.success) {
       return res.status(401).json({

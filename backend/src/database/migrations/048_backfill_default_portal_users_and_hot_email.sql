@@ -41,36 +41,36 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM users WHERE email = 'shadrack@techswifttrix.com') THEN
     UPDATE users
     SET email = 'shadrack@techswifttrix.com'
-    WHERE email = 'headtrainer@tst.com'
+    WHERE email IN ('headtrainer@tst.com', 'headtrainer@techswifttrix.com')
       AND role_id = v_hot_role;
   END IF;
 
   INSERT INTO users (email, password_hash, full_name, phone, country, role_id, language_preference, timezone)
-  VALUES ('ceo@tst.com', '$2b$10$wnu1/eWm/gG23dKIeL14yeJ4JlJmQvrUpYH61nKYy/C4144kLLtne', 'CEO User', '+254700000001', 'Kenya', v_ceo_role, 'en', 'Africa/Nairobi')
+  VALUES ('ceo@techswifttrix.com', '$2b$10$wnu1/eWm/gG23dKIeL14yeJ4JlJmQvrUpYH61nKYy/C4144kLLtne', 'CEO User', '+254700000001', 'Kenya', v_ceo_role, 'en', 'Africa/Nairobi')
   ON CONFLICT (email) DO NOTHING;
 
   INSERT INTO users (email, password_hash, full_name, phone, country, role_id, language_preference, timezone)
-  VALUES ('cos@tst.com', '$2b$10$rKj8yozSuohYpTqZd.uSi.XFHyO7F5kOsYOxjrp5a/6bK8pTAfyqy', 'Chief of Staff', '+254700000002', 'Kenya', v_cos_role, 'en', 'Africa/Nairobi')
+  VALUES ('cos@techswifttrix.com', '$2b$10$rKj8yozSuohYpTqZd.uSi.XFHyO7F5kOsYOxjrp5a/6bK8pTAfyqy', 'Chief of Staff', '+254700000002', 'Kenya', v_cos_role, 'en', 'Africa/Nairobi')
   ON CONFLICT (email) DO NOTHING;
 
   INSERT INTO users (email, password_hash, full_name, phone, country, role_id, language_preference, timezone)
-  VALUES ('cfo@tst.com', '$2b$10$ILsW.egsD3Xw78D66QvVnuvksY.ES.R7oiuNAaJvp9u926Y5tZYAG', 'CFO User', '+254700000003', 'Kenya', v_cfo_role, 'en', 'Africa/Nairobi')
+  VALUES ('cfo@techswifttrix.com', '$2b$10$ILsW.egsD3Xw78D66QvVnuvksY.ES.R7oiuNAaJvp9u926Y5tZYAG', 'CFO User', '+254700000003', 'Kenya', v_cfo_role, 'en', 'Africa/Nairobi')
   ON CONFLICT (email) DO NOTHING;
 
   INSERT INTO users (email, password_hash, full_name, phone, country, role_id, language_preference, timezone)
-  VALUES ('ea@tst.com', '$2b$10$iYmrbRbm5PIWbrN31D.SSufs4Z26ACF.tH9VTWew99qlIAXYRYr72', 'Executive Assistant', '+254700000006', 'Kenya', v_ea_role, 'en', 'Africa/Nairobi')
+  VALUES ('ea@techswifttrix.com', '$2b$10$iYmrbRbm5PIWbrN31D.SSufs4Z26ACF.tH9VTWew99qlIAXYRYr72', 'Executive Assistant', '+254700000006', 'Kenya', v_ea_role, 'en', 'Africa/Nairobi')
   ON CONFLICT (email) DO NOTHING;
 
   INSERT INTO users (email, password_hash, full_name, phone, country, role_id, department_id, language_preference, timezone)
-  VALUES ('coo@tst.com', '$2b$10$rlXNZHdzNq0W9FZXpoyGYOFcYRu2IGAqDqe7ebg3McsCDh.yu8djC', 'COO User', '+254700000004', 'Kenya', v_coo_role, v_coo_dept, 'en', 'Africa/Nairobi')
+  VALUES ('coo@techswifttrix.com', '$2b$10$rlXNZHdzNq0W9FZXpoyGYOFcYRu2IGAqDqe7ebg3McsCDh.yu8djC', 'COO User', '+254700000004', 'Kenya', v_coo_role, v_coo_dept, 'en', 'Africa/Nairobi')
   ON CONFLICT (email) DO NOTHING;
 
   INSERT INTO users (email, password_hash, full_name, phone, country, role_id, department_id, language_preference, timezone)
-  VALUES ('cto@tst.com', '$2b$10$3pSPJUzmoYcD60zDR4av8uZ3bLRG7S5EM9kE8.THha.N5NqRYvth6', 'CTO User', '+254700000005', 'Kenya', v_cto_role, v_cto_dept, 'en', 'Africa/Nairobi')
+  VALUES ('cto@techswifttrix.com', '$2b$10$3pSPJUzmoYcD60zDR4av8uZ3bLRG7S5EM9kE8.THha.N5NqRYvth6', 'CTO User', '+254700000005', 'Kenya', v_cto_role, v_cto_dept, 'en', 'Africa/Nairobi')
   ON CONFLICT (email) DO NOTHING;
 
   INSERT INTO users (email, password_hash, full_name, phone, country, role_id, department_id, language_preference, timezone)
-  VALUES ('ops@tst.com', '$2b$10$NSq109Hg2fGoF5UbMdXp3u76gVvD9r8o9nBvC6oVCT5.UoX6V0gcm', 'Operations User', '+254700000007', 'Kenya', v_ops_role, v_coo_dept, 'en', 'Africa/Nairobi')
+  VALUES ('ops@techswifttrix.com', '$2b$10$NSq109Hg2fGoF5UbMdXp3u76gVvD9r8o9nBvC6oVCT5.UoX6V0gcm', 'Operations User', '+254700000007', 'Kenya', v_ops_role, v_coo_dept, 'en', 'Africa/Nairobi')
   ON CONFLICT (email) DO NOTHING;
 
   INSERT INTO users (email, password_hash, full_name, phone, country, role_id, language_preference, timezone)
@@ -78,19 +78,18 @@ BEGIN
   ON CONFLICT (email) DO NOTHING;
 
   INSERT INTO users (email, password_hash, full_name, phone, country, role_id, language_preference, timezone)
-  VALUES ('trainer@tst.com', '$2b$10$sl7LLo8t1kxzvoXtK5dz..lyKi4aXF9XxJJsjjnxoXr3rHMd3Au/u', 'Trainer User', '+254700000012', 'Kenya', v_trainer_role, 'en', 'Africa/Nairobi')
+  VALUES ('trainer@techswifttrix.com', '$2b$10$sl7LLo8t1kxzvoXtK5dz..lyKi4aXF9XxJJsjjnxoXr3rHMd3Au/u', 'Trainer User', '+254700000012', 'Kenya', v_trainer_role, 'en', 'Africa/Nairobi')
   ON CONFLICT (email) DO NOTHING;
 
   INSERT INTO users (email, password_hash, full_name, phone, country, role_id, department_id, language_preference, timezone)
-  VALUES ('tech@tst.com', '$2b$10$.v6yhgYKiBTlC4MG/UQjfew3N7RzlbAP2N7op.AANp8YgV5S9KFTa', 'Tech Lead', '+254700000008', 'Kenya', v_tech_role, v_cto_dept, 'en', 'Africa/Nairobi')
+  VALUES ('tech@techswifttrix.com', '$2b$10$.v6yhgYKiBTlC4MG/UQjfew3N7RzlbAP2N7op.AANp8YgV5S9KFTa', 'Tech Lead', '+254700000008', 'Kenya', v_tech_role, v_cto_dept, 'en', 'Africa/Nairobi')
   ON CONFLICT (email) DO NOTHING;
 
   INSERT INTO users (email, password_hash, full_name, phone, country, role_id, department_id, language_preference, timezone)
-  VALUES ('dev@tst.com', '$2b$10$2kGrU5TNhJ8tH2AmeLPAqOF5nh1dIImnzaFHF95/BdvnnOSlU8SEG', 'Developer User', '+254700000009', 'Kenya', v_dev_role, v_cto_dept, 'en', 'Africa/Nairobi')
+  VALUES ('dev@techswifttrix.com', '$2b$10$2kGrU5TNhJ8tH2AmeLPAqOF5nh1dIImnzaFHF95/BdvnnOSlU8SEG', 'Developer User', '+254700000009', 'Kenya', v_dev_role, v_cto_dept, 'en', 'Africa/Nairobi')
   ON CONFLICT (email) DO NOTHING;
 
   INSERT INTO users (email, password_hash, full_name, phone, country, role_id, department_id, language_preference, timezone)
-  VALUES ('agent@tst.com', '$2b$10$S5DOZft3bMaNGdsqZAjlh.QaFJ/cMXadUPkHiZi5Z6OFSejRwkEEi', 'Sales Agent', '+254700000010', 'Kenya', v_agent_role, v_sales_dept, 'en', 'Africa/Nairobi')
+  VALUES ('agent@techswifttrix.com', '$2b$10$S5DOZft3bMaNGdsqZAjlh.QaFJ/cMXadUPkHiZi5Z6OFSejRwkEEi', 'Sales Agent', '+254700000010', 'Kenya', v_agent_role, v_sales_dept, 'en', 'Africa/Nairobi')
   ON CONFLICT (email) DO NOTHING;
 END $$;
-

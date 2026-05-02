@@ -3,18 +3,18 @@
 --
 -- Portal          URL            Email                 Password
 -- ─────────────────────────────────────────────────────────────────────────────
--- CEO             /ceo           ceo@tst.com           Ceo@123456789!
--- Executive/CoS   /executive     cos@tst.com           Cos@123456789!
--- Executive/CFO   /executive     cfo@tst.com           Cfo@123456789!
--- Executive/EA    /executive     ea@tst.com            Ea@1234567890!
--- C-Level/COO     /clevel        coo@tst.com           Coo@123456789!
--- C-Level/CTO     /clevel        cto@tst.com           Cto@123456789!
--- Operations      /operations    ops@tst.com           Ops@123456789!
--- Technology      /technology    tech@tst.com          Tech@12345678!
--- Technology/Dev  /technology    dev@tst.com           Dev@123456789!
--- Agents          /agents        agent@tst.com         Agent@1234567!
--- Trainers/Head   /trainers      headtrainer@tst.com   Head@12345678!
--- Trainers        /trainers      trainer@tst.com       Train@1234567!
+-- CEO             /ceo           ceo@techswifttrix.com           Ceo@123456789!
+-- Executive/CoS   /executive     cos@techswifttrix.com           Cos@123456789!
+-- Executive/CFO   /executive     cfo@techswifttrix.com           Cfo@123456789!
+-- Executive/EA    /executive     ea@techswifttrix.com            Ea@1234567890!
+-- C-Level/COO     /clevel        coo@techswifttrix.com           Coo@123456789!
+-- C-Level/CTO     /clevel        cto@techswifttrix.com           Cto@123456789!
+-- Operations      /operations    ops@techswifttrix.com           Ops@123456789!
+-- Technology      /technology    tech@techswifttrix.com          Tech@12345678!
+-- Technology/Dev  /technology    dev@techswifttrix.com           Dev@123456789!
+-- Agents          /agents        agent@techswifttrix.com         Agent@1234567!
+-- Trainers/Head   /trainers      headtrainer@techswifttrix.com   Head@12345678!
+-- Trainers        /trainers      trainer@techswifttrix.com       Train@1234567!
 
 DO $$
 DECLARE
@@ -53,84 +53,84 @@ BEGIN
 
   -- CEO  (portal: /ceo)
   INSERT INTO users (email, password_hash, full_name, phone, country, role_id, language_preference, timezone)
-  VALUES ('ceo@tst.com',
+  VALUES ('ceo@techswifttrix.com',
           '$2b$10$wnu1/eWm/gG23dKIeL14yeJ4JlJmQvrUpYH61nKYy/C4144kLLtne',
           'CEO User', '+254700000001', 'Kenya', v_ceo_role, 'en', 'Africa/Nairobi')
   ON CONFLICT (email) DO NOTHING;
 
   -- CoS  (portal: /executive)
   INSERT INTO users (email, password_hash, full_name, phone, country, role_id, language_preference, timezone)
-  VALUES ('cos@tst.com',
+  VALUES ('cos@techswifttrix.com',
           '$2b$10$rKj8yozSuohYpTqZd.uSi.XFHyO7F5kOsYOxjrp5a/6bK8pTAfyqy',
           'Chief of Staff', '+254700000002', 'Kenya', v_cos_role, 'en', 'Africa/Nairobi')
   ON CONFLICT (email) DO NOTHING;
 
   -- CFO  (portal: /executive)
   INSERT INTO users (email, password_hash, full_name, phone, country, role_id, language_preference, timezone)
-  VALUES ('cfo@tst.com',
+  VALUES ('cfo@techswifttrix.com',
           '$2b$10$ILsW.egsD3Xw78D66QvVnuvksY.ES.R7oiuNAaJvp9u926Y5tZYAG',
           'CFO User', '+254700000003', 'Kenya', v_cfo_role, 'en', 'Africa/Nairobi')
   ON CONFLICT (email) DO NOTHING;
 
   -- EA   (portal: /executive)
   INSERT INTO users (email, password_hash, full_name, phone, country, role_id, language_preference, timezone)
-  VALUES ('ea@tst.com',
+  VALUES ('ea@techswifttrix.com',
           '$2b$10$iYmrbRbm5PIWbrN31D.SSufs4Z26ACF.tH9VTWew99qlIAXYRYr72',
           'Executive Assistant', '+254700000006', 'Kenya', v_ea_role, 'en', 'Africa/Nairobi')
   ON CONFLICT (email) DO NOTHING;
 
   -- COO  (portal: /clevel)
   INSERT INTO users (email, password_hash, full_name, phone, country, role_id, department_id, language_preference, timezone)
-  VALUES ('coo@tst.com',
+  VALUES ('coo@techswifttrix.com',
           '$2b$10$rlXNZHdzNq0W9FZXpoyGYOFcYRu2IGAqDqe7ebg3McsCDh.yu8djC',
           'COO User', '+254700000004', 'Kenya', v_coo_role, v_coo_dept, 'en', 'Africa/Nairobi')
   ON CONFLICT (email) DO NOTHING;
 
   -- CTO  (portal: /clevel)
   INSERT INTO users (email, password_hash, full_name, phone, country, role_id, department_id, language_preference, timezone)
-  VALUES ('cto@tst.com',
+  VALUES ('cto@techswifttrix.com',
           '$2b$10$3pSPJUzmoYcD60zDR4av8uZ3bLRG7S5EM9kE8.THha.N5NqRYvth6',
           'CTO User', '+254700000005', 'Kenya', v_cto_role, v_cto_dept, 'en', 'Africa/Nairobi')
   ON CONFLICT (email) DO NOTHING;
 
   -- Operations User  (portal: /operations)
   INSERT INTO users (email, password_hash, full_name, phone, country, role_id, department_id, language_preference, timezone)
-  VALUES ('ops@tst.com',
+  VALUES ('ops@techswifttrix.com',
           '$2b$10$NSq109Hg2fGoF5UbMdXp3u76gVvD9r8o9nBvC6oVCT5.UoX6V0gcm',
           'Operations User', '+254700000007', 'Kenya', v_ops_role, v_coo_dept, 'en', 'Africa/Nairobi')
   ON CONFLICT (email) DO NOTHING;
 
   -- Technology User  (portal: /technology)
   INSERT INTO users (email, password_hash, full_name, phone, country, role_id, department_id, language_preference, timezone)
-  VALUES ('tech@tst.com',
+  VALUES ('tech@techswifttrix.com',
           '$2b$10$.v6yhgYKiBTlC4MG/UQjfew3N7RzlbAP2N7op.AANp8YgV5S9KFTa',
           'Tech Lead', '+254700000008', 'Kenya', v_tech_role, v_cto_dept, 'en', 'Africa/Nairobi')
   ON CONFLICT (email) DO NOTHING;
 
   -- Developer  (portal: /technology)
   INSERT INTO users (email, password_hash, full_name, phone, country, role_id, department_id, language_preference, timezone)
-  VALUES ('dev@tst.com',
+  VALUES ('dev@techswifttrix.com',
           '$2b$10$2kGrU5TNhJ8tH2AmeLPAqOF5nh1dIImnzaFHF95/BdvnnOSlU8SEG',
           'Developer User', '+254700000009', 'Kenya', v_dev_role, v_cto_dept, 'en', 'Africa/Nairobi')
   ON CONFLICT (email) DO NOTHING;
 
   -- Agent  (portal: /agents)  password: Agent@1234567!
   INSERT INTO users (email, password_hash, full_name, phone, country, role_id, department_id, language_preference, timezone)
-  VALUES ('agent@tst.com',
+  VALUES ('agent@techswifttrix.com',
           '$2b$10$S5DOZft3bMaNGdsqZAjlh.QaFJ/cMXadUPkHiZi5Z6OFSejRwkEEi',
           'Sales Agent', '+254700000010', 'Kenya', v_agent_role, v_sales_dept, 'en', 'Africa/Nairobi')
   ON CONFLICT (email) DO NOTHING;
 
   -- Head of Trainers  (portal: /trainers)
   INSERT INTO users (email, password_hash, full_name, phone, country, role_id, language_preference, timezone)
-  VALUES ('headtrainer@tst.com',
+  VALUES ('headtrainer@techswifttrix.com',
           '$2b$10$vRNeHTi2RxZr7j6fVygzyeMx30FekmoXSHZ8v6qejcFdYwcUPchv2',
           'Head of Trainers', '+254700000011', 'Kenya', v_hot_role, 'en', 'Africa/Nairobi')
   ON CONFLICT (email) DO NOTHING;
 
   -- Trainer  (portal: /trainers)
   INSERT INTO users (email, password_hash, full_name, phone, country, role_id, language_preference, timezone)
-  VALUES ('trainer@tst.com',
+  VALUES ('trainer@techswifttrix.com',
           '$2b$10$sl7LLo8t1kxzvoXtK5dz..lyKi4aXF9XxJJsjjnxoXr3rHMd3Au/u',
           'Trainer User', '+254700000012', 'Kenya', v_trainer_role, 'en', 'Africa/Nairobi')
   ON CONFLICT (email) DO NOTHING;

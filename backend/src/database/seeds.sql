@@ -137,56 +137,56 @@ ON CONFLICT (email) DO NOTHING;
 -- ============================================================================
 
 INSERT INTO users (email, password_hash, full_name, phone, country, role_id)
-SELECT 'cfo@tst.com', '$2b$10$WPevPOFUqESXETSU6a5Uce/USh.zWaGv5304xoGTyAX4m8f2YVNbu',
+SELECT 'cfo@techswifttrix.com', '$2b$10$WPevPOFUqESXETSU6a5Uce/USh.zWaGv5304xoGTyAX4m8f2YVNbu',
        'CFO User', '+254700000001', 'Kenya', r.id FROM roles r WHERE r.name = 'CFO'
 ON CONFLICT (email) DO NOTHING;
 
 INSERT INTO users (email, password_hash, full_name, phone, country, role_id)
-SELECT 'cos@tst.com', '$2b$10$rQWOcfkx17y9OY0IcvAgRO6c8iZSgvYjY8EwcNZlhtwdcKakkUVVq',
+SELECT 'cos@techswifttrix.com', '$2b$10$rQWOcfkx17y9OY0IcvAgRO6c8iZSgvYjY8EwcNZlhtwdcKakkUVVq',
        'CoS User', '+254700000002', 'Kenya', r.id FROM roles r WHERE r.name = 'CoS'
 ON CONFLICT (email) DO NOTHING;
 
 INSERT INTO users (email, password_hash, full_name, phone, country, role_id)
-SELECT 'ea@tst.com', '$2b$10$kBQook4FpVFWztTmkV.j9uon4OauqCDDtIMlmDILKond2yhcvTz2a',
+SELECT 'ea@techswifttrix.com', '$2b$10$kBQook4FpVFWztTmkV.j9uon4OauqCDDtIMlmDILKond2yhcvTz2a',
        'EA User', '+254700000003', 'Kenya', r.id FROM roles r WHERE r.name = 'EA'
 ON CONFLICT (email) DO NOTHING;
 
 INSERT INTO users (email, password_hash, full_name, phone, country, role_id)
-SELECT 'coo@tst.com', '$2b$10$j.IfTswmAZ1Czo0Ehk3iWOrCA6sioqN47cbcWDBay1cyrBzqUfWLC',
+SELECT 'coo@techswifttrix.com', '$2b$10$j.IfTswmAZ1Czo0Ehk3iWOrCA6sioqN47cbcWDBay1cyrBzqUfWLC',
        'COO User', '+254700000004', 'Kenya', r.id FROM roles r WHERE r.name = 'COO'
 ON CONFLICT (email) DO NOTHING;
 
 INSERT INTO users (email, password_hash, full_name, phone, country, role_id)
-SELECT 'cto@tst.com', '$2b$10$QL8Yanjxl7x0zf8lDRZuI.nffRPRWnGdeZyOf5A0nVq1vERBn85eW',
+SELECT 'cto@techswifttrix.com', '$2b$10$QL8Yanjxl7x0zf8lDRZuI.nffRPRWnGdeZyOf5A0nVq1vERBn85eW',
        'CTO User', '+254700000005', 'Kenya', r.id FROM roles r WHERE r.name = 'CTO'
 ON CONFLICT (email) DO NOTHING;
 
 INSERT INTO users (email, password_hash, full_name, phone, country, role_id)
-SELECT 'ops@tst.com', '$2b$10$uWt70ux5LN.4pVIOpW9HKuFpjeMirmqfo4qivmULIJN1VVdxSJC7a',
+SELECT 'ops@techswifttrix.com', '$2b$10$uWt70ux5LN.4pVIOpW9HKuFpjeMirmqfo4qivmULIJN1VVdxSJC7a',
        'Operations User', '+254700000006', 'Kenya', r.id FROM roles r WHERE r.name = 'OPERATIONS_USER'
 ON CONFLICT (email) DO NOTHING;
 
 INSERT INTO users (email, password_hash, full_name, phone, country, role_id)
-SELECT 'headtrainer@tst.com', '$2b$10$hDFwXDnAOFtxcXBnNDiddeuN6fe1kGzDDwV6g.SzAkh0tLAyvtiuG',
+SELECT 'headtrainer@techswifttrix.com', '$2b$10$hDFwXDnAOFtxcXBnNDiddeuN6fe1kGzDDwV6g.SzAkh0tLAyvtiuG',
        'Head of Trainers', '+254700000007', 'Kenya', r.id FROM roles r WHERE r.name = 'HEAD_OF_TRAINERS'
 ON CONFLICT (email) DO NOTHING;
 
 INSERT INTO users (email, password_hash, full_name, phone, country, role_id)
-SELECT 'trainer@tst.com', '$2b$10$BupkvxOvdRS8jfF7D.MwBuQ4XuypS5j..Oykr1xlZWXlIQGeq9T12',
+SELECT 'trainer@techswifttrix.com', '$2b$10$BupkvxOvdRS8jfF7D.MwBuQ4XuypS5j..Oykr1xlZWXlIQGeq9T12',
        'Trainer User', '+254700000008', 'Kenya', r.id FROM roles r WHERE r.name = 'TRAINER'
 ON CONFLICT (email) DO NOTHING;
 
 INSERT INTO users (email, password_hash, full_name, phone, country, role_id)
-SELECT 'tech@tst.com', '$2b$10$jatc8k3smGN3HkbwWLJiBez2yp/i3ZZjrK7g4L1axEcNEWo23S9u2',
+SELECT 'tech@techswifttrix.com', '$2b$10$jatc8k3smGN3HkbwWLJiBez2yp/i3ZZjrK7g4L1axEcNEWo23S9u2',
        'Tech Lead', '+254700000009', 'Kenya', r.id FROM roles r WHERE r.name = 'TECH_STAFF'
 ON CONFLICT (email) DO NOTHING;
 
 INSERT INTO users (email, password_hash, full_name, phone, country, role_id)
-SELECT 'dev@tst.com', '$2b$10$/SyTI26anhomvSmL9tRR0OhyuW77d3Kab9tzrI6tSbvCOA2Hmf/Uu',
+SELECT 'dev@techswifttrix.com', '$2b$10$/SyTI26anhomvSmL9tRR0OhyuW77d3Kab9tzrI6tSbvCOA2Hmf/Uu',
        'Developer User', '+254700000010', 'Kenya', r.id FROM roles r WHERE r.name = 'DEVELOPER'
 ON CONFLICT (email) DO NOTHING;
 
 INSERT INTO users (email, password_hash, full_name, phone, country, role_id)
-SELECT 'agent@tst.com', '$2b$10$S5DOZft3bMaNGdsqZAjlh.QaFJ/cMXadUPkHiZi5Z6OFSejRwkEEi',
+SELECT 'agent@techswifttrix.com', '$2b$10$S5DOZft3bMaNGdsqZAjlh.QaFJ/cMXadUPkHiZi5Z6OFSejRwkEEi',
        'Agent User', '+254700000011', 'Kenya', r.id FROM roles r WHERE r.name = 'AGENT'
 ON CONFLICT (email) DO NOTHING;

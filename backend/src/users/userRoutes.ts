@@ -16,7 +16,7 @@ const router = Router();
  * Who can invite whom (Permissions Matrix):
  *   CEO              → CoS, CFO, COO, CTO, EA  (C-level accounts)
  *   CTO              → HEAD_OF_TRAINERS, TECH_STAFF, DEVELOPER
- *   HEAD_OF_TRAINERS → AGENT, TRAINER
+ *   HEAD_OF_TRAINERS → TRAINER
  *   CFO              → CFO_ASSISTANT
  */
 router.post(

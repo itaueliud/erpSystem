@@ -7,6 +7,7 @@ import { Router, Request, Response } from 'express';
 import { agentService, PaymentPlan } from './agentService';
 import { requireRole } from '../auth/authorizationMiddleware';
 import { Role } from '../auth/authorizationService';
+import { authService } from '../auth/authService';
 import logger from '../utils/logger';
 
 const router = Router();
@@ -169,10 +170,17 @@ router.get('/commitment-amounts', requireRole(Role.AGENT), async (_req: Request,
 router.post('/create', requireRole(Role.HEAD_OF_TRAINERS), async (req: Request, res: Response) => {
   try {
     const createdBy = (req as any).user.id;
-    const { phone, idNumber, coverPhotoUrl } = req.body;
+    const { email, password, fullName, phone, idNumber, coverPhotoUrl } = req.body;
 
-    if (!phone || !idNumber) {
-      return res.status(400).json({ success: false, error: 'phone and idNumber are required' });
+    if (!email || !password || !fullName || !phone || !idNumber) {
+      return res.status(400).json({ success: false, error: 'email, password, fullName, phone, and idNumber are required' });
+    }
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{12,}$/;
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Password must be at least 12 characters and contain uppercase, lowercase, number, and special character',
+      });
     }
 
     const { db } = await import('../database/connection');
@@ -186,16 +194,24 @@ router.post('/create', requireRole(Role.HEAD_OF_TRAINERS), async (req: Request, 
     const hotResult = await db.query(`SELECT country FROM users WHERE id = $1`, [createdBy]);
     const country = hotResult.rows[0]?.country || '';
 
-    // Create minimal agent user (agent completes own profile later — doc §5)
+    const existing = await db.query(`SELECT id FROM users WHERE email = $1`, [email]);
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ success: false, error: 'User with this email already exists' });
+    }
+
+    const passwordHash = await authService.hashPassword(password);
+
+    // Create agent directly with credentials
     const result = await db.query(
       `INSERT INTO users
          (email, password_hash, full_name, phone, country, role_id, national_id_number,
           cover_photo_url, is_active, created_at, updated_at)
-       VALUES ($1, $2, 'Pending', $3, $4, $5, $6, $7, TRUE, NOW(), NOW())
-       RETURNING id, phone, national_id_number, cover_photo_url, created_at`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, TRUE, NOW(), NOW())
+       RETURNING id, email, full_name, phone, national_id_number, cover_photo_url, created_at`,
       [
-        `agent-${phone}@pending.tst`,  // placeholder email until agent completes profile
-        'PENDING_SETUP',
+        email.toLowerCase().trim(),
+        passwordHash,
+        fullName,
         phone,
         country,
         roleId,
@@ -208,6 +224,51 @@ router.post('/create', requireRole(Role.HEAD_OF_TRAINERS), async (req: Request, 
     return res.status(201).json({ success: true, data: result.rows[0] });
   } catch (error: any) {
     logger.error('Create agent error', { error });
+    return res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+// —— HoT: Reset agent password (password management) ——————————————————————————
+router.post('/:agentId/reset-password', requireRole(Role.HEAD_OF_TRAINERS), async (req: Request, res: Response) => {
+  try {
+    const { agentId } = req.params;
+    const { newPassword } = req.body;
+
+    if (!newPassword) {
+      return res.status(400).json({ success: false, error: 'newPassword is required' });
+    }
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{12,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Password must be at least 12 characters and contain uppercase, lowercase, number, and special character',
+      });
+    }
+
+    const { db } = await import('../database/connection');
+    const agentCheck = await db.query(
+      `SELECT u.id
+       FROM users u
+       JOIN roles r ON r.id = u.role_id
+       WHERE u.id = $1 AND r.name = 'AGENT'`,
+      [agentId]
+    );
+    if (!agentCheck.rows.length) {
+      return res.status(404).json({ success: false, error: 'Agent not found' });
+    }
+
+    const newHash = await authService.hashPassword(newPassword);
+    await db.query(
+      `UPDATE users
+       SET password_hash = $1, updated_at = NOW()
+       WHERE id = $2`,
+      [newHash, agentId]
+    );
+
+    logger.info('Agent password reset by HoT', { agentId, resetBy: (req as any).user.id });
+    return res.json({ success: true, message: 'Agent password reset successfully' });
+  } catch (error: any) {
+    logger.error('Reset agent password error', { error });
     return res.status(400).json({ success: false, error: error.message });
   }
 });

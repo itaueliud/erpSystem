@@ -27,8 +27,8 @@ export const INVITE_PERMISSIONS: Partial<Record<Role, Role[]>> = {
   [Role.CEO]: [Role.CoS, Role.CFO, Role.COO, Role.CTO, Role.EA],
   // CTO can add Trainers, Head of Trainers, and CTO department members (doc §5)
   [Role.CTO]: [Role.HEAD_OF_TRAINERS, Role.TRAINER, Role.TECH_STAFF, Role.DEVELOPER],
-  // Head of Trainers can add Trainers and Agents
-  [Role.HEAD_OF_TRAINERS]: [Role.TRAINER, Role.AGENT],
+  // Head of Trainers can invite Trainers only (Agents are created directly)
+  [Role.HEAD_OF_TRAINERS]: [Role.TRAINER],
   // CFO can add CFO Assistants (max 3) (doc §5)
   [Role.CFO]: [Role.CFO_ASSISTANT],
 };
@@ -202,7 +202,6 @@ export const ROLE_PERMISSIONS: Record<Role, string[]> = {
     'manage:agents',
     'verify:training_completion',
     'invite:trainers',
-    'invite:agents',                          // Add Agents (doc §18)
     'reassign:agents',                        // Reassign Agents (doc §18)
     'assign:converted_client_to_account_exec', // Assign converted client to Account Executive (doc §18)
     'chat:cfo',

@@ -330,6 +330,7 @@ function TrainerDashboard({ data, refetch, user, onLogout }: { data: any; refetc
 const HOT_NAV = [
   { id: 'overview',       label: 'Overview',              icon: I.overview },
   { id: 'trainers',       label: 'Trainers',              icon: I.trainers },
+  { id: 'invite-trainer', label: 'Invite Trainer',        icon: I.trainers },
   { id: 'agents',         label: 'Agents',                icon: I.agents },
   { id: 'achievements',   label: 'Achievements',          icon: I.achieve },
   { id: 'add-agent',      label: 'Add Agent',             icon: I.addAgent },
@@ -348,6 +349,12 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
   const [addMsg, setAddMsg] = useState('');
   const [addOk, setAddOk] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [generatedPassword, setGeneratedPassword] = useState('');
+  const [inviteTrainerEmail, setInviteTrainerEmail] = useState('');
+  const [inviteTrainerMsg, setInviteTrainerMsg] = useState('');
+  const [inviteTrainerOk, setInviteTrainerOk] = useState(false);
+  const [inviteTrainerBusy, setInviteTrainerBusy] = useState(false);
+  const [resetPasswordBusyId, setResetPasswordBusyId] = useState<string | null>(null);
   const [assignClientForm, setAssignClientForm] = useState({ clientId: '', accountExecutiveId: '' });
   const [assignClientMsg, setAssignClientMsg] = useState('');
   const [assignClientOk, setAssignClientOk] = useState(false);
@@ -380,6 +387,7 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
 
   const submitAddAgent = async (e: React.FormEvent) => {
     e.preventDefault(); setAdding(true); setAddMsg('');
+    setGeneratedPassword('');
     try {
       const { apiClient } = await import('../../shared/api/apiClient');
       const fd = new FormData();
@@ -390,12 +398,36 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
       fd.append('paymentType', addForm.paymentType);
       fd.append('paymentAccount', addForm.paymentAccount);
       if (addForm.coverPhoto) fd.append('coverPhoto', addForm.coverPhoto);
-      await apiClient.post('/api/v1/agents/create', fd);
+      const res = await apiClient.post('/api/v1/agents/create', fd);
+      const generated = (res.data as any)?.data?.generatedPassword || '';
       setAddOk(true); setAddMsg('Agent account created!');
+      setGeneratedPassword(generated);
       setAddForm({ fullName: '', phone: '', idNumber: '', country: '', paymentType: 'MPESA', paymentAccount: '', coverPhoto: null });
       refetch(['myAgents']);
     } catch (err: any) { setAddOk(false); setAddMsg(err?.response?.data?.error || 'Failed'); }
     finally { setAdding(false); }
+  };
+
+  const submitInviteTrainer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setInviteTrainerMsg('');
+    setInviteTrainerBusy(true);
+    try {
+      const { apiClient } = await import('../../shared/api/apiClient');
+      const rolesRes = await apiClient.get('/api/v1/users/roles');
+      const roles = (rolesRes.data as any)?.data || [];
+      const trainerRole = roles.find((r: any) => r.name === 'TRAINER');
+      if (!trainerRole?.id) throw new Error('TRAINER role not found');
+      await apiClient.post('/api/v1/users/invite', { email: inviteTrainerEmail.trim(), roleId: trainerRole.id });
+      setInviteTrainerOk(true);
+      setInviteTrainerMsg('Trainer invitation sent successfully.');
+      setInviteTrainerEmail('');
+    } catch (err: any) {
+      setInviteTrainerOk(false);
+      setInviteTrainerMsg(err?.response?.data?.error || err?.message || 'Failed to invite trainer');
+    } finally {
+      setInviteTrainerBusy(false);
+    }
   };
 
   return (
@@ -442,6 +474,31 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
         </div>
       )}
 
+      {section === 'invite-trainer' && (
+        <div>
+          <SectionHeader title="Invite Trainer" subtitle="Send trainer invitation link by email" />
+          <div className="max-w-md">
+            {inviteTrainerMsg && <div className={`p-3 rounded-xl text-sm mb-4 ${inviteTrainerOk ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{inviteTrainerMsg}</div>}
+            <form onSubmit={submitInviteTrainer} className={cardCls} style={cardStyle}>
+              <div className="mb-4">
+                <label className={labelCls}>Trainer Email *</label>
+                <input
+                  type="email"
+                  required
+                  value={inviteTrainerEmail}
+                  onChange={e => setInviteTrainerEmail(e.target.value)}
+                  className={inputCls}
+                  placeholder="trainer@techswifttrix.com"
+                />
+              </div>
+              <PortalButton type="submit" color={theme.hex} fullWidth disabled={inviteTrainerBusy || !inviteTrainerEmail.trim()}>
+                {inviteTrainerBusy ? 'Sending…' : 'Send Invitation'}
+              </PortalButton>
+            </form>
+          </div>
+        </div>
+      )}
+
       {section === 'agents' && (
         <div>
           <SectionHeader title="Agents" subtitle="Agent performance within your country" />
@@ -468,9 +525,35 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
                       <PortalButton size="sm" variant="secondary" onClick={() => setReassignAgentId(null)}>Cancel</PortalButton>
                     </div>
                   ) : (
-                    <PortalButton size="sm" color={theme.hex} onClick={() => { setReassignAgentId(row.id || row._id); setReassignTrainerId(''); }}>
-                      Reassign Agent
-                    </PortalButton>
+                    <div className="flex gap-2 flex-wrap">
+                      <PortalButton size="sm" color={theme.hex} onClick={() => { setReassignAgentId(row.id || row._id); setReassignTrainerId(''); }}>
+                        Reassign Agent
+                      </PortalButton>
+                      <PortalButton
+                        size="sm"
+                        variant="secondary"
+                        disabled={resetPasswordBusyId === (row.id || row._id)}
+                        onClick={async () => {
+                          const agentId = row.id || row._id;
+                          const newPassword = window.prompt('Enter new password for this agent (min 12 chars with upper/lower/number/special):');
+                          if (!newPassword) return;
+                          try {
+                            setResetPasswordBusyId(agentId);
+                            const { apiClient } = await import('../../shared/api/apiClient');
+                            await apiClient.post(`/api/v1/agents/${agentId}/reset-password`, { newPassword });
+                            setReassignOk(true);
+                            setReassignMsg('Agent password reset successfully.');
+                          } catch (err: any) {
+                            setReassignOk(false);
+                            setReassignMsg(err?.response?.data?.error || 'Failed to reset password');
+                          } finally {
+                            setResetPasswordBusyId(null);
+                          }
+                        }}
+                      >
+                        {resetPasswordBusyId === (row.id || row._id) ? 'Resetting…' : 'Reset Password'}
+                      </PortalButton>
+                    </div>
                   ),
               },
             ]}
@@ -500,6 +583,12 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
           <SectionHeader title="Add Agent" subtitle="Create a new agent account" />
           <div className="max-w-md">
             {addMsg && <div className={`p-3 rounded-xl text-sm mb-4 ${addOk ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{addMsg}</div>}
+            {generatedPassword && (
+              <div className="p-3 rounded-xl text-sm mb-4 bg-amber-50 text-amber-800 border border-amber-200">
+                Generated password: <span className="font-mono font-semibold">{generatedPassword}</span>
+                <div className="mt-1">Copy and share it securely with the agent, then ask them to change it after first login.</div>
+              </div>
+            )}
             <form onSubmit={submitAddAgent} className={cardCls} style={cardStyle}>
               <div className="mb-4">
                 <label className={labelCls}>Full Name *</label>

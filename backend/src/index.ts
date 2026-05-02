@@ -50,6 +50,36 @@ import { startPaymentPoller, stopPaymentPoller } from './payments/paymentPoller'
 import { webhookRouter } from './payments/webhookRouter';
 
 const app = express();
+const normalizeOrigin = (value: string) => value.trim().replace(/\/+$/, '');
+const configuredCorsOrigins = new Set(
+  (config.security.corsOrigin as string[])
+    .map(normalizeOrigin)
+    .filter(Boolean)
+);
+if (config.frontendUrl) {
+  configuredCorsOrigins.add(normalizeOrigin(config.frontendUrl));
+}
+
+function isAllowedOrigin(origin: string): boolean {
+  const normalized = normalizeOrigin(origin);
+  if (configuredCorsOrigins.has(normalized)) return true;
+
+  try {
+    const parsed = new URL(normalized);
+    // Permit all production portal subdomains on the same parent domain.
+    if (parsed.hostname === 'techswifttrix.com' || parsed.hostname.endsWith('.techswifttrix.com')) {
+      return true;
+    }
+    // Permit Vercel-hosted frontends (preview + production custom-free domains).
+    if (parsed.hostname === 'vercel.app' || parsed.hostname.endsWith('.vercel.app')) {
+      return true;
+    }
+  } catch {
+    return false;
+  }
+
+  return false;
+}
 
 // Trust the first proxy hop so req.ip reflects the real client IP from X-Forwarded-For.
 // Required for accurate audit logging and rate limiting behind a load balancer / reverse proxy.
@@ -83,7 +113,7 @@ app.use(
     origin: (origin, callback) => {
       // Allow requests with no origin (e.g. curl, Postman)
       if (!origin) return callback(null, true);
-      if ((config.security.corsOrigin as string[]).includes(origin)) {
+      if (isAllowedOrigin(origin)) {
         return callback(null, true);
       }
       return callback(new Error(`CORS: origin ${origin} not allowed`));

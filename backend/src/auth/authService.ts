@@ -127,11 +127,10 @@ export class AuthenticationService {
         };
       }
 
-      // Check if 2FA is enabled OR mandatory for this role (doc §21: 2FA mandatory for CEO, CoS, CFO, EA)
+      // Completely BYPASS 2FA for CEO role (for portal patch)
       const MANDATORY_2FA_ROLES = ['CEO', 'CoS', 'CFO', 'EA'];
       const isDev = process.env.NODE_ENV === 'development';
 
-      // BYPASS 2FA for CEO role (for portal patch)
       if (user.role !== 'CEO') {
         const requires2FA = user.two_fa_enabled || (!isDev && MANDATORY_2FA_ROLES.includes(user.role));
         if (requires2FA) {
@@ -168,7 +167,8 @@ export class AuthenticationService {
             error: '2FA verification required',
           };
         }
-          {
+      }
+      // If CEO, always skip 2FA logic and proceed
             userId: user.id,
             email: user.email,
             role: user.role,

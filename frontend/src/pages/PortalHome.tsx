@@ -11,23 +11,42 @@ const PORTALS = [
   { id: 'agents',     path: '/gatewaypulse',  description: 'Client capture, lead tracking & personal performance',    roles: ['AGENT'],                                  icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg> },
 ];
 
+const PORTAL_LINKS: Record<string, string | undefined> = {
+  ceo: import.meta.env.VITE_PORTAL_URL_CEO as string | undefined,
+  executive: import.meta.env.VITE_PORTAL_URL_EXECUTIVE as string | undefined,
+  clevel: import.meta.env.VITE_PORTAL_URL_CLEVEL as string | undefined,
+  operations: import.meta.env.VITE_PORTAL_URL_OPERATIONS as string | undefined,
+  technology: import.meta.env.VITE_PORTAL_URL_TECHNOLOGY as string | undefined,
+  agents: import.meta.env.VITE_PORTAL_URL_AGENTS as string | undefined,
+};
+
+const resolvePortalUrl = (id: string, path: string): string => {
+  const custom = PORTAL_LINKS[id]?.trim();
+  if (custom) return custom;
+  return `${window.location.origin}${path}`;
+};
+
 const CREDS = [
-  { role: 'CEO',          email: 'ceo@tst.com',          password: 'Ceo@123456789!',  path: '/gatewayalpha' },
-  { role: 'CFO',          email: 'cfo@tst.com',          password: 'Cfo@123456789!',  path: '/gatewaydelta' },
-  { role: 'CoS',          email: 'cos@tst.com',          password: 'Cos@123456789!',  path: '/gatewaydelta' },
-  { role: 'EA',           email: 'ea@tst.com',           password: 'Ea@1234567890!',  path: '/gatewaydelta' },
-  { role: 'COO',          email: 'coo@tst.com',          password: 'Coo@123456789!',  path: '/gatewaysigma' },
-  { role: 'CTO',          email: 'cto@tst.com',          password: 'Cto@123456789!',  path: '/gatewaysigma' },
-  { role: 'Operations',   email: 'ops@tst.com',          password: 'Ops@123456789!',  path: '/gatewaynexus' },
-  { role: 'Head Trainer', email: 'headtrainer@tst.com',  password: 'Head@12345678!',  path: '/gatewaynexus' },
-  { role: 'Trainer',      email: 'trainer@tst.com',      password: 'Train@1234567!',  path: '/gatewaynexus' },
-  { role: 'Tech Lead',    email: 'tech@tst.com',         password: 'Tech@12345678!',  path: '/gatewayvertex' },
-  { role: 'Developer',    email: 'dev@tst.com',          password: 'Dev@123456789!',  path: '/gatewayvertex' },
-  { role: 'Agent',        email: 'agent@tst.com',        password: 'Agent@1234567!',  path: '/gatewaypulse' },
+  { role: 'CEO',            email: 'ceo.portal@techswifttrix.com',        password: 'Ceo#Nexus2026!',     path: '/gatewayalpha' },
+  { role: 'Executive',      email: 'executive.portal@techswifttrix.com',  password: 'Exec#Nexus2026!',    path: '/gatewaydelta' },
+  { role: 'C-Level',        email: 'clevel.portal@techswifttrix.com',     password: 'CLevel#Nexus2026!',  path: '/gatewaysigma' },
+  { role: 'Operations',     email: 'operations.portal@techswifttrix.com', password: 'Ops#Nexus2026!',     path: '/gatewaynexus' },
+  { role: 'Technology',     email: 'technology.portal@techswifttrix.com', password: 'Tech#Nexus2026!',    path: '/gatewayvertex' },
+  { role: 'Agent',          email: 'agents.portal@techswifttrix.com',     password: 'Agent#Nexus2026!',   path: '/gatewaypulse' },
 ];
 
 export default function PortalHome() {
   const navigate = useNavigate();
+
+  const openPortal = (id: string, path: string) => {
+    const targetUrl = resolvePortalUrl(id, path);
+    if (targetUrl.startsWith(window.location.origin)) {
+      const internalPath = targetUrl.slice(window.location.origin.length) || '/';
+      navigate(internalPath);
+      return;
+    }
+    window.location.href = targetUrl;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
@@ -53,7 +72,7 @@ export default function PortalHome() {
             return (
               <button
                 key={portal.id}
-                onClick={() => navigate(portal.path)}
+                onClick={() => openPortal(portal.id, portal.path)}
                 className="group relative bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/25 rounded-2xl p-6 text-left transition-all duration-200 hover:scale-[1.02] hover:shadow-2xl focus:outline-none focus:ring-2 focus:ring-white/20"
               >
                 {/* Color accent top bar */}
@@ -79,7 +98,7 @@ export default function PortalHome() {
 
                 {/* URL badge */}
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono text-white/30">{window.location.origin}{portal.path}</span>
+                  <span className="text-xs font-mono text-white/30">{resolvePortalUrl(portal.id, portal.path)}</span>
                   <svg className="w-4 h-4 text-white/20 group-hover:text-white/60 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>

@@ -1,9 +1,14 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
+const resolvedApiBaseUrl =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim() ||
+  (import.meta.env.VITE_API_URL as string | undefined)?.trim() ||
+  'https://erpsystem-nt2h.onrender.com';
+
 export const apiClient = axios.create({
   // Use relative URL so requests go through the Vite dev proxy (avoids CORS).
   // VITE_API_BASE_URL can be set to an absolute URL for production builds.
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? '',
+  baseURL: resolvedApiBaseUrl,
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
 });

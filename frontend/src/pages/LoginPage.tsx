@@ -14,22 +14,6 @@ const PATH_THEME: Record<string, string> = {
   '/gatewaypulse':  'agents',
 };
 
-// Quick-fill credentials for dev
-const DEV_CREDS: { label: string; email: string; password: string; portal: string }[] = [
-  { label: 'CEO',          email: 'ceo@tst.com',          password: 'Ceo@123456789!',  portal: '/gatewayalpha' },
-  { label: 'CFO',          email: 'cfo@tst.com',          password: 'Cfo@123456789!',  portal: '/gatewaydelta' },
-  { label: 'CoS',          email: 'cos@tst.com',          password: 'Cos@123456789!',  portal: '/gatewaydelta' },
-  { label: 'EA',           email: 'ea@tst.com',           password: 'Ea@1234567890!',  portal: '/gatewaydelta' },
-  { label: 'COO',          email: 'coo@tst.com',          password: 'Coo@123456789!',  portal: '/gatewaysigma' },
-  { label: 'CTO',          email: 'cto@tst.com',          password: 'Cto@123456789!',  portal: '/gatewaysigma' },
-  { label: 'Operations',   email: 'ops@tst.com',          password: 'Ops@123456789!',  portal: '/gatewaynexus' },
-  { label: 'Head Trainer', email: 'headtrainer@tst.com',  password: 'Head@12345678!',  portal: '/gatewaynexus' },
-  { label: 'Trainer',      email: 'trainer@tst.com',      password: 'Train@1234567!',  portal: '/gatewaynexus' },
-  { label: 'Tech Lead',    email: 'tech@tst.com',         password: 'Tech@12345678!',  portal: '/gatewayvertex' },
-  { label: 'Developer',    email: 'dev@tst.com',          password: 'Dev@123456789!',  portal: '/gatewayvertex' },
-  { label: 'Agent',        email: 'agent@tst.com',        password: 'Agent@1234567!',  portal: '/gatewaypulse' },
-];
-
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -64,12 +48,6 @@ export default function LoginPage() {
     } else {
       setError(result.error || 'Login failed');
     }
-  };
-
-  const fillCreds = (cred: typeof DEV_CREDS[0]) => {
-    setEmail(cred.email);
-    setPassword(cred.password);
-    setError('');
   };
 
   return (
@@ -158,19 +136,6 @@ export default function LoginPage() {
                   : 'Sign in to your portal'}
               </button>
             </form>
-
-            {/* Quick-fill dev credentials */}
-            <div className="mt-6 pt-5 border-t border-gray-100">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Quick access — dev credentials</p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                {DEV_CREDS.map((c) => (
-                  <button key={c.email} onClick={() => fillCreds(c)}
-                    className="text-xs px-2 py-1.5 rounded-lg border border-gray-100 text-gray-600 hover:border-gray-300 hover:text-gray-900 transition-all text-left truncate">
-                    {c.label}
-                  </button>
-                ))}
-              </div>
-            </div>
 
             <div className="mt-4 text-center">
               <button onClick={() => navigate('/')} className="text-xs text-gray-400 hover:text-gray-600 transition-colors">

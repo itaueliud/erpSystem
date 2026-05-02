@@ -177,21 +177,6 @@ export default function LoginTemplate({
                 </button>
               </form>
 
-              {/* Dev quick-fill */}
-              {devCreds.length > 0 && (
-                <div className="mt-5 pt-4 border-t border-slate-100">
-                  <p className="text-xs text-slate-400 mb-2 font-medium">Dev quick-fill</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {devCreds.map(c => (
-                      <button key={c.email} onClick={() => { setEmail(c.email); setPassword(c.password); }}
-                        className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-all">
-                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: primaryColor }} />
-                        {c.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 

@@ -16,10 +16,7 @@ export default function TrainersLoginPage() {
         'Priority listing modification',
         'CFO direct communication',
       ]}
-      devCreds={[
-        { label: 'Head Trainer', email: 'headtrainer@tst.com', password: 'Head@12345678!' },
-        { label: 'Trainer',      email: 'trainer@tst.com',     password: 'Train@1234567!' },
-      ]}
     />
   );
 }
+

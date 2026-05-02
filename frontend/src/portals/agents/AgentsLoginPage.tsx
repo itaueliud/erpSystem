@@ -16,7 +16,7 @@ export default function AgentsLoginPage() {
         'TST PlotConnect property listings',
         'Personal performance metrics',
       ]}
-      devCreds={[{ label: 'Agent', email: 'agent@tst.com', password: 'Agent@1234567!' }]}
     />
   );
 }
+

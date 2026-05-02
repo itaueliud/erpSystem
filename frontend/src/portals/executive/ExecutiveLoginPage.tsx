@@ -16,11 +16,7 @@ export default function ExecutiveLoginPage() {
         'Service amount configuration',
         'Anti-corruption audit controls',
       ]}
-      devCreds={[
-        { label: 'CFO', email: 'cfo@tst.com', password: 'Cfo@123456789!' },
-        { label: 'CoS', email: 'cos@tst.com', password: 'Cos@123456789!' },
-        { label: 'EA',  email: 'ea@tst.com',  password: 'Ea@1234567890!' },
-      ]}
     />
   );
 }
+

@@ -16,11 +16,7 @@ export default function TechnologyLoginPage() {
         'Contract download and signing',
         'Team performance metrics',
       ]}
-      devCreds={[
-        { label: 'Security Manager',        email: 'tech@tst.com',     password: 'Tech@12345678!' },
-        { label: 'Lead Software Architect', email: 'softeng@tst.com',  password: 'Tech@12345678!' },
-        { label: 'Developer (Team Leader)', email: 'dev@tst.com',      password: 'Dev@123456789!' },
-      ]}
     />
   );
 }
+

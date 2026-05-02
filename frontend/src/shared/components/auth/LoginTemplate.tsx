@@ -15,12 +15,11 @@ interface LoginTemplateProps {
   sidebarColor: string;       // hex e.g. '#0f2557'
   accentColor: string;        // hex e.g. '#f59e0b'
   features: string[];
-  devCreds: { label: string; email: string; password: string }[];
 }
 
 export default function LoginTemplate({
   allowedRoles, portalName, portalDescription,
-  primaryColor, sidebarColor, accentColor, features, devCreds,
+  primaryColor, sidebarColor, accentColor, features,
 }: LoginTemplateProps) {
   const { isAuthenticated, user, login, logout } = useAuth();
   const navigate = useNavigate();

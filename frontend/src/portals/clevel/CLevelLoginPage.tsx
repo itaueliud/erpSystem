@@ -16,10 +16,7 @@ export default function CLevelLoginPage() {
         'Budget and expense management',
         'Tech funding requests',
       ]}
-      devCreds={[
-        { label: 'COO', email: 'coo@tst.com', password: 'Coo@123456789!' },
-        { label: 'CTO', email: 'cto@tst.com', password: 'Cto@123456789!' },
-      ]}
     />
   );
 }
+

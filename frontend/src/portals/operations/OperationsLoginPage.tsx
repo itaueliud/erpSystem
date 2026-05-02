@@ -16,11 +16,7 @@ export default function OperationsLoginPage() {
         'Trainer and agent performance',
         'Daily report submission',
       ]}
-      devCreds={[
-        { label: 'Operations', email: 'ops@tst.com',         password: 'Ops@123456789!' },
-        { label: 'Head Trainer', email: 'headtrainer@tst.com', password: 'Head@12345678!' },
-        { label: 'Trainer',    email: 'trainer@tst.com',     password: 'Train@1234567!' },
-      ]}
     />
   );
 }
+

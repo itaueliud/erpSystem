@@ -16,7 +16,6 @@ export default function CEOLoginPage() {
         'Cross-country performance analytics',
         'System admin — user & role management',
       ]}
-      devCreds={[{ label: 'CEO', email: 'ceo@tst.com', password: 'Ceo@123456789!' }]}
     />
   );
 }

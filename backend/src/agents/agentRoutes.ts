@@ -170,17 +170,21 @@ router.get('/commitment-amounts', requireRole(Role.AGENT), async (_req: Request,
 router.post('/create', requireRole(Role.HEAD_OF_TRAINERS), async (req: Request, res: Response) => {
   try {
     const createdBy = (req as any).user.id;
-    const { email, password, fullName, phone, idNumber, coverPhotoUrl } = req.body;
+    const {
+      email,
+      password,
+      fullName,
+      phone,
+      idNumber,
+      country,
+      paymentMethod,
+      mpesaNumber,
+      payoutPhone,
+      coverPhotoUrl,
+    } = req.body;
 
-    if (!email || !password || !fullName || !phone || !idNumber) {
-      return res.status(400).json({ success: false, error: 'email, password, fullName, phone, and idNumber are required' });
-    }
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{12,}$/;
-    if (!passwordRegex.test(password)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Password must be at least 12 characters and contain uppercase, lowercase, number, and special character',
-      });
+    if (!fullName || !phone || !idNumber) {
+      return res.status(400).json({ success: false, error: 'fullName, phone, and idNumber are required' });
     }
 
     const { db } = await import('../database/connection');
@@ -190,38 +194,62 @@ router.post('/create', requireRole(Role.HEAD_OF_TRAINERS), async (req: Request, 
     if (!roleResult.rows.length) throw new Error('AGENT role not found');
     const roleId = roleResult.rows[0].id;
 
-    // Get HoT's country to assign to agent
+    // Get HoT's country to assign to agent if country not provided
     const hotResult = await db.query(`SELECT country FROM users WHERE id = $1`, [createdBy]);
-    const country = hotResult.rows[0]?.country || '';
+    const agentCountry = country || hotResult.rows[0]?.country || '';
 
-    const existing = await db.query(`SELECT id FROM users WHERE email = $1`, [email]);
+    const normalizedPhone = String(phone).replace(/\s+/g, '');
+    const generatedEmail = `agent.${normalizedPhone.replace(/[^\d+]/g, '')}@techswifttrix.com`;
+    const effectiveEmail = (email || generatedEmail).toLowerCase().trim();
+
+    const existing = await db.query(`SELECT id FROM users WHERE email = $1`, [effectiveEmail]);
     if (existing.rows.length > 0) {
       return res.status(409).json({ success: false, error: 'User with this email already exists' });
     }
 
-    const passwordHash = await authService.hashPassword(password);
+    const generatedPassword = `Agent@${Math.random().toString(36).slice(-4)}${Date.now().toString().slice(-4)}!`;
+    const effectivePassword = password || generatedPassword;
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{12,}$/;
+    if (!passwordRegex.test(effectivePassword)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Password must be at least 12 characters and contain uppercase, lowercase, number, and special character',
+      });
+    }
+    const passwordHash = await authService.hashPassword(effectivePassword);
 
     // Create agent directly with credentials
     const result = await db.query(
       `INSERT INTO users
          (email, password_hash, full_name, phone, country, role_id, national_id_number,
-          cover_photo_url, is_active, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, TRUE, NOW(), NOW())
-       RETURNING id, email, full_name, phone, national_id_number, cover_photo_url, created_at`,
+          payout_method, payout_phone, cover_photo_url, is_active, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, TRUE, NOW(), NOW())
+       RETURNING id, email, full_name, phone, national_id_number, payout_method, payout_phone, cover_photo_url, created_at`,
       [
-        email.toLowerCase().trim(),
+        effectiveEmail,
         passwordHash,
         fullName,
         phone,
-        country,
+        agentCountry,
         roleId,
         idNumber,
+        paymentMethod || null,
+        payoutPhone || mpesaNumber || null,
         coverPhotoUrl || null,
       ]
     );
 
     logger.info('Agent account created by HoT', { agentId: result.rows[0].id, createdBy });
-    return res.status(201).json({ success: true, data: result.rows[0] });
+    return res.status(201).json({
+      success: true,
+      data: {
+        ...result.rows[0],
+        generatedPassword: password ? undefined : generatedPassword,
+      },
+      message: password
+        ? 'Agent created successfully'
+        : 'Agent created successfully. Save generatedPassword and ask the agent to change it on first login.',
+    });
   } catch (error: any) {
     logger.error('Create agent error', { error });
     return res.status(400).json({ success: false, error: error.message });

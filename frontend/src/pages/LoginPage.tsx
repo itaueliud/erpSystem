@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from '../shared/utils/router';
-import { useAuth, getPortalForRole, ROLE_PORTAL_MAP } from '../shared/components/auth/AuthContext';
+import { useAuth, getPortalForRole } from '../shared/components/auth/AuthContext';
 import { PORTAL_THEMES } from '../shared/theme/portalThemes';
 import { TSTEmblem } from '../shared/components/TSTLogo';
 
@@ -69,16 +69,6 @@ export default function LoginPage() {
           <p className="text-white/50 text-sm leading-relaxed">
             Enterprise Resource Planning for modern African businesses
           </p>
-          {themeId !== 'agents' && (
-            <div className="mt-8 grid grid-cols-2 gap-3 text-left">
-              {Object.entries(ROLE_PORTAL_MAP).slice(0, 6).map(([role, path]) => (
-                <div key={role} className="bg-white/10 rounded-xl px-3 py-2">
-                  <p className="text-white/90 text-xs font-semibold">{role}</p>
-                  <p className="text-white/50 text-xs">{path}</p>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </div>
 

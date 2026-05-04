@@ -7,6 +7,7 @@ export interface EmailMessage {
   subject: string;
   text?: string;
   html?: string;
+  disableClickTracking?: boolean;
   templateId?: string;
   dynamicTemplateData?: Record<string, any>;
   attachments?: EmailAttachment[];
@@ -68,6 +69,14 @@ export class SendGridClient {
         text: message.text,
         html: message.html,
         attachments: message.attachments,
+        trackingSettings: message.disableClickTracking
+          ? {
+            clickTracking: {
+              enable: false,
+              enableText: false,
+            },
+          }
+          : undefined,
       };
 
       // Use dynamic template if provided
@@ -181,6 +190,7 @@ export class SendGridClient {
       to,
       subject: 'Invitation to TechSwiftTrix ERP System',
       html,
+      disableClickTracking: true,
     });
   }
 

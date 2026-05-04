@@ -191,9 +191,11 @@ export function PortalLayout({
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifOpen, setNotifOpen]     = useState(false);
   const [faqOpen, setFaqOpen]         = useState(false);
-  const [profileForm, setProfileForm] = useState({ name: user.name });
+  const [profileForm, setProfileForm] = useState({ name: user.name, email: user.email, phone: '' });
   const [profileMsg, setProfileMsg]   = useState('');
   const [profileSaving, setProfileSaving] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [passwordSaving, setPasswordSaving] = useState(false);
 
   const initials   = user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   const showLabels = sidebarOpen || mobileOpen;
@@ -202,10 +204,69 @@ export function PortalLayout({
     setProfileSaving(true); setProfileMsg('');
     try {
       const { apiClient } = await import('../../api/apiClient');
-      await apiClient.put('/api/v1/users/me', { fullName: profileForm.name });
-      setProfileMsg('Profile updated!');
+      await apiClient.put('/api/v1/users/me', {
+        fullName: profileForm.name,
+        phone: profileForm.phone || undefined,
+      });
+      if (profileForm.email.trim().toLowerCase() !== user.email.trim().toLowerCase()) {
+        await apiClient.post('/api/v1/users/me/email', { newEmail: profileForm.email.trim() });
+        setProfileMsg('Profile updated. Verify your new email from your inbox.');
+      } else {
+        setProfileMsg('Profile updated!');
+      }
     } catch { setProfileMsg('Failed to save'); }
     finally { setProfileSaving(false); }
+  };
+
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { apiClient } = await import('../../api/apiClient');
+        const res = await apiClient.get('/api/v1/users/me');
+        const me = (res.data as any)?.data || {};
+        if (!cancelled) {
+          setProfileForm({
+            name: me.fullName || user.name,
+            email: me.email || user.email,
+            phone: me.phone || '',
+          });
+        }
+      } catch {
+        if (!cancelled) {
+          setProfileForm(f => ({ ...f, name: user.name, email: user.email }));
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user.name, user.email]);
+
+  const changePassword = async () => {
+    setProfileMsg('');
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      setProfileMsg('Failed to change password: fill in all password fields.');
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setProfileMsg('Failed to change password: new passwords do not match.');
+      return;
+    }
+
+    setPasswordSaving(true);
+    try {
+      const { apiClient } = await import('../../api/apiClient');
+      await apiClient.post('/api/v1/users/me/password', {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      });
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setProfileMsg('Password changed successfully.');
+    } catch (err: any) {
+      const msg = err?.response?.data?.error || 'Failed to change password';
+      setProfileMsg(`Failed to change password: ${msg}`);
+    } finally {
+      setPasswordSaving(false);
+    }
   };
 
   return (
@@ -487,7 +548,35 @@ export function PortalLayout({
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Email</label>
-                <input type="email" value={user.email} readOnly className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm bg-slate-100 text-slate-500 cursor-not-allowed" />
+                <input type="email" value={profileForm.email} onChange={e => setProfileForm(f => ({ ...f, email: e.target.value }))}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:border-transparent transition-all"
+                  style={{ '--tw-ring-color': theme.hex } as any} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Phone</label>
+                <input type="tel" value={profileForm.phone} onChange={e => setProfileForm(f => ({ ...f, phone: e.target.value }))}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:border-transparent transition-all"
+                  style={{ '--tw-ring-color': theme.hex } as any} />
+              </div>
+              <div className="pt-2 border-t border-slate-100 space-y-3">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Change Password</p>
+                <input type="password" value={passwordForm.currentPassword} placeholder="Current password"
+                  onChange={e => setPasswordForm(f => ({ ...f, currentPassword: e.target.value }))}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:border-transparent transition-all"
+                  style={{ '--tw-ring-color': theme.hex } as any} />
+                <input type="password" value={passwordForm.newPassword} placeholder="New password"
+                  onChange={e => setPasswordForm(f => ({ ...f, newPassword: e.target.value }))}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:border-transparent transition-all"
+                  style={{ '--tw-ring-color': theme.hex } as any} />
+                <input type="password" value={passwordForm.confirmPassword} placeholder="Confirm new password"
+                  onChange={e => setPasswordForm(f => ({ ...f, confirmPassword: e.target.value }))}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:border-transparent transition-all"
+                  style={{ '--tw-ring-color': theme.hex } as any} />
+                <button onClick={changePassword} disabled={passwordSaving}
+                  className="w-full py-2.5 rounded-lg text-white text-sm font-semibold transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
+                  style={{ backgroundColor: theme.hex }}>
+                  {passwordSaving ? 'Updating password...' : 'Update Password'}
+                </button>
               </div>
               <button onClick={saveProfile} disabled={profileSaving}
                 className="w-full py-2.5 rounded-lg text-white text-sm font-semibold transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50"

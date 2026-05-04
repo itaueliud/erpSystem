@@ -41,7 +41,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    const result = await login(email, password);
+    const result = await login(email, password, themeId);
     setLoading(false);
     if (result.success) {
       // AuthContext sets user; redirect handled by useEffect above

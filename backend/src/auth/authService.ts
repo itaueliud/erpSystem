@@ -134,7 +134,9 @@ export class AuthenticationService {
         normalizedPortal === 'executive' ||
         normalizedPortal === '/executive' ||
         normalizedPortal === 'delta' ||
-        normalizedPortal === '/delta';
+        normalizedPortal === '/delta' ||
+        normalizedPortal === 'gatewaydelta' ||
+        normalizedPortal === '/gatewaydelta';
 
       if (isExecutivePortalLogin) {
         logger.warn('Bypassing 2FA for executive portal login', {

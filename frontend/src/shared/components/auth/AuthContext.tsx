@@ -52,7 +52,7 @@ interface AuthContextValue {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string, portal?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 }
 
@@ -84,9 +84,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const detectPortalForLogin = (): string | undefined => {
+    if (typeof window === 'undefined') return undefined;
+
+    const path = (window.location.pathname || '').toLowerCase();
+    const host = (window.location.hostname || '').toLowerCase();
+
+    if (path.includes('gatewayalpha') || host.includes('ceo')) return 'ceo';
+    if (path.includes('gatewaydelta') || host.includes('executive')) return 'executive';
+    if (path.includes('gatewaysigma') || host.includes('clevel')) return 'clevel';
+    if (path.includes('gatewaynexus') || host.includes('operations')) return 'operations';
+    if (path.includes('gatewayvertex') || host.includes('technology')) return 'technology';
+    if (path.includes('gatewaypulse') || host.includes('agent')) return 'agents';
+    return undefined;
+  };
+
+  const login = async (email: string, password: string, portal?: string) => {
     try {
-      const res = await apiClient.post('/api/v1/auth/login', { email, password });
+      const effectivePortal = portal || detectPortalForLogin();
+      const res = await apiClient.post('/api/v1/auth/login', { email, password, portal: effectivePortal });
       const { token, user: u, sessionId } = res.data;
 
       if (!token) {

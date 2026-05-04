@@ -2950,26 +2950,9 @@ export default function CEOPortal() {
   ]);
 
   const d = data as any;
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: C.bg }}>
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 rounded-full border-4 border-slate-200 border-t-blue-600 animate-spin" />
-          <p className="text-sm text-slate-500 font-medium">Loading CEO Portal…</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) { navigate('/login'); return null; }
-
-  const pendingCount = (Array.isArray(d.serviceApprovals) ? d.serviceApprovals.filter((a: any) => a.status === 'PENDING' || a.status === 'PENDING_APPROVAL').length : 0)
-                     + (Array.isArray(d.paymentApprovals)  ? d.paymentApprovals.filter((p: any) => p.status === 'PENDING_APPROVAL').length : 0)
-                     + (Array.isArray(d.techRequests)       ? d.techRequests.filter((t: any) => t.status === 'PENDING').length : 0);
-
-  const handleLogout = () => { logout(); navigate('/login'); };
   const initials = (profileForm.name || user?.name || user?.email || 'C').split(/[\s._-]+/).filter(Boolean).map(p => p[0]).join('').toUpperCase().slice(0, 2);
+  const handleLogout = () => { logout(); navigate('/login'); };
+  const sectionProps = { data: d, refetch, currentUserId: user?.id };
 
   React.useEffect(() => {
     if (!profileOpen) return;
@@ -3037,7 +3020,22 @@ export default function CEOPortal() {
     }
   };
 
-  const sectionProps = { data: d, refetch, currentUserId: user?.id };
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: C.bg }}>
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 rounded-full border-4 border-slate-200 border-t-blue-600 animate-spin" />
+          <p className="text-sm text-slate-500 font-medium">Loading CEO Portal…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) { navigate('/login'); return null; }
+
+  const pendingCount = (Array.isArray(d.serviceApprovals) ? d.serviceApprovals.filter((a: any) => a.status === 'PENDING' || a.status === 'PENDING_APPROVAL').length : 0)
+                     + (Array.isArray(d.paymentApprovals)  ? d.paymentApprovals.filter((p: any) => p.status === 'PENDING_APPROVAL').length : 0)
+                     + (Array.isArray(d.techRequests)       ? d.techRequests.filter((t: any) => t.status === 'PENDING').length : 0);
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: C.bg, fontFamily: "'Inter', system-ui, sans-serif" }}>

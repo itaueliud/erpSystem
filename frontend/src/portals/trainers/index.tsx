@@ -345,7 +345,7 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
   const [reassignTrainerId, setReassignTrainerId] = useState('');
   const [reassignMsg, setReassignMsg] = useState('');
   const [reassignOk, setReassignOk] = useState(false);
-  const [addForm, setAddForm] = useState({ fullName: '', phone: '', idNumber: '', country: '', paymentType: 'MPESA', paymentAccount: '', coverPhoto: null as File | null });
+  const [addForm, setAddForm] = useState({ fullName: '', phone: '', idNumber: '', country: '', paymentType: 'MPESA', paymentAccount: '', password: '', coverPhoto: null as File | null });
   const [addMsg, setAddMsg] = useState('');
   const [addOk, setAddOk] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -390,19 +390,21 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
     setGeneratedPassword('');
     try {
       const { apiClient } = await import('../../shared/api/apiClient');
-      const fd = new FormData();
-      fd.append('fullName', addForm.fullName.toUpperCase().trim());
-      fd.append('phone', addForm.phone);
-      fd.append('idNumber', addForm.idNumber);
-      fd.append('country', addForm.country);
-      fd.append('paymentType', addForm.paymentType);
-      fd.append('paymentAccount', addForm.paymentAccount);
-      if (addForm.coverPhoto) fd.append('coverPhoto', addForm.coverPhoto);
-      const res = await apiClient.post('/api/v1/agents/create', fd);
+      const payload: any = {
+        fullName: addForm.fullName.toUpperCase().trim(),
+        phone: addForm.phone,
+        idNumber: addForm.idNumber,
+        country: addForm.country,
+        paymentMethod: addForm.paymentType,
+      };
+      if (addForm.paymentType === 'MPESA') payload.mpesaNumber = addForm.paymentAccount;
+      else payload.payoutPhone = addForm.paymentAccount;
+      if (addForm.password.trim()) payload.password = addForm.password.trim();
+      const res = await apiClient.post('/api/v1/agents/create', payload);
       const generated = (res.data as any)?.data?.generatedPassword || '';
       setAddOk(true); setAddMsg('Agent account created!');
       setGeneratedPassword(generated);
-      setAddForm({ fullName: '', phone: '', idNumber: '', country: '', paymentType: 'MPESA', paymentAccount: '', coverPhoto: null });
+      setAddForm({ fullName: '', phone: '', idNumber: '', country: '', paymentType: 'MPESA', paymentAccount: '', password: '', coverPhoto: null });
       refetch(['myAgents']);
     } catch (err: any) { setAddOk(false); setAddMsg(err?.response?.data?.error || 'Failed'); }
     finally { setAdding(false); }
@@ -640,6 +642,16 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
                   onChange={e => setAddForm(f => ({ ...f, paymentAccount: e.target.value }))}
                   className={inputCls}
                   placeholder={addForm.paymentType === 'BANK' ? 'e.g. 1234567890' : 'e.g. 0712345678'}
+                />
+              </div>
+              <div className="mb-6">
+                <label className={labelCls}>Password (Optional)</label>
+                <input
+                  type="password"
+                  value={addForm.password}
+                  onChange={e => setAddForm(f => ({ ...f, password: e.target.value }))}
+                  className={inputCls}
+                  placeholder="Leave blank to auto-generate"
                 />
               </div>
               <div className="mb-6">

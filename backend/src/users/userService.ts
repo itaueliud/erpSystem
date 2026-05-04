@@ -133,6 +133,20 @@ export interface Invitation {
  * Requirements: 1.1-1.5, 39.1-39.12
  */
 export class UserService {
+  private invitationTokensHasPayoutColumns: boolean | null = null;
+
+  private async hasInvitationPayoutColumns(): Promise<boolean> {
+    if (this.invitationTokensHasPayoutColumns !== null) return this.invitationTokensHasPayoutColumns;
+    const check = await db.query(
+      `SELECT COUNT(*)::int AS count
+       FROM information_schema.columns
+       WHERE table_name = 'invitation_tokens'
+         AND column_name IN ('payout_method', 'payout_phone', 'payout_bank_name', 'payout_bank_account')`
+    );
+    this.invitationTokensHasPayoutColumns = (check.rows[0]?.count || 0) === 4;
+    return this.invitationTokensHasPayoutColumns;
+  }
+
   /**
    * Send invitation email to create new user account
    * Requirement 1.1: Create user accounts only through invitation emails
@@ -183,17 +197,24 @@ export class UserService {
       const token = crypto.randomBytes(32).toString('hex');
       const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000); // 72 hours
 
-      // Store invitation in database
-      const result = await db.query(
-        `INSERT INTO invitation_tokens (email, token, role_id, department_id, expires_at, created_by,
-           payout_method, payout_phone, payout_bank_name, payout_bank_account)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-         RETURNING id, email, token, role_id, department_id, expires_at, created_by, created_at,
-                   payout_method, payout_phone, payout_bank_name, payout_bank_account`,
-        [input.email, token, input.roleId, input.departmentId, expiresAt, input.invitedBy,
-         input.payoutMethod || null, input.payoutPhone || null,
-         input.payoutBankName || null, input.payoutBankAccount || null]
-      );
+      const hasPayoutCols = await this.hasInvitationPayoutColumns();
+      const result = hasPayoutCols
+        ? await db.query(
+          `INSERT INTO invitation_tokens (email, token, role_id, department_id, expires_at, created_by,
+             payout_method, payout_phone, payout_bank_name, payout_bank_account)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+           RETURNING id, email, token, role_id, department_id, expires_at, created_by, created_at,
+                     payout_method, payout_phone, payout_bank_name, payout_bank_account`,
+          [input.email, token, input.roleId, input.departmentId, expiresAt, input.invitedBy,
+            input.payoutMethod || null, input.payoutPhone || null,
+            input.payoutBankName || null, input.payoutBankAccount || null]
+        )
+        : await db.query(
+          `INSERT INTO invitation_tokens (email, token, role_id, department_id, expires_at, created_by)
+           VALUES ($1, $2, $3, $4, $5, $6)
+           RETURNING id, email, token, role_id, department_id, expires_at, created_by, created_at`,
+          [input.email, token, input.roleId, input.departmentId, expiresAt, input.invitedBy]
+        );
 
       const invitation = result.rows[0];
 
@@ -219,6 +240,10 @@ export class UserService {
         expiresAt: invitation.expires_at,
         createdBy: invitation.created_by,
         createdAt: invitation.created_at,
+        payoutMethod: invitation.payout_method,
+        payoutPhone: invitation.payout_phone,
+        payoutBankName: invitation.payout_bank_name,
+        payoutBankAccount: invitation.payout_bank_account,
       };
     } catch (error) {
       logger.error('Failed to send invitation', { error, input });
@@ -232,13 +257,21 @@ export class UserService {
    */
   async validateInvitationToken(token: string): Promise<Invitation | null> {
     try {
-      const result = await db.query(
-        `SELECT id, email, token, role_id, department_id, expires_at, used_at, created_by, created_at,
-                payout_method, payout_phone, payout_bank_name, payout_bank_account
-         FROM invitation_tokens
-         WHERE token = $1`,
-        [token]
-      );
+      const hasPayoutCols = await this.hasInvitationPayoutColumns();
+      const result = hasPayoutCols
+        ? await db.query(
+          `SELECT id, email, token, role_id, department_id, expires_at, used_at, created_by, created_at,
+                  payout_method, payout_phone, payout_bank_name, payout_bank_account
+           FROM invitation_tokens
+           WHERE token = $1`,
+          [token]
+        )
+        : await db.query(
+          `SELECT id, email, token, role_id, department_id, expires_at, used_at, created_by, created_at
+           FROM invitation_tokens
+           WHERE token = $1`,
+          [token]
+        );
 
       if (result.rows.length === 0) {
         return null;

@@ -248,11 +248,13 @@ function Table({ cols, rows, empty = 'No data' }: {
 }
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
-function Sidebar({ section, setSection, pendingCount, user, onLogout, mobileOpen, onMobileClose }: {
+function Sidebar({ section, setSection, pendingCount, user, onLogout, onProfileOpen, mobileOpen, onMobileClose }: {
   section: string; setSection: (s: string) => void;
   pendingCount: number; user: any; onLogout: () => void;
+  onProfileOpen?: () => void;
   mobileOpen?: boolean; onMobileClose?: () => void;
 }) {
+  const username = (user?.email?.split('@')?.[0] || user?.name || 'ceo').trim();
   return (
     <>
       {/* Mobile overlay */}
@@ -311,13 +313,14 @@ function Sidebar({ section, setSection, pendingCount, user, onLogout, mobileOpen
       {/* User footer */}
       <div className="px-3 py-4 border-t" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
         <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl mb-1"
-          style={{ background: 'rgba(255,255,255,0.05)' }}>
+          style={{ background: 'rgba(255,255,255,0.05)' }}
+          onClick={onProfileOpen}>
           <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
             style={{ background: C.blue2 }}>
-            {(user?.name || 'C').charAt(0).toUpperCase()}
+            {username.charAt(0).toUpperCase()}
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-white text-xs font-semibold truncate">{user?.name || 'CEO'}</p>
+          <div className="flex-1 min-w-0 cursor-pointer">
+            <p className="text-white text-xs font-semibold truncate">{username}</p>
             <p className="text-slate-500 text-[10px] truncate">{user?.email || ''}</p>
           </div>
         </div>
@@ -2889,6 +2892,12 @@ export default function CEOPortal() {
   const [section, setSection] = useState('overview');
   const [faqOpen, setFaqOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [profileForm, setProfileForm] = useState({ name: user?.name || '', email: user?.email || '', phone: '' });
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [profileMsg, setProfileMsg] = useState('');
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [passwordSaving, setPasswordSaving] = useState(false);
 
   const { data, loading, refetch } = useMultiPortalData([
     { key: 'metrics',            endpoint: '/api/v1/dashboard/metrics',           fallback: {} },
@@ -2960,6 +2969,73 @@ export default function CEOPortal() {
                      + (Array.isArray(d.techRequests)       ? d.techRequests.filter((t: any) => t.status === 'PENDING').length : 0);
 
   const handleLogout = () => { logout(); navigate('/login'); };
+  const initials = (profileForm.name || user?.name || user?.email || 'C').split(/[\s._-]+/).filter(Boolean).map(p => p[0]).join('').toUpperCase().slice(0, 2);
+
+  React.useEffect(() => {
+    if (!profileOpen) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiClient.get('/api/v1/users/me');
+        const me = (res.data as any)?.data || {};
+        if (cancelled) return;
+        setProfileForm({
+          name: me.fullName || user?.name || '',
+          email: me.email || user?.email || '',
+          phone: me.phone || '',
+        });
+      } catch {
+        if (!cancelled) {
+          setProfileForm(f => ({ ...f, name: user?.name || f.name, email: user?.email || f.email }));
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [profileOpen, user?.name, user?.email]);
+
+  const saveProfile = async () => {
+    setProfileSaving(true);
+    setProfileMsg('');
+    try {
+      await apiClient.put('/api/v1/users/me', { fullName: profileForm.name, phone: profileForm.phone || undefined });
+      if ((profileForm.email || '').trim().toLowerCase() !== (user?.email || '').trim().toLowerCase()) {
+        await apiClient.post('/api/v1/users/me/email', { newEmail: profileForm.email.trim() });
+        setProfileMsg('Profile updated. Verify your new email from your inbox.');
+      } else {
+        setProfileMsg('Profile updated!');
+      }
+    } catch {
+      setProfileMsg('Failed to save');
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  const changePassword = async () => {
+    setProfileMsg('');
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      setProfileMsg('Failed to change password: fill in all password fields.');
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setProfileMsg('Failed to change password: new passwords do not match.');
+      return;
+    }
+    setPasswordSaving(true);
+    try {
+      await apiClient.post('/api/v1/users/me/password', {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      });
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setProfileMsg('Password changed successfully.');
+    } catch (err: any) {
+      const msg = err?.response?.data?.error || 'Failed to change password';
+      setProfileMsg(`Failed to change password: ${msg}`);
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
 
   const sectionProps = { data: d, refetch, currentUserId: user?.id };
 
@@ -2971,6 +3047,7 @@ export default function CEOPortal() {
         pendingCount={pendingCount}
         user={user}
         onLogout={handleLogout}
+        onProfileOpen={() => setProfileOpen(true)}
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
       />
@@ -3022,6 +3099,54 @@ export default function CEOPortal() {
             </div>
             <div className="flex-1 overflow-y-auto px-5 py-5">
               <FAQPanel faqs={CEO_FAQS} accentColor={C.blue2} portalName="CEO Portal" />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {profileOpen && (
+        <div className="fixed inset-0 z-[70] flex justify-end">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setProfileOpen(false)} />
+          <div className="relative w-full max-w-xs h-full flex flex-col bg-white shadow-2xl overflow-y-auto">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+              <h2 className="text-base font-bold text-slate-900">My Profile</h2>
+              <button onClick={() => setProfileOpen(false)} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="flex flex-col items-center py-6 px-5 border-b border-slate-100">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold mb-2" style={{ backgroundColor: C.blue2 }}>
+                {initials || 'C'}
+              </div>
+              <p className="font-bold text-slate-900">{profileForm.name || user?.name || 'CEO'}</p>
+              <span className="mt-1 text-xs font-semibold px-2.5 py-0.5 rounded-full text-white" style={{ backgroundColor: C.blue2 }}>CEO</span>
+            </div>
+            <div className="flex-1 px-5 py-5 space-y-4">
+              {profileMsg && <div className={`p-3 rounded-lg text-sm ${profileMsg.includes('Failed') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>{profileMsg}</div>}
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Full Name</label>
+                <input type="text" value={profileForm.name} onChange={e => setProfileForm(f => ({ ...f, name: e.target.value }))} className={inp} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Email</label>
+                <input type="email" value={profileForm.email} onChange={e => setProfileForm(f => ({ ...f, email: e.target.value }))} className={inp} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Phone</label>
+                <input type="tel" value={profileForm.phone} onChange={e => setProfileForm(f => ({ ...f, phone: e.target.value }))} className={inp} />
+              </div>
+              <div className="pt-2 border-t border-slate-100 space-y-3">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Change Password</p>
+                <input type="password" value={passwordForm.currentPassword} placeholder="Current password" onChange={e => setPasswordForm(f => ({ ...f, currentPassword: e.target.value }))} className={inp} />
+                <input type="password" value={passwordForm.newPassword} placeholder="New password" onChange={e => setPasswordForm(f => ({ ...f, newPassword: e.target.value }))} className={inp} />
+                <input type="password" value={passwordForm.confirmPassword} placeholder="Confirm new password" onChange={e => setPasswordForm(f => ({ ...f, confirmPassword: e.target.value }))} className={inp} />
+                <button onClick={changePassword} disabled={passwordSaving} className="w-full py-2.5 rounded-lg text-white text-sm font-semibold transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50" style={{ backgroundColor: C.blue2 }}>
+                  {passwordSaving ? 'Updating password...' : 'Update Password'}
+                </button>
+              </div>
+              <button onClick={saveProfile} disabled={profileSaving} className="w-full py-2.5 rounded-lg text-white text-sm font-semibold transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50" style={{ backgroundColor: C.blue2 }}>
+                {profileSaving ? 'Saving...' : 'Save Changes'}
+              </button>
             </div>
           </div>
         </div>

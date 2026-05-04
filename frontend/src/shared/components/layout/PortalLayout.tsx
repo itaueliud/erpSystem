@@ -197,7 +197,8 @@ export function PortalLayout({
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [passwordSaving, setPasswordSaving] = useState(false);
 
-  const initials   = user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  const sidebarUsername = (user.email?.split('@')[0] || user.name || '').trim();
+  const initials   = sidebarUsername.split(/[\s._-]+/).filter(Boolean).map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
   const showLabels = sidebarOpen || mobileOpen;
 
   const saveProfile = async () => {
@@ -333,7 +334,7 @@ export function PortalLayout({
             </button>
             {showLabels && (
               <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setProfileOpen(true)}>
-                <p className="text-white text-xs font-semibold truncate">{user.name}</p>
+                <p className="text-white text-xs font-semibold truncate">{sidebarUsername}</p>
                 <p className="text-white/40 text-[10px] truncate">{user.role}</p>
               </div>
             )}

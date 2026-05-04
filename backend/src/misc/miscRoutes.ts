@@ -584,27 +584,34 @@ router.get('/training/agent-records', async (req: Request, res: Response) => {
 
   if (userRole === 'HEAD_OF_TRAINERS') {
     query = `
-      SELECT a.id, u.full_name as name, a.phone, a.status,
-             a.performance_score as "performanceScore",
-             a.trainer_id as "trainerId",
+      SELECT au.id,
+             au.full_name as name,
+             au.phone,
+             CASE WHEN au.is_active THEN 'ACTIVE' ELSE 'INACTIVE' END as status,
+             NULL::numeric as "performanceScore",
+             au.trainer_id as "trainerId",
              tu.full_name as "trainerName",
-             a.created_at as "createdAt"
-      FROM agents a
-      LEFT JOIN users u ON u.id = a.user_id
-      LEFT JOIN users tu ON tu.id = a.trainer_id
+             au.created_at as "createdAt"
+      FROM users au
+      JOIN roles ar ON ar.id = au.role_id AND ar.name = 'AGENT'
+      LEFT JOIN users tu ON tu.id = au.trainer_id
       JOIN users hot ON hot.id = $1
       WHERE tu.country = hot.country
-      ORDER BY a.created_at DESC`;
+      ORDER BY au.created_at DESC`;
     params = [userId];
   } else {
     query = `
-      SELECT a.id, u.full_name as name, a.phone, a.status,
-             a.performance_score as "performanceScore",
-             a.trainer_id as "trainerId", a.created_at as "createdAt"
-      FROM agents a
-      LEFT JOIN users u ON u.id = a.user_id
-      WHERE a.trainer_id = $1
-      ORDER BY a.created_at DESC`;
+      SELECT au.id,
+             au.full_name as name,
+             au.phone,
+             CASE WHEN au.is_active THEN 'ACTIVE' ELSE 'INACTIVE' END as status,
+             NULL::numeric as "performanceScore",
+             au.trainer_id as "trainerId",
+             au.created_at as "createdAt"
+      FROM users au
+      JOIN roles ar ON ar.id = au.role_id AND ar.name = 'AGENT'
+      WHERE au.trainer_id = $1
+      ORDER BY au.created_at DESC`;
     params = [userId];
   }
 

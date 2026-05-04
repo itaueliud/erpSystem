@@ -221,9 +221,19 @@ export class UserService {
       // Generate registration link — points to the frontend register page
       const registrationLink = `${config.frontendUrl}/register?token=${token}`;
 
-      // Send invitation email (reuse targetRoleName already fetched above)
+      // Send invitation email (reuse targetRoleName already fetched above).
+      // Do not fail invitation creation when the mail provider rejects delivery
+      // (e.g. sender/domain not yet verified in SendGrid).
       const roleName = targetRoleName || 'User';
-      await sendgridClient.sendInvitationEmail(input.email, registrationLink, roleName);
+      try {
+        await sendgridClient.sendInvitationEmail(input.email, registrationLink, roleName);
+      } catch (mailError: any) {
+        logger.error('Invitation created but email delivery failed', {
+          email: input.email,
+          invitedBy: input.invitedBy,
+          error: mailError?.message || String(mailError),
+        });
+      }
 
       logger.info('Invitation sent successfully', {
         email: input.email,

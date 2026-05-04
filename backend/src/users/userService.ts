@@ -438,6 +438,22 @@ export class UserService {
       const user = result.rows[0];
       return this.mapUserFromDb(user, user.role_name);
     } catch (error) {
+      const err: any = error;
+      if (err?.code === '42703') {
+        logger.warn('Falling back to legacy users schema for getUserById', { userId, message: err?.message });
+        const fallback = await db.query(
+          `SELECT u.id, u.email, u.full_name, u.phone, u.country, u.role_id, u.department_id,
+                  u.language_preference, u.timezone, u.two_fa_enabled,
+                  u.profile_photo_url, u.last_login, u.is_active, u.created_at, u.updated_at,
+                  r.name as role_name
+           FROM users u
+           JOIN roles r ON u.role_id = r.id
+           WHERE u.id = $1`,
+          [userId]
+        );
+        if (fallback.rows.length === 0) return null;
+        return this.mapUserFromDb(fallback.rows[0], fallback.rows[0].role_name);
+      }
       logger.error('Failed to get user by ID', { error, userId });
       throw error;
     }

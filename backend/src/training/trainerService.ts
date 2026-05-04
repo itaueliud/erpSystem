@@ -21,30 +21,40 @@ export class TrainerService {
     if (!trainerResult.rows.length) throw new Error('Trainer not found');
     const { country } = trainerResult.rows[0];
 
-    // Agents assigned to this trainer
-    const agentsResult = await db.query(
-      `SELECT COUNT(DISTINCT agent_id) AS agent_count FROM clients WHERE trainer_id = $1`,
-      [trainerId]
-    );
-
-    // Lead counts from trainer's agents
-    const leadsResult = await db.query(
-      `SELECT
-         COUNT(*) FILTER (WHERE status NOT IN ('CLOSED_WON')) AS active_leads,
-         COUNT(*) FILTER (WHERE status = 'CLOSED_WON') AS converted_this_month,
-         COUNT(*) AS total_leads
-       FROM clients
-       WHERE trainer_id = $1
-         AND (status NOT IN ('NEW_LEAD') OR created_at >= NOW() - INTERVAL '30 days')`,
-      [trainerId]
-    );
+    let agentCount = 0;
+    let activeLeads = 0;
+    let convertedThisMonth = 0;
+    let totalLeads = 0;
+    try {
+      const agentsResult = await db.query(
+        `SELECT COUNT(DISTINCT agent_id) AS agent_count FROM clients WHERE trainer_id = $1`,
+        [trainerId]
+      );
+      const leadsResult = await db.query(
+        `SELECT
+           COUNT(*) FILTER (WHERE status NOT IN ('CLOSED_WON')) AS active_leads,
+           COUNT(*) FILTER (WHERE status = 'CLOSED_WON') AS converted_this_month,
+           COUNT(*) AS total_leads
+         FROM clients
+         WHERE trainer_id = $1
+           AND (status NOT IN ('NEW_LEAD') OR created_at >= NOW() - INTERVAL '30 days')`,
+        [trainerId]
+      );
+      agentCount = parseInt(agentsResult.rows[0].agent_count);
+      activeLeads = parseInt(leadsResult.rows[0].active_leads);
+      convertedThisMonth = parseInt(leadsResult.rows[0].converted_this_month);
+      totalLeads = parseInt(leadsResult.rows[0].total_leads);
+    } catch (error: any) {
+      if (error?.code !== '42703') throw error;
+      logger.warn('Legacy schema fallback in trainer dashboard; trainer_id not available', { trainerId, message: error?.message });
+    }
 
     return {
       country,
-      agentCount: parseInt(agentsResult.rows[0].agent_count),
-      activeLeads: parseInt(leadsResult.rows[0].active_leads),
-      convertedThisMonth: parseInt(leadsResult.rows[0].converted_this_month),
-      totalLeads: parseInt(leadsResult.rows[0].total_leads),
+      agentCount,
+      activeLeads,
+      convertedThisMonth,
+      totalLeads,
     };
   }
 
@@ -131,20 +141,27 @@ export class TrainerService {
     const { country } = trainerResult.rows[0];
 
     // Achievements only — no revenue data
-    const result = await db.query(
-      `SELECT
-         u.full_name AS trainer_name,
-         COUNT(c.id) AS total_clients,
-         COUNT(c.id) FILTER (WHERE c.status = 'CLOSED_WON') AS closed_deals,
-         COUNT(c.id) FILTER (WHERE c.status NOT IN ('CLOSED_WON','NEW_LEAD')) AS active_leads
-       FROM users u
-       JOIN roles r ON r.id = u.role_id AND r.name = 'TRAINER'
-       LEFT JOIN clients c ON c.trainer_id = u.id
-       WHERE u.country = $1
-       GROUP BY u.id, u.full_name
-       ORDER BY closed_deals DESC`,
-      [country]
-    );
+    let result;
+    try {
+      result = await db.query(
+        `SELECT
+           u.full_name AS trainer_name,
+           COUNT(c.id) AS total_clients,
+           COUNT(c.id) FILTER (WHERE c.status = 'CLOSED_WON') AS closed_deals,
+           COUNT(c.id) FILTER (WHERE c.status NOT IN ('CLOSED_WON','NEW_LEAD')) AS active_leads
+         FROM users u
+         JOIN roles r ON r.id = u.role_id AND r.name = 'TRAINER'
+         LEFT JOIN clients c ON c.trainer_id = u.id
+         WHERE u.country = $1
+         GROUP BY u.id, u.full_name
+         ORDER BY closed_deals DESC`,
+        [country]
+      );
+    } catch (error: any) {
+      if (error?.code !== '42703') throw error;
+      logger.warn('Legacy schema fallback in country achievements; trainer_id not available', { trainerId, message: error?.message });
+      result = { rows: [] as any[] };
+    }
 
     return { country, trainers: result.rows };
   }

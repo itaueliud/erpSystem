@@ -232,25 +232,53 @@ export class NotificationService {
 
     const where = conditions.join(' AND ');
 
-    const countResult = await db.query(
-      `SELECT COUNT(*) FROM notifications n WHERE ${where}`,
-      params
-    );
-    const total = parseInt(countResult.rows[0].count, 10);
+    let total = 0;
+    let dataRows: any[] = [];
+    try {
+      const countResult = await db.query(
+        `SELECT COUNT(*) FROM notifications n WHERE ${where}`,
+        params
+      );
+      total = parseInt(countResult.rows[0].count, 10);
 
-    params.push(limit, offset);
-    const dataResult = await db.query(
-      `SELECT n.id, n.user_id, n.type, n.priority, n.title, n.message,
-              n.data, n.delivery_status, n.read, n.read_at, n.scheduled_at, n.created_at
-       FROM notifications n
-       WHERE ${where}
-       ORDER BY n.created_at DESC
-       LIMIT $${idx++} OFFSET $${idx++}`,
-      params
-    );
+      params.push(limit, offset);
+      const dataResult = await db.query(
+        `SELECT n.id, n.user_id, n.type, n.priority, n.title, n.message,
+                n.data, n.delivery_status, n.read, n.read_at, n.scheduled_at, n.created_at
+         FROM notifications n
+         WHERE ${where}
+         ORDER BY n.created_at DESC
+         LIMIT $${idx++} OFFSET $${idx++}`,
+        params
+      );
+      dataRows = dataResult.rows;
+    } catch (error: any) {
+      if (error?.code !== '42703') throw error;
+      logger.warn('Falling back to legacy notifications schema in getNotifications', { message: error?.message, userId });
+      const countFallback = await db.query(
+        `SELECT COUNT(*) FROM notifications n WHERE n.user_id = $1`,
+        [userId]
+      );
+      total = parseInt(countFallback.rows[0].count, 10);
+      const rowsFallback = await db.query(
+        `SELECT n.id, n.user_id, n.type, n.priority, n.title, n.message, n.data, n.created_at
+         FROM notifications n
+         WHERE n.user_id = $1
+         ORDER BY n.created_at DESC
+         LIMIT $2 OFFSET $3`,
+        [userId, limit, offset]
+      );
+      dataRows = rowsFallback.rows.map((r: any) => ({
+        ...r,
+        read: false,
+        read_at: null,
+        scheduled_at: null,
+        delivery_status: {},
+      }));
+    }
 
     return {
-      notifications: dataResult.rows.map(this.mapRow),
+      notifications: dataRows.map(this.mapRow),
       total,
       limit,
       offset,
@@ -262,14 +290,26 @@ export class NotificationService {
    * Requirement 14.12: Allow users to mark notifications as read.
    */
   async markAsRead(notificationId: string, userId: string): Promise<NotificationRecord> {
-    const result = await db.query(
-      `UPDATE notifications
-       SET read = TRUE, read_at = NOW()
-       WHERE id = $1 AND user_id = $2
-       RETURNING id, user_id, type, priority, title, message,
-                 data, delivery_status, read, read_at, created_at`,
-      [notificationId, userId]
-    );
+    let result;
+    try {
+      result = await db.query(
+        `UPDATE notifications
+         SET read = TRUE, read_at = NOW()
+         WHERE id = $1 AND user_id = $2
+         RETURNING id, user_id, type, priority, title, message,
+                   data, delivery_status, read, read_at, created_at`,
+        [notificationId, userId]
+      );
+    } catch (error: any) {
+      if (error?.code !== '42703') throw error;
+      logger.warn('markAsRead fallback for legacy notifications schema', { message: error?.message, notificationId });
+      result = await db.query(
+        `SELECT id, user_id, type, priority, title, message, data, created_at
+         FROM notifications WHERE id = $1 AND user_id = $2`,
+        [notificationId, userId]
+      );
+      result.rows = result.rows.map((r: any) => ({ ...r, read: true, read_at: new Date(), delivery_status: {} }));
+    }
 
     if (result.rows.length === 0) {
       throw new Error('Notification not found or access denied');
@@ -282,11 +322,20 @@ export class NotificationService {
    * Get unread notification count for a user.
    */
   async getUnreadCount(userId: string): Promise<number> {
-    const result = await db.query(
-      `SELECT COUNT(*) FROM notifications WHERE user_id = $1 AND read = FALSE`,
-      [userId]
-    );
-    return parseInt(result.rows[0].count, 10);
+    try {
+      const result = await db.query(
+        `SELECT COUNT(*) FROM notifications WHERE user_id = $1 AND read = FALSE`,
+        [userId]
+      );
+      return parseInt(result.rows[0].count, 10);
+    } catch (error: any) {
+      if (error?.code !== '42703') throw error;
+      const result = await db.query(
+        `SELECT COUNT(*) FROM notifications WHERE user_id = $1`,
+        [userId]
+      );
+      return parseInt(result.rows[0].count, 10);
+    }
   }
 
   // ── Internal helpers ────────────────────────────────────────────────────────

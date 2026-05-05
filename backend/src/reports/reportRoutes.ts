@@ -327,6 +327,11 @@ router.patch('/:reportId', async (req: Request, res: Response) => {
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
+    const reportId = req.params.reportId;
+    const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRe.test(reportId)) {
+      return res.status(400).json({ error: 'Invalid report ID format' });
+    }
 
     const { accomplishments, challenges, tomorrowPlan, hoursWorked } = req.body;
 
@@ -395,7 +400,6 @@ router.post('/check-reminders', async (req: Request, res: Response) => {
   }
 });
 
-export default router;
 
 /**
  * DELETE /api/v1/reports/:reportId
@@ -427,3 +431,5 @@ router.delete('/:reportId', async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Failed to delete report' });
   }
 });
+
+export default router;

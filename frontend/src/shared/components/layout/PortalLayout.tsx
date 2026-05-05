@@ -296,7 +296,7 @@ export function PortalLayout({
           {showLabels && (
             <div className="overflow-hidden">
               <p className="text-white font-bold text-sm leading-tight truncate">TechSwiftTrix</p>
-              <p className="text-white/50 text-xs truncate">{theme.name}</p>
+              <p className="text-white/50 text-xs truncate">{user.name} ({user.role})</p>
             </div>
           )}
         </div>
@@ -376,10 +376,10 @@ export function PortalLayout({
               </svg>
             </button>
             {/* Portal badge */}
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-white"
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-white max-w-[220px]"
               style={{ backgroundColor: theme.hex }}>
               <span className="w-1.5 h-1.5 rounded-full bg-white/70" />
-              {theme.name}
+              <span className="truncate">{user.name} ({user.role})</span>
             </span>
           </div>
 

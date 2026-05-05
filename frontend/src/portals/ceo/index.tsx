@@ -270,7 +270,7 @@ function Sidebar({ section, setSection, pendingCount, user, onLogout, onProfileO
         <TSTEmblem size={32} />
         <div>
           <p className="text-white font-bold text-sm leading-tight">TechSwiftTrix</p>
-          <p className="text-slate-400 text-xs">CEO Portal</p>
+          <p className="text-slate-400 text-xs truncate">{user?.name || username} ({user?.role || 'CEO'})</p>
         </div>
       </div>
 

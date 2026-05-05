@@ -366,7 +366,7 @@ router.get('/', requireRole(Role.CEO, Role.CoS, Role.CFO, Role.COO, Role.CTO, Ro
       offset: offset ? parseInt(offset as string) : undefined,
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: result.users,
       pagination: {

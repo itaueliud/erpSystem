@@ -427,8 +427,3 @@ router.delete('/:reportId', async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Failed to delete report' });
   }
 });
-    const reportId = req.params.reportId;
-    const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!uuidRe.test(reportId)) {
-      return res.status(400).json({ error: 'Invalid report ID format' });
-    }

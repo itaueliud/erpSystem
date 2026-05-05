@@ -736,7 +736,7 @@ router.get('/dashboard/agent-metrics', async (req: Request, res: Response) => {
 });
 
 // ─── Chat messages (alias) ────────────────────────────────────────────────────
-router.post('/chat/messages', async (req: Request, res: Response) => {
+router.post('/chat/messages', async (_req: Request, res: Response) => {
   return res.status(410).json({
     success: false,
     error: 'Deprecated endpoint. Use /api/v1/chat/rooms/:roomId/messages.',

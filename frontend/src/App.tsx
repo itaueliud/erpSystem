@@ -49,6 +49,11 @@ function resolveStandaloneGateway(): string | null {
   return null;
 }
 
+function shouldRedirectRootToLogin(): boolean {
+  const host = window.location.hostname.toLowerCase();
+  return host === 'core.techswifttrix.com';
+}
+
 function LoadingSpinner() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -93,12 +98,22 @@ function PortalGuard({ portalPath, children }: { portalPath: string; children: R
 
 function App() {
   const standaloneGateway = resolveStandaloneGateway();
+  const redirectRootToLogin = shouldRedirectRootToLogin();
 
   return (
     <BrowserRouter>
       <Suspense fallback={<LoadingSpinner />}>
         <Routes>
-          <Route path="/" element={standaloneGateway ? <Navigate to={standaloneGateway} replace /> : <PortalHome />} />
+          <Route
+            path="/"
+            element={
+              redirectRootToLogin
+                ? <Navigate to="/login" replace />
+                : standaloneGateway
+                  ? <Navigate to={standaloneGateway} replace />
+                  : <PortalHome />
+            }
+          />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 

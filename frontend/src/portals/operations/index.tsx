@@ -104,6 +104,12 @@ const NAV = [
   { id: 'daily-report',label: 'Daily Report',   icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg> },
   { id: 'chat', label: 'Chat', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg> },
 ];
+const INDUSTRY_OPTIONS = ['SCHOOLS','CHURCHES','HOTELS','HOSPITALS','COMPANIES','REAL_ESTATE','SHOPS'];
+const PAYMENT_PLAN_OPTIONS = [
+  { value: 'FULL_PAYMENT', label: 'Full Payment' },
+  { value: 'FIFTY_FIFTY', label: '50 / 50' },
+  { value: 'MILESTONE', label: 'Milestone' },
+];
 
 // ─── CSV Export helper ────────────────────────────────────────────────────────
 function exportToCSV(rows: any[], filename: string) {
@@ -130,7 +136,7 @@ export function SalesClientAcquisitionDashboard() {
 
 
   const [showClientForm, setShowClientForm] = useState(false);
-  const [clientForm, setClientForm] = useState({ name: '', email: '', phone: '', country: 'Kenya', industryCategory: '', estimatedValue: '', serviceDescription: '' });
+  const [clientForm, setClientForm] = useState({ name: '', email: '', phone: '', country: 'Kenya', industryCategory: '', paymentPlan: '', estimatedValue: '', serviceDescription: '' });
   const [clientSubmitting, setClientSubmitting] = useState(false);
   const [clientMsg, setClientMsg] = useState('');
   const [activeAction, setActiveAction] = useState<{ type: 'qualify' | 'convert'; clientId: string } | null>(null);
@@ -304,9 +310,23 @@ export function SalesClientAcquisitionDashboard() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Industry</label>
-                  <input type="text" value={clientForm.industryCategory} onChange={e => setClientForm(f => ({ ...f, industryCategory: e.target.value }))}
-                    placeholder="e.g. Real Estate"
-                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 transition-all" />
+                  <select value={clientForm.industryCategory} onChange={e => setClientForm(f => ({ ...f, industryCategory: e.target.value }))}
+                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 transition-all">
+                    <option value="">Select industry</option>
+                    {INDUSTRY_OPTIONS.map(i => (
+                      <option key={i} value={i}>{i.replace(/_/g, ' ')}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Payment Plan *</label>
+                  <select value={clientForm.paymentPlan} onChange={e => setClientForm(f => ({ ...f, paymentPlan: e.target.value }))}
+                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 transition-all">
+                    <option value="">Select payment plan</option>
+                    {PAYMENT_PLAN_OPTIONS.map(p => (
+                      <option key={p.value} value={p.value}>{p.label}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Estimated Value (KSh)</label>
@@ -320,7 +340,13 @@ export function SalesClientAcquisitionDashboard() {
                   rows={2} placeholder="Describe the service required…"
                   className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 transition-all resize-none" />
               </div>
-              <PortalButton color={theme.hex} fullWidth disabled={clientSubmitting || !clientForm.name} onClick={async () => {
+              <PortalButton color={theme.hex} fullWidth disabled={
+                clientSubmitting
+                || !clientForm.name
+                || !clientForm.industryCategory
+                || !clientForm.paymentPlan
+                || !clientForm.serviceDescription
+              } onClick={async () => {
                 setClientSubmitting(true);
                 try {
                   const { apiClient } = await import('../../shared/api/apiClient');
@@ -330,11 +356,12 @@ export function SalesClientAcquisitionDashboard() {
                     phone: clientForm.phone || undefined,
                     country: clientForm.country,
                     industryCategory: clientForm.industryCategory || undefined,
+                    paymentPlan: clientForm.paymentPlan || undefined,
                     serviceDescription: clientForm.serviceDescription || undefined,
                     estimatedValue: clientForm.estimatedValue ? parseFloat(clientForm.estimatedValue) : undefined,
                   });
                   setClientMsg('Client added successfully!');
-                  setClientForm({ name: '', email: '', phone: '', country: 'Kenya', industryCategory: '', estimatedValue: '', serviceDescription: '' });
+                  setClientForm({ name: '', email: '', phone: '', country: 'Kenya', industryCategory: '', paymentPlan: '', estimatedValue: '', serviceDescription: '' });
                   setShowClientForm(false);
                   refetch(['clients']);
                 } catch (err: any) {

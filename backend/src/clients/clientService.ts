@@ -10,7 +10,7 @@ export interface CreateClientInput {
   industryCategory: IndustryCategory;
   serviceDescription: string;
   agentId: string;
-  paymentPlan?: string;
+  paymentPlan: 'FULL_PAYMENT' | 'FIFTY_FIFTY' | 'MILESTONE';
 }
 
 export interface UpdateClientInput {
@@ -106,18 +106,40 @@ export class ClientService {
     return parseInt(result.rows[0].count, 10) > 0;
   }
 
-  private validateIndustryCategory(category: string): boolean {
-    return Object.values(IndustryCategory).includes(category as IndustryCategory);
+  private normalizeIndustryCategory(category: string): IndustryCategory | null {
+    const raw = String(category || '').trim();
+    if (!raw) return null;
+
+    const normalized = raw.toUpperCase().replace(/[\s-]+/g, '_');
+    const aliases: Record<string, IndustryCategory> = {
+      SCHOOL: IndustryCategory.SCHOOLS,
+      SCHOOLS: IndustryCategory.SCHOOLS,
+      CHURCH: IndustryCategory.CHURCHES,
+      CHURCHES: IndustryCategory.CHURCHES,
+      HOTEL: IndustryCategory.HOTELS,
+      HOTELS: IndustryCategory.HOTELS,
+      HOSPITAL: IndustryCategory.HOSPITALS,
+      HOSPITALS: IndustryCategory.HOSPITALS,
+      COMPANY: IndustryCategory.COMPANIES,
+      COMPANIES: IndustryCategory.COMPANIES,
+      REAL_ESTATE: IndustryCategory.REAL_ESTATE,
+      REALESTATE: IndustryCategory.REAL_ESTATE,
+      SHOP: IndustryCategory.SHOPS,
+      SHOPS: IndustryCategory.SHOPS,
+    };
+
+    return aliases[normalized] || null;
   }
 
   /** Create new client — status starts as NEW_LEAD (doc §10) */
   async createClient(input: CreateClientInput): Promise<Client> {
     try {
+      const normalizedIndustry = this.normalizeIndustryCategory(input.industryCategory);
       const isValidCountry = await this.validateCountry(input.country);
       if (!isValidCountry) {
         logger.warn('Client country not in countries table', { country: input.country });
       }
-      if (!this.validateIndustryCategory(input.industryCategory)) {
+      if (!normalizedIndustry) {
         throw new Error('Invalid industry category.');
       }
       const agentResult = await db.query('SELECT id FROM users WHERE id = $1', [input.agentId]);
@@ -134,8 +156,8 @@ export class ClientService {
                    estimated_value, priority, expected_start_date, created_at, updated_at`,
         [
           referenceNumber, input.name, input.email, input.phone, input.country,
-          input.industryCategory, input.serviceDescription, ClientStatus.NEW_LEAD,
-          input.agentId, input.paymentPlan || null,
+          normalizedIndustry, input.serviceDescription, ClientStatus.NEW_LEAD,
+          input.agentId, input.paymentPlan,
         ]
       );
       const client = this.mapClientFromDb(result.rows[0]);
@@ -143,6 +165,10 @@ export class ClientService {
       realtimeEvents.publish('client:created', { clientId: client.id, agentId: input.agentId });
       return client;
     } catch (error) {
+      const err: any = error;
+      if (err?.code === '42703' && String(err?.message || '').includes('payment_plan')) {
+        throw new Error('Database schema missing clients.payment_plan. Run migrations before creating clients.');
+      }
       logger.error('Failed to create client', { error });
       throw error;
     }
@@ -160,8 +186,11 @@ export class ClientService {
         const valid = await this.validateCountry(updates.country);
         if (!valid) throw new Error('Invalid country.');
       }
-      if (updates.industryCategory && !this.validateIndustryCategory(updates.industryCategory)) {
-        throw new Error('Invalid industry category.');
+      let normalizedUpdateIndustry: IndustryCategory | undefined;
+      if (updates.industryCategory !== undefined) {
+        const normalized = this.normalizeIndustryCategory(updates.industryCategory);
+        if (!normalized) throw new Error('Invalid industry category.');
+        normalizedUpdateIndustry = normalized;
       }
 
       const fields: string[] = [];
@@ -171,7 +200,7 @@ export class ClientService {
       if (updates.email !== undefined)             { fields.push(`email = $${p++}`);              values.push(updates.email); }
       if (updates.phone !== undefined)             { fields.push(`phone = $${p++}`);              values.push(updates.phone); }
       if (updates.country !== undefined)           { fields.push(`country = $${p++}`);            values.push(updates.country); }
-      if (updates.industryCategory !== undefined)  { fields.push(`industry_category = $${p++}`);  values.push(updates.industryCategory); }
+      if (updates.industryCategory !== undefined)  { fields.push(`industry_category = $${p++}`);  values.push(normalizedUpdateIndustry); }
       if (updates.serviceDescription !== undefined){ fields.push(`service_description = $${p++}`);values.push(updates.serviceDescription); }
       if (updates.estimatedValue !== undefined)    { fields.push(`estimated_value = $${p++}`);    values.push(updates.estimatedValue); }
       if (updates.priority !== undefined)          { fields.push(`priority = $${p++}`);           values.push(updates.priority); }

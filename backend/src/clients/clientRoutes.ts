@@ -21,9 +21,16 @@ router.post('/', async (req: Request, res: Response) => {
     const { name, email, phone, country, industryCategory, serviceDescription, paymentPlan } = req.body;
 
     // Validate required fields — country falls back to agent's own country if not provided
-    if (!name || !email || !phone || !industryCategory || !serviceDescription) {
+    if (!name || !email || !phone || !industryCategory || !serviceDescription || !paymentPlan) {
       return res.status(400).json({
-        error: 'Missing required fields: name, email, phone, industryCategory, serviceDescription',
+        error: 'Missing required fields: name, email, phone, industryCategory, serviceDescription, paymentPlan',
+      });
+    }
+
+    const validPaymentPlans = ['FULL_PAYMENT', 'FIFTY_FIFTY', 'MILESTONE'];
+    if (!validPaymentPlans.includes(paymentPlan)) {
+      return res.status(400).json({
+        error: `Invalid paymentPlan. Must be one of: ${validPaymentPlans.join(', ')}`,
       });
     }
 
@@ -56,7 +63,7 @@ router.post('/', async (req: Request, res: Response) => {
       industryCategory,
       serviceDescription,
       agentId,
-      paymentPlan: paymentPlan || null,
+      paymentPlan,
     };
 
     const client = await clientService.createClient(clientInput);

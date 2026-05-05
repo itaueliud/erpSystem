@@ -196,6 +196,11 @@ export function PortalLayout({
   const [profileSaving, setProfileSaving] = useState(false);
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState({
+    currentPassword: false,
+    newPassword: false,
+    confirmPassword: false,
+  });
 
   const sidebarUsername = (user.email?.split('@')[0] || user.name || '').trim();
   const initials   = sidebarUsername.split(/[\s._-]+/).filter(Boolean).map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
@@ -561,18 +566,48 @@ export function PortalLayout({
               </div>
               <div className="pt-2 border-t border-slate-100 space-y-3">
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Change Password</p>
-                <input type="password" value={passwordForm.currentPassword} placeholder="Current password"
-                  onChange={e => setPasswordForm(f => ({ ...f, currentPassword: e.target.value }))}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:border-transparent transition-all"
-                  style={{ '--tw-ring-color': theme.hex } as any} />
-                <input type="password" value={passwordForm.newPassword} placeholder="New password"
-                  onChange={e => setPasswordForm(f => ({ ...f, newPassword: e.target.value }))}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:border-transparent transition-all"
-                  style={{ '--tw-ring-color': theme.hex } as any} />
-                <input type="password" value={passwordForm.confirmPassword} placeholder="Confirm new password"
-                  onChange={e => setPasswordForm(f => ({ ...f, confirmPassword: e.target.value }))}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:border-transparent transition-all"
-                  style={{ '--tw-ring-color': theme.hex } as any} />
+                <div className="relative">
+                  <input type={passwordVisible.currentPassword ? 'text' : 'password'} value={passwordForm.currentPassword} placeholder="Current password"
+                    onChange={e => setPasswordForm(f => ({ ...f, currentPassword: e.target.value }))}
+                    className="w-full px-3.5 py-2.5 pr-10 rounded-lg border border-slate-200 text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:border-transparent transition-all"
+                    style={{ '--tw-ring-color': theme.hex } as any} />
+                  <button type="button" onClick={() => setPasswordVisible(v => ({ ...v, currentPassword: !v.currentPassword }))}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 rounded"
+                    aria-label={passwordVisible.currentPassword ? 'Hide current password' : 'Show current password'}>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="relative">
+                  <input type={passwordVisible.newPassword ? 'text' : 'password'} value={passwordForm.newPassword} placeholder="New password"
+                    onChange={e => setPasswordForm(f => ({ ...f, newPassword: e.target.value }))}
+                    className="w-full px-3.5 py-2.5 pr-10 rounded-lg border border-slate-200 text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:border-transparent transition-all"
+                    style={{ '--tw-ring-color': theme.hex } as any} />
+                  <button type="button" onClick={() => setPasswordVisible(v => ({ ...v, newPassword: !v.newPassword }))}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 rounded"
+                    aria-label={passwordVisible.newPassword ? 'Hide new password' : 'Show new password'}>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="relative">
+                  <input type={passwordVisible.confirmPassword ? 'text' : 'password'} value={passwordForm.confirmPassword} placeholder="Confirm new password"
+                    onChange={e => setPasswordForm(f => ({ ...f, confirmPassword: e.target.value }))}
+                    className="w-full px-3.5 py-2.5 pr-10 rounded-lg border border-slate-200 text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:border-transparent transition-all"
+                    style={{ '--tw-ring-color': theme.hex } as any} />
+                  <button type="button" onClick={() => setPasswordVisible(v => ({ ...v, confirmPassword: !v.confirmPassword }))}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 rounded"
+                    aria-label={passwordVisible.confirmPassword ? 'Hide confirm password' : 'Show confirm password'}>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  </button>
+                </div>
                 <button onClick={changePassword} disabled={passwordSaving}
                   className="w-full py-2.5 rounded-lg text-white text-sm font-semibold transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
                   style={{ backgroundColor: theme.hex }}>

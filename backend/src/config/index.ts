@@ -111,6 +111,14 @@ export const config = {
     fromName: process.env.SENDGRID_FROM_NAME || 'TechSwiftTrix ERP',
   },
 
+  // Emailable Configuration
+  emailable: {
+    apiKey: process.env.EMAILABLE_API_KEY || '',
+    // true: only "deliverable" is accepted
+    // false: "deliverable", "risky", and "unknown" are accepted
+    strictDeliverableOnly: process.env.EMAILABLE_STRICT_DELIVERABLE_ONLY === 'true',
+  },
+
   // Africa's Talking Configuration
   africasTalking: {
     username: process.env.AFRICAS_TALKING_USERNAME || '',

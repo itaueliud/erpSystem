@@ -5,3 +5,4 @@ export * from './firebase';
 export * from './sendgrid';
 export * from './africas-talking';
 export * from './storage';
+export * from './emailable';

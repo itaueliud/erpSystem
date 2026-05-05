@@ -3,6 +3,7 @@ import { userService, PAYABLE_ROLES } from './userService';
 import { requireRole } from '../auth/authorizationMiddleware';
 import { Role, INVITE_PERMISSIONS } from '../auth/authorizationService';
 import { db } from '../database/connection';
+import { emailableClient } from '../services/emailable/client';
 import logger from '../utils/logger';
 
 const router = Router();
@@ -28,6 +29,14 @@ router.post(
 
     if (!email || !roleId) {
       return res.status(400).json({ success: false, error: 'Email and roleId are required' });
+    }
+
+    const inviteEmailVerification = await emailableClient.verifyEmail(email);
+    if (!inviteEmailVerification.isAcceptedForSignup) {
+      return res.status(400).json({
+        success: false,
+        error: `Email is not accepted for registration (${inviteEmailVerification.state})`,
+      });
     }
 
     const inviter = (req as any).user;
@@ -140,6 +149,14 @@ router.post('/register', async (req: Request, res: Response) => {
       return res.status(400).json({
         success: false,
         error: 'token, email, password and fullName are required',
+      });
+    }
+
+    const registrationEmailVerification = await emailableClient.verifyEmail(email);
+    if (!registrationEmailVerification.isAcceptedForSignup) {
+      return res.status(400).json({
+        success: false,
+        error: `Email is not accepted for registration (${registrationEmailVerification.state})`,
       });
     }
 
@@ -446,6 +463,14 @@ router.post('/me/email', async (req: Request, res: Response) => {
 
     const { newEmail } = req.body;
     if (!newEmail) return res.status(400).json({ success: false, error: 'newEmail is required' });
+
+    const changeEmailVerification = await emailableClient.verifyEmail(newEmail);
+    if (!changeEmailVerification.isAcceptedForSignup) {
+      return res.status(400).json({
+        success: false,
+        error: `Email is not accepted (${changeEmailVerification.state})`,
+      });
+    }
 
     await userService.initiateEmailChange(userId, newEmail);
     return res.json({ success: true, message: 'Verification email sent to new address' });

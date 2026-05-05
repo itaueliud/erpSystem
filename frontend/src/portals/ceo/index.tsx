@@ -2895,6 +2895,11 @@ export default function CEOPortal() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [profileForm, setProfileForm] = useState({ name: user?.name || '', email: user?.email || '', phone: '' });
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [passwordVisible, setPasswordVisible] = useState({
+    currentPassword: false,
+    newPassword: false,
+    confirmPassword: false,
+  });
   const [profileMsg, setProfileMsg] = useState('');
   const [profileSaving, setProfileSaving] = useState(false);
   const [passwordSaving, setPasswordSaving] = useState(false);
@@ -3135,9 +3140,30 @@ export default function CEOPortal() {
               </div>
               <div className="pt-2 border-t border-slate-100 space-y-3">
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Change Password</p>
-                <input type="password" value={passwordForm.currentPassword} placeholder="Current password" onChange={e => setPasswordForm(f => ({ ...f, currentPassword: e.target.value }))} className={inp} />
-                <input type="password" value={passwordForm.newPassword} placeholder="New password" onChange={e => setPasswordForm(f => ({ ...f, newPassword: e.target.value }))} className={inp} />
-                <input type="password" value={passwordForm.confirmPassword} placeholder="Confirm new password" onChange={e => setPasswordForm(f => ({ ...f, confirmPassword: e.target.value }))} className={inp} />
+                <div className="relative">
+                  <input type={passwordVisible.currentPassword ? 'text' : 'password'} value={passwordForm.currentPassword} placeholder="Current password" onChange={e => setPasswordForm(f => ({ ...f, currentPassword: e.target.value }))} className={`${inp} pr-10`} />
+                  <button type="button" onClick={() => setPasswordVisible(v => ({ ...v, currentPassword: !v.currentPassword }))}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 rounded"
+                    aria-label={passwordVisible.currentPassword ? 'Hide current password' : 'Show current password'}>
+                    {Ic.eye}
+                  </button>
+                </div>
+                <div className="relative">
+                  <input type={passwordVisible.newPassword ? 'text' : 'password'} value={passwordForm.newPassword} placeholder="New password" onChange={e => setPasswordForm(f => ({ ...f, newPassword: e.target.value }))} className={`${inp} pr-10`} />
+                  <button type="button" onClick={() => setPasswordVisible(v => ({ ...v, newPassword: !v.newPassword }))}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 rounded"
+                    aria-label={passwordVisible.newPassword ? 'Hide new password' : 'Show new password'}>
+                    {Ic.eye}
+                  </button>
+                </div>
+                <div className="relative">
+                  <input type={passwordVisible.confirmPassword ? 'text' : 'password'} value={passwordForm.confirmPassword} placeholder="Confirm new password" onChange={e => setPasswordForm(f => ({ ...f, confirmPassword: e.target.value }))} className={`${inp} pr-10`} />
+                  <button type="button" onClick={() => setPasswordVisible(v => ({ ...v, confirmPassword: !v.confirmPassword }))}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 rounded"
+                    aria-label={passwordVisible.confirmPassword ? 'Hide confirm password' : 'Show confirm password'}>
+                    {Ic.eye}
+                  </button>
+                </div>
                 <button onClick={changePassword} disabled={passwordSaving} className="w-full py-2.5 rounded-lg text-white text-sm font-semibold transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50" style={{ backgroundColor: C.blue2 }}>
                   {passwordSaving ? 'Updating password...' : 'Update Password'}
                 </button>

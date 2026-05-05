@@ -21,7 +21,9 @@ export default function LoginPage() {
 
   // The portal the user was trying to access
   const from: string = (location.state as any)?.from?.pathname || '/';
-  const themeId = PATH_THEME[from] || 'ceo';
+  const host = window.location.hostname.toLowerCase();
+  const hostTheme = host === 'core.techswifttrix.com' ? 'operations' : null;
+  const themeId = hostTheme || PATH_THEME[from] || 'ceo';
   const theme = PORTAL_THEMES[themeId];
 
   const [email, setEmail] = useState('');

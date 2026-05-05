@@ -42,6 +42,7 @@ function resolveStandaloneGateway(): string | null {
   if (host.includes('erp-ceo-portal')) return '/gatewayalpha';
   if (host.includes('erp-executive-portal')) return '/gatewaydelta';
   if (host.includes('erp-clevel-portal')) return '/gatewaysigma';
+  if (host === 'core.techswifttrix.com') return '/gatewaynexus';
   if (host.includes('erp-operations-portal')) return '/gatewaynexus';
   if (host.includes('erp-technology-portal')) return '/gatewayvertex';
   if (host.includes('erp-agents-portal')) return '/gatewaypulse';

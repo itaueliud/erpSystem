@@ -10,6 +10,7 @@ import { initializeSentry, getSentryErrorHandler } from './config/sentry';
 import { compressionMiddleware } from './middleware/compression';
 import { queryMonitorMiddleware, requestTimingMiddleware } from './middleware/performanceMiddleware';
 import { db } from './database';
+import { migrationManager } from './database/migrations';
 import { redis } from './cache';
 import logger from './utils/logger';
 import { authRoutes } from './auth';
@@ -290,6 +291,11 @@ async function startServer() {
     }
 
     logger.info('Database connection successful');
+
+    // Keep runtime schema aligned with code expectations (chat, payments, etc.)
+    logger.info('Running pending database migrations...');
+    await migrationManager.runMigrations();
+    logger.info('Database migrations complete');
 
     // Connect to Redis
     logger.info('Connecting to Redis...');

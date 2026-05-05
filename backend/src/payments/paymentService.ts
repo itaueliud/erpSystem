@@ -510,9 +510,13 @@ export class PaymentProcessingService {
         if (clientId) {
           const { clientService } = await import('../clients/clientService');
           try {
-            if (paymentPlan === 'FULL') {
+            // Ensure required transition chain exists:
+            // NEW_LEAD -> CONVERTED -> (LEAD_ACTIVATED | LEAD_QUALIFIED)
+            await clientService.markConverted(clientId).catch(() => {});
+
+            if (paymentPlan === 'FULL_PAYMENT') {
               await clientService.activateLead(clientId, transactionId);
-              logger.info('Client LEAD_ACTIVATED after Full Payment', { clientId, transactionId });
+              logger.info('Client LEAD_ACTIVATED after Full Payment', { clientId, transactionId, paymentPlan });
             } else {
               await clientService.qualifyLead(clientId, transactionId);
               logger.info('Client LEAD_QUALIFIED after 50/50 or Milestone payment', { clientId, transactionId, paymentPlan });

@@ -565,6 +565,11 @@ CREATE TABLE chat_messages (
     sender_id UUID NOT NULL REFERENCES users(id),
     content TEXT NOT NULL,
     file_id VARCHAR(255),
+    file_name VARCHAR(255),
+    mime_type VARCHAR(255),
+    is_deleted_for_everyone BOOLEAN NOT NULL DEFAULT FALSE,
+    deleted_for JSONB NOT NULL DEFAULT '[]',
+    read_by JSONB NOT NULL DEFAULT '[]',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     
     PRIMARY KEY (id, created_at)

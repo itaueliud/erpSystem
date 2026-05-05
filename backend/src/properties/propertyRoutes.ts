@@ -59,15 +59,41 @@ router.post('/', async (req: Request, res: Response) => {
 router.get('/', async (req: Request, res: Response) => {
   try {
     const { db } = await import('../database/connection');
-    const result = await db.query(
-      `SELECT id, reference_number, title, location, country, property_type,
-              price, currency, size, view_count,
-              description, status, created_at
-       FROM property_listings
-       ORDER BY created_at DESC
-       LIMIT 100`
-    );
-    return res.json({ success: true, data: result.rows });
+    try {
+      const result = await db.query(
+        `SELECT id, reference_number, title, location, country, property_type,
+                price, currency, size, view_count,
+                description, status, created_at
+         FROM property_listings
+         ORDER BY created_at DESC
+         LIMIT 100`
+      );
+      return res.json({ success: true, data: result.rows });
+    } catch (primaryError: any) {
+      // Backward-compatible fallback for legacy/live environments that still use marketer_properties.
+      if (!String(primaryError?.message || '').toLowerCase().includes('property_listings')) {
+        throw primaryError;
+      }
+      const fallback = await db.query(
+        `SELECT id,
+                COALESCE(reference_number, ('MKP-' || SUBSTRING(CAST(id AS TEXT), 1, 8))) AS reference_number,
+                COALESCE(property_name, 'Property Listing') AS title,
+                COALESCE(location, 'Unknown') AS location,
+                COALESCE(country, 'Kenya') AS country,
+                COALESCE(property_type, 'RESIDENTIAL') AS property_type,
+                COALESCE(price::numeric, 0) AS price,
+                COALESCE(currency, 'KES') AS currency,
+                0::numeric AS size,
+                0::int AS view_count,
+                COALESCE(description, '') AS description,
+                'AVAILABLE'::text AS status,
+                created_at
+         FROM marketer_properties
+         ORDER BY created_at DESC
+         LIMIT 100`
+      );
+      return res.json({ success: true, data: fallback.rows });
+    }
   } catch (error: any) {
     logger.error('Error listing property listings', { error, query: req.query });
     return res.status(500).json({ error: 'Failed to list property listings' });

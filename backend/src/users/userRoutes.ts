@@ -343,9 +343,20 @@ router.get('/departments', async (_req: Request, res: Response) => {
  * GET /api/v1/users
  * Restricted to admin/management roles.
  */
-router.get('/', requireRole(Role.CEO, Role.CoS, Role.CFO, Role.COO, Role.CTO, Role.EA, Role.HEAD_OF_TRAINERS), async (req: Request, res: Response) => {
+router.get('/', requireRole(Role.CEO, Role.CoS, Role.CFO, Role.COO, Role.CTO, Role.EA, Role.HEAD_OF_TRAINERS, Role.TRAINER), async (req: Request, res: Response) => {
   try {
     const { roleId, departmentId, search, limit, offset } = req.query;
+    const requester = (req as any).user;
+
+    // Trainers get a minimal self-only view to avoid forbidden errors in trainer-facing UIs.
+    if (requester?.role === Role.TRAINER) {
+      const self = await userService.getUserById(requester.id);
+      return res.json({
+        success: true,
+        data: self ? [self] : [],
+        pagination: { total: self ? 1 : 0, limit: 1, offset: 0 },
+      });
+    }
 
     const result = await userService.listUsers({
       roleId: roleId as string,

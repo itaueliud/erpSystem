@@ -207,8 +207,13 @@ router.post('/create', requireRole(Role.HEAD_OF_TRAINERS), async (req: Request, 
       return res.status(409).json({ success: false, error: 'User with this email already exists' });
     }
 
-    const generatedPassword = `Agent@${Math.random().toString(36).slice(-4)}${Date.now().toString().slice(-4)}!`;
-    const effectivePassword = password || generatedPassword;
+    const effectivePassword = String(password || '').trim();
+    if (!effectivePassword) {
+      return res.status(400).json({
+        success: false,
+        error: 'password is required',
+      });
+    }
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{12,}$/;
     if (!passwordRegex.test(effectivePassword)) {
       return res.status(400).json({
@@ -218,37 +223,62 @@ router.post('/create', requireRole(Role.HEAD_OF_TRAINERS), async (req: Request, 
     }
     const passwordHash = await authService.hashPassword(effectivePassword);
 
-    // Create agent directly with credentials
+    const columnsResult = await db.query(
+      `SELECT column_name
+       FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'users'`
+    );
+    const existingColumns = new Set<string>(columnsResult.rows.map((r: any) => String(r.column_name)));
+
+    const insertCols: string[] = ['email', 'password_hash', 'full_name', 'phone', 'country', 'role_id'];
+    const insertVals: any[] = [effectiveEmail, passwordHash, fullName, phone, agentCountry, roleId];
+
+    if (existingColumns.has('national_id_number')) {
+      insertCols.push('national_id_number');
+      insertVals.push(idNumber);
+    }
+    if (existingColumns.has('payout_method')) {
+      insertCols.push('payout_method');
+      insertVals.push(paymentMethod || null);
+    }
+    if (existingColumns.has('payout_phone')) {
+      insertCols.push('payout_phone');
+      insertVals.push(payoutPhone || mpesaNumber || null);
+    }
+    if (existingColumns.has('cover_photo_url')) {
+      insertCols.push('cover_photo_url');
+      insertVals.push(coverPhotoUrl || null);
+    }
+    if (existingColumns.has('is_active')) {
+      insertCols.push('is_active');
+      insertVals.push(true);
+    }
+    if (existingColumns.has('created_at')) {
+      insertCols.push('created_at');
+      insertVals.push(new Date());
+    }
+    if (existingColumns.has('updated_at')) {
+      insertCols.push('updated_at');
+      insertVals.push(new Date());
+    }
+    if (existingColumns.has('trainer_id')) {
+      insertCols.push('trainer_id');
+      insertVals.push(createdBy);
+    }
+
+    const placeholders = insertVals.map((_, i) => `$${i + 1}`).join(', ');
     const result = await db.query(
-      `INSERT INTO users
-         (email, password_hash, full_name, phone, country, role_id, national_id_number,
-          payout_method, payout_phone, cover_photo_url, is_active, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, TRUE, NOW(), NOW())
-       RETURNING id, email, full_name, phone, national_id_number, payout_method, payout_phone, cover_photo_url, created_at`,
-      [
-        effectiveEmail,
-        passwordHash,
-        fullName,
-        phone,
-        agentCountry,
-        roleId,
-        idNumber,
-        paymentMethod || null,
-        payoutPhone || mpesaNumber || null,
-        coverPhotoUrl || null,
-      ]
+      `INSERT INTO users (${insertCols.join(', ')})
+       VALUES (${placeholders})
+       RETURNING id, email, full_name, phone, created_at`,
+      insertVals
     );
 
     logger.info('Agent account created by HoT', { agentId: result.rows[0].id, createdBy });
     return res.status(201).json({
       success: true,
-      data: {
-        ...result.rows[0],
-        generatedPassword: password ? undefined : generatedPassword,
-      },
-      message: password
-        ? 'Agent created successfully'
-        : 'Agent created successfully. Save generatedPassword and ask the agent to change it on first login.',
+      data: result.rows[0],
+      message: 'Agent created successfully. Ask the agent to change this password after first login.',
     });
   } catch (error: any) {
     logger.error('Create agent error', { error });

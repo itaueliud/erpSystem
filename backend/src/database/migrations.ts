@@ -118,14 +118,24 @@ class MigrationManager {
 
         const migrationPath = path.join(migrationsDir, migrationFile);
         const migrationSql = await fs.readFile(migrationPath, 'utf-8');
+        const requiresNonTransactionalExecution = /\bCONCURRENTLY\b/i.test(migrationSql);
 
-        await db.transaction(async (client) => {
-          await client.query(migrationSql);
-          await client.query(
+        if (requiresNonTransactionalExecution) {
+          // PostgreSQL disallows CREATE INDEX CONCURRENTLY inside transactions.
+          await db.query(migrationSql);
+          await db.query(
             `INSERT INTO ${this.migrationsTable} (name) VALUES ($1)`,
             [migrationFile]
           );
-        });
+        } else {
+          await db.transaction(async (client) => {
+            await client.query(migrationSql);
+            await client.query(
+              `INSERT INTO ${this.migrationsTable} (name) VALUES ($1)`,
+              [migrationFile]
+            );
+          });
+        }
 
         logger.info(`Migration completed: ${migrationFile}`);
       }

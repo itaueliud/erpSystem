@@ -245,6 +245,46 @@ router.post('/tax/submit', async (req: Request, res: Response) => {
   }
 });
 
+// Compliance aliases expected by some portal screens.
+// Keep these BEFORE /:reportId to avoid route collision.
+router.get('/compliance', async (_req: Request, res: Response) => {
+  try {
+    const { db } = await import('../database/connection');
+    const r = await db.query(
+      `SELECT id, title, report_name as "reportName", period, report_period as "reportPeriod",
+              description, summary, status, pdf_url as "pdfUrl", created_at as "createdAt"
+       FROM compliance_reports ORDER BY created_at DESC`
+    );
+    return res.json({ success: true, data: r.rows });
+  } catch (error: any) {
+    logger.error('Error listing compliance reports', { error });
+    return res.status(500).json({ success: true, data: [] });
+  }
+});
+
+router.get('/compliance/:id', async (req: Request, res: Response) => {
+  try {
+    const { db } = await import('../database/connection');
+    const r = await db.query(`SELECT * FROM compliance_reports WHERE id = $1`, [req.params.id]);
+    if (!r.rows.length) return res.status(404).json({ success: false, error: 'Not found' });
+    return res.json({ success: true, data: r.rows[0] });
+  } catch (error: any) {
+    logger.error('Error getting compliance report', { error, id: req.params.id });
+    return res.status(500).json({ success: false, error: 'Failed to fetch compliance report' });
+  }
+});
+
+router.get('/compliance/:id/download', async (req: Request, res: Response) => {
+  try {
+    const { db } = await import('../database/connection');
+    const r = await db.query(`SELECT pdf_url as "pdfUrl" FROM compliance_reports WHERE id = $1`, [req.params.id]);
+    return res.json({ success: true, data: { pdfUrl: r.rows[0]?.pdfUrl || null } });
+  } catch (error: any) {
+    logger.error('Error getting compliance report download link', { error, id: req.params.id });
+    return res.status(500).json({ success: false, error: 'Failed to fetch compliance report download link' });
+  }
+});
+
 /**
  * Get a specific report by ID
  * GET /api/reports/:reportId
@@ -257,7 +297,13 @@ router.get('/:reportId', async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const report = await dailyReportService.getReportById(req.params.reportId);
+    const reportId = req.params.reportId;
+    const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRe.test(reportId)) {
+      return res.status(400).json({ error: 'Invalid report ID format' });
+    }
+
+    const report = await dailyReportService.getReportById(reportId);
 
     if (!report) {
       return res.status(404).json({ error: 'Report not found' });
@@ -290,7 +336,7 @@ router.patch('/:reportId', async (req: Request, res: Response) => {
     if (tomorrowPlan !== undefined) updates.tomorrowPlan = tomorrowPlan;
     if (hoursWorked !== undefined) updates.hoursWorked = parseFloat(hoursWorked);
 
-    const report = await dailyReportService.updateReport(req.params.reportId, userId, updates);
+    const report = await dailyReportService.updateReport(reportId, userId, updates);
 
     return res.json(report);
   } catch (error: any) {
@@ -381,3 +427,8 @@ router.delete('/:reportId', async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Failed to delete report' });
   }
 });
+    const reportId = req.params.reportId;
+    const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRe.test(reportId)) {
+      return res.status(400).json({ error: 'Invalid report ID format' });
+    }

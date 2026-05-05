@@ -338,7 +338,9 @@ export default function ChatPanel({ token, currentUserId, portal, inlineMode = f
     try {
       const res = await apiClient.post('/api/v1/chat/rooms', { type: 'DIRECT', memberIds: [user.id] });
       const roomId: string = res.data.id;
-      const msgRes = await apiClient.get(`/api/v1/chat/rooms/${roomId}/messages`);
+      const msgRes = await apiClient
+        .get(`/api/v1/chat/rooms/${roomId}/messages`)
+        .catch(() => ({ data: { messages: [] } }));
       const messages: ChatMessage[] = (msgRes.data.messages || []).slice().reverse();
       const conv: Conversation = { roomId, user, messages, unread: 0 };
       setConversations(prev => [conv, ...prev.filter(c => c.user.id !== user.id)]);

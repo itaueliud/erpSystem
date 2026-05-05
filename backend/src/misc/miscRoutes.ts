@@ -737,18 +737,10 @@ router.get('/dashboard/agent-metrics', async (req: Request, res: Response) => {
 
 // ─── Chat messages (alias) ────────────────────────────────────────────────────
 router.post('/chat/messages', async (req: Request, res: Response) => {
-  try {
-    const { message, type } = req.body;
-    const senderId = (req as any).user?.id;
-    if (!message) return res.status(400).json({ success: false, error: 'message is required' });
-    await safeQuery(
-      `INSERT INTO chat_messages (sender_id, message, type, created_at) VALUES ($1, $2, $3, NOW())`,
-      [senderId, message, type || 'INTERNAL']
-    );
-    return res.status(201).json({ success: true, message: 'Message sent' });
-  } catch (e: any) {
-    return res.status(400).json({ success: false, error: e.message || 'Failed to send message' });
-  }
+  return res.status(410).json({
+    success: false,
+    error: 'Deprecated endpoint. Use /api/v1/chat/rooms/:roomId/messages.',
+  });
 });
 
 // ─── Communications (standalone, not client-scoped) ───────────────────────────

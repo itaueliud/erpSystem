@@ -72,13 +72,17 @@ export class AuthenticationService {
     try {
       // ── Account lockout check (Redis-backed, per email) ──────────────────
       // Read current count first — only increment on actual failed password attempt below.
-      const lockKey = `login:attempts:${credentials.email}`;
+      const normalizedEmail = String(credentials.email || '').trim().toLowerCase();
+      if (!normalizedEmail) {
+        return { success: false, error: 'Invalid email or password' };
+      }
+      const lockKey = `login:attempts:${normalizedEmail}`;
       try {
         const client = redis.getClient();
         const currentAttempts = parseInt((await client.get(lockKey)) || '0', 10);
         if (currentAttempts >= LOGIN_MAX_ATTEMPTS) {
           const ttl = await client.ttl(lockKey);
-          logger.warn('Login lockout triggered', { email: credentials.email, attempts: currentAttempts });
+          logger.warn('Login lockout triggered', { email: normalizedEmail, attempts: currentAttempts });
           return { success: false, error: `Account temporarily locked. Try again in ${Math.ceil(ttl / 60)} minutes.` };
         }
       } catch (redisErr) {
@@ -92,12 +96,12 @@ export class AuthenticationService {
                r.name as role, r.permissions, u.department_id
         FROM users u
         JOIN roles r ON u.role_id = r.id
-        WHERE u.email = $1
+        WHERE LOWER(u.email) = LOWER($1)
       `;
-      const result = await db.query(userQuery, [credentials.email]);
+      const result = await db.query(userQuery, [normalizedEmail]);
 
       if (result.rows.length === 0) {
-        logger.warn('Login attempt with non-existent email', { email: credentials.email });
+        logger.warn('Login attempt with non-existent email', { email: normalizedEmail });
         return {
           success: false,
           error: 'Invalid email or password',
@@ -108,14 +112,14 @@ export class AuthenticationService {
 
       // Check if account is suspended (doc §5: CEO can deactivate/suspend any account)
       if (user.is_active === false) {
-        logger.warn('Login attempt on suspended account', { email: credentials.email });
+        logger.warn('Login attempt on suspended account', { email: normalizedEmail });
         return { success: false, error: 'Your account has been suspended. Contact the system administrator.' };
       }
 
       // Verify password
       const passwordMatch = await bcrypt.compare(credentials.password, user.password_hash);
       if (!passwordMatch) {
-        logger.warn('Login attempt with incorrect password', { email: credentials.email });
+        logger.warn('Login attempt with incorrect password', { email: normalizedEmail });
         // Increment lockout counter only on actual password failure
         try {
           const client = redis.getClient();

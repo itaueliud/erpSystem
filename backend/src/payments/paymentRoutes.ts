@@ -213,14 +213,14 @@ router.post('/mpesa', async (req: Request, res: Response) => {
       if (clientId) {
         try {
           const { clientService } = await import('../clients/clientService');
-          // Determine payment plan from the payments record or default to FULL
+          // Determine payment plan from the payments record or default to FULL_PAYMENT
           const planRow = await db.query(
             `SELECT payment_plan FROM clients WHERE id = $1`, [clientId]
           ).catch(() => ({ rows: [] }));
-          const paymentPlan = planRow.rows[0]?.payment_plan || 'FULL';
+          const paymentPlan = planRow.rows[0]?.payment_plan || 'FULL_PAYMENT';
           // Walk the status chain: NEW_LEAD → CONVERTED → LEAD_ACTIVATED/LEAD_QUALIFIED
           await clientService.markConverted(clientId).catch(() => {});
-          if (paymentPlan === 'FULL') {
+          if (paymentPlan === 'FULL_PAYMENT') {
             await clientService.activateLead(clientId, fakeCheckoutId);
           } else {
             await clientService.qualifyLead(clientId, fakeCheckoutId);
@@ -730,3 +730,4 @@ router.post('/approvals/:approvalId/approve-developer',
 );
 
 export default router;
+

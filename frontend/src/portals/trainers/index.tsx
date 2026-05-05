@@ -349,7 +349,6 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
   const [addMsg, setAddMsg] = useState('');
   const [addOk, setAddOk] = useState(false);
   const [adding, setAdding] = useState(false);
-  const [generatedPassword, setGeneratedPassword] = useState('');
   const [inviteTrainerEmail, setInviteTrainerEmail] = useState('');
   const [inviteTrainerMsg, setInviteTrainerMsg] = useState('');
   const [inviteTrainerOk, setInviteTrainerOk] = useState(false);
@@ -387,23 +386,26 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
 
   const submitAddAgent = async (e: React.FormEvent) => {
     e.preventDefault(); setAdding(true); setAddMsg('');
-    setGeneratedPassword('');
     try {
       const { apiClient } = await import('../../shared/api/apiClient');
+      if (!addForm.password.trim()) {
+        setAddOk(false);
+        setAddMsg('Password is required');
+        setAdding(false);
+        return;
+      }
       const payload: any = {
         fullName: addForm.fullName.toUpperCase().trim(),
         phone: addForm.phone,
         idNumber: addForm.idNumber,
         country: addForm.country,
         paymentMethod: addForm.paymentType,
+        password: addForm.password.trim(),
       };
       if (addForm.paymentType === 'MPESA') payload.mpesaNumber = addForm.paymentAccount;
       else payload.payoutPhone = addForm.paymentAccount;
-      if (addForm.password.trim()) payload.password = addForm.password.trim();
       const res = await apiClient.post('/api/v1/agents/create', payload);
-      const generated = (res.data as any)?.data?.generatedPassword || '';
       setAddOk(true); setAddMsg('Agent account created!');
-      setGeneratedPassword(generated);
       setAddForm({ fullName: '', phone: '', idNumber: '', country: '', paymentType: 'MPESA', paymentAccount: '', password: '', coverPhoto: null });
       refetch(['myAgents']);
     } catch (err: any) { setAddOk(false); setAddMsg(err?.response?.data?.error || 'Failed'); }
@@ -585,12 +587,6 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
           <SectionHeader title="Add Agent" subtitle="Create a new agent account" />
           <div className="max-w-md">
             {addMsg && <div className={`p-3 rounded-xl text-sm mb-4 ${addOk ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{addMsg}</div>}
-            {generatedPassword && (
-              <div className="p-3 rounded-xl text-sm mb-4 bg-amber-50 text-amber-800 border border-amber-200">
-                Generated password: <span className="font-mono font-semibold">{generatedPassword}</span>
-                <div className="mt-1">Copy and share it securely with the agent, then ask them to change it after first login.</div>
-              </div>
-            )}
             <form onSubmit={submitAddAgent} className={cardCls} style={cardStyle}>
               <div className="mb-4">
                 <label className={labelCls}>Full Name *</label>
@@ -645,13 +641,14 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
                 />
               </div>
               <div className="mb-6">
-                <label className={labelCls}>Password (Optional)</label>
+                <label className={labelCls}>Password *</label>
                 <input
                   type="password"
+                  required
                   value={addForm.password}
                   onChange={e => setAddForm(f => ({ ...f, password: e.target.value }))}
                   className={inputCls}
-                  placeholder="Leave blank to auto-generate"
+                  placeholder="At least 12 chars, upper/lower/number/special"
                 />
               </div>
               <div className="mb-6">

@@ -377,7 +377,7 @@ router.get('/', requireRole(Role.CEO, Role.CoS, Role.CFO, Role.COO, Role.CTO, Ro
     });
   } catch (error: any) {
     logger.error('Failed to list users', { error });
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to list users',
     });

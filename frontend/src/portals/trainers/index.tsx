@@ -404,7 +404,7 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
       };
       if (addForm.paymentType === 'MPESA') payload.mpesaNumber = addForm.paymentAccount;
       else payload.payoutPhone = addForm.paymentAccount;
-      const res = await apiClient.post('/api/v1/agents/create', payload);
+      await apiClient.post('/api/v1/agents/create', payload);
       setAddOk(true); setAddMsg('Agent account created!');
       setAddForm({ fullName: '', phone: '', idNumber: '', country: '', paymentType: 'MPESA', paymentAccount: '', password: '', coverPhoto: null });
       refetch(['myAgents']);

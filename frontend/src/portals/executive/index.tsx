@@ -1784,7 +1784,7 @@ const EA_NAV = [
   { id: 'region-country',     label: 'Region & Country',      icon: I.region },
   { id: 'agent-performance',  label: 'Agent Performance',     icon: I.agent },
   { id: 'agent-comparison',   label: 'Agent Comparison',      icon: I.agent },
-  { id: 'service-amounts',    label: 'Service Amounts',       icon: I.service },
+  { id: 'service-amounts',    label: 'Pricing',               icon: I.service },
   { id: 'chat',               label: 'Chat',                  icon: I.chat },
 ];
 

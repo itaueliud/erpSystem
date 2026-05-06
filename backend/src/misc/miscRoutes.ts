@@ -23,12 +23,21 @@ const safeQuery = async (sql: string, params: any[] = []) => {
 
 // ─── Service Amounts ──────────────────────────────────────────────────────────
 router.get('/service-amounts', async (_req, res) => {
+  const role = ((_req as any).user?.role || '').toString();
+  const blockedRoles = ['CTO', 'HEAD_OF_TRAINERS', 'TRAINER', 'TECH_STAFF', 'DEVELOPER'];
+  if (blockedRoles.includes(role)) {
+    return res.status(403).json({ success: false, error: 'Pricing view is not allowed for this role' });
+  }
   const r = await safeQuery(`SELECT id, service_name as "serviceName", current_amount as "currentAmount", status, updated_at as "updatedAt" FROM service_amounts ORDER BY service_name`);
   res.json({ success: true, data: r.rows });
 });
 
 router.post('/service-amounts/:id/propose', async (req: Request, res: Response) => {
   try {
+    const role = ((req as any).user?.role || '').toString();
+    if (role !== 'EA') {
+      return res.status(403).json({ success: false, error: 'Only EA can update pricing' });
+    }
     const { id } = req.params;
     const { newAmount, reason } = req.body;
     const requestedBy = (req as any).user?.id;
@@ -45,6 +54,10 @@ router.post('/service-amounts/:id/propose', async (req: Request, res: Response) 
 
 router.post('/service-amounts/:id/approve', async (req: Request, res: Response) => {
   try {
+    const role = ((req as any).user?.role || '').toString();
+    if (role !== 'EA') {
+      return res.status(403).json({ success: false, error: 'Only EA can update pricing' });
+    }
     const { id } = req.params;
     const { newAmount, reason } = req.body;
     await safeQuery(`UPDATE service_amounts SET current_amount = $1, updated_at = NOW() WHERE id = $2`, [newAmount, id]);

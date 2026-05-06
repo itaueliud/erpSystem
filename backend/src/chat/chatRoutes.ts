@@ -37,6 +37,23 @@ const upload = multer({
 
 const router = Router();
 
+const CHAT_ROLE_ALLOWLIST: Record<string, string[]> = {
+  CEO: ['COO', 'CTO', 'EA', 'CoS', 'CFO'],
+  COO: ['CEO'],
+  CTO: ['CEO'],
+  EA: ['CEO'],
+  CoS: ['CEO'],
+  CFO: ['CEO', 'HEAD_OF_TRAINERS'],
+  HEAD_OF_TRAINERS: ['TRAINER', 'COO', 'CFO'],
+  TRAINER: ['HEAD_OF_TRAINERS', 'AGENT'],
+  AGENT: ['TRAINER'],
+};
+
+function canRolesChat(senderRole: string, targetRole: string): boolean {
+  const allowed = CHAT_ROLE_ALLOWLIST[senderRole] || [];
+  return allowed.includes(targetRole);
+}
+
 // ─── Authentication middleware ────────────────────────────────────────────────
 
 async function authenticate(req: Request, res: Response, next: () => void): Promise<void> {
@@ -84,11 +101,6 @@ router.post('/rooms', authenticate as any, async (req: Request, res: Response) =
     const userId = (req as any).user?.id;
     const userRole = (req as any).user?.role;
 
-    // doc §18: Agents have no chat — personal dashboard only
-    if (userRole === 'AGENT') {
-      return res.status(403).json({ error: 'Agents do not have chat access' });
-    }
-
     // doc §21: Non-leader developers cannot create rooms (Team Leaders only)
     if (userRole === 'DEVELOPER') {
       const { db } = await import('../database/connection');
@@ -113,6 +125,21 @@ router.post('/rooms', authenticate as any, async (req: Request, res: Response) =
     if (type === 'DIRECT') {
       if (memberIds.length !== 1) {
         return res.status(400).json({ error: 'DIRECT rooms require exactly one other member' });
+      }
+      const { db } = await import('../database/connection');
+      const targetRes = await db.query(
+        `SELECT r.name AS role
+         FROM users u
+         JOIN roles r ON r.id = u.role_id
+         WHERE u.id = $1 AND u.is_active = true`,
+        [memberIds[0]]
+      );
+      if (!targetRes.rows.length) {
+        return res.status(404).json({ error: 'Target user not found' });
+      }
+      const targetRole = targetRes.rows[0].role;
+      if (!canRolesChat(userRole, targetRole)) {
+        return res.status(403).json({ error: `Chat not allowed between ${userRole} and ${targetRole}` });
       }
       const room = await chatService.getOrCreateDirectRoom(userId, memberIds[0]);
       return res.status(200).json(room);
@@ -264,10 +291,27 @@ router.get('/online-users', authenticate as any, async (_req: Request, res: Resp
 router.post('/rooms/direct', authenticate as any, async (req: Request, res: Response) => {
   try {
     const userId1 = (req as any).user?.id;
+    const userRole = (req as any).user?.role;
     const { userId2 } = req.body;
 
     if (!userId2) {
       return res.status(400).json({ error: 'userId2 is required' });
+    }
+
+    const { db } = await import('../database/connection');
+    const targetRes = await db.query(
+      `SELECT r.name AS role
+       FROM users u
+       JOIN roles r ON r.id = u.role_id
+       WHERE u.id = $1 AND u.is_active = true`,
+      [userId2]
+    );
+    if (!targetRes.rows.length) {
+      return res.status(404).json({ error: 'Target user not found' });
+    }
+    const targetRole = targetRes.rows[0].role;
+    if (!canRolesChat(userRole, targetRole)) {
+      return res.status(403).json({ error: `Chat not allowed between ${userRole} and ${targetRole}` });
     }
 
     const room = await chatService.getOrCreateDirectRoom(userId1, userId2);
@@ -295,11 +339,6 @@ router.post(
       const senderId = (req as any).user?.id;
       const userRole = (req as any).user?.role;
       const { content, fileId, fileSizeBytes, fileName, mimeType } = req.body;
-
-      // doc §18: Agents have no chat access
-      if (userRole === 'AGENT') {
-        return res.status(403).json({ error: 'Agents do not have chat access' });
-      }
 
       // doc §21: Non-leader developers can view but cannot send messages
       if (userRole === 'DEVELOPER') {
@@ -658,67 +697,18 @@ router.get('/muted-rooms', authenticate as any, async (req: Request, res: Respon
  * Returns only the users this role is allowed to chat with — doc §18.
  *
  * Chat access matrix:
- *   CEO, CoS, CFO, EA          → everyone (except Agents)
- *   COO                        → CEO, CoS, CFO, EA, CTO  +  own dept (OPERATIONS_USER, HEAD_OF_TRAINERS, TRAINER)
- *   CTO                        → CEO, CoS, CFO, EA, COO  +  DEVELOPER (team leaders only)  +  TECH_STAFF
- *   HEAD_OF_TRAINERS            → CEO, CoS, CFO, EA, COO, CTO  (higher-ups + CFO for enquiries)
- *   TRAINER                    → CEO, CoS, CFO, EA, COO, CTO, HEAD_OF_TRAINERS
- *   DEVELOPER (team leader)    → CTO only
- *   TECH_STAFF            → CEO, CoS, CFO, EA, COO, CTO
- *   OPERATIONS_USER            → CEO, CoS, CFO, EA, COO, CTO  +  own dept
- *   CFO_ASSISTANT              → CEO, CoS, CFO, EA
- *   AGENT                      → no chat (blocked at room creation)
+ *   CEO                → COO, CTO, EA, CoS, CFO
+ *   HEAD_OF_TRAINERS   → TRAINER, COO, CFO
+ *   TRAINER            → HEAD_OF_TRAINERS, AGENT
+ *   AGENT              → TRAINER
  */
 router.get('/users', authenticate as any, async (req: Request, res: Response) => {
   try {
     const currentUserId = (req as any).user?.id;
     const currentRole: string = (req as any).user?.role || '';
     const { db } = await import('../database/connection');
-
-    // Roles that can see everyone (except Agents)
-    const FULL_ACCESS = ['CEO', 'CoS', 'CFO', 'EA'];
-
-    // Build the allowed roles list based on the requester's role
-    let allowedRoles: string[] | null = null; // null = all (except AGENT)
-
-    if (FULL_ACCESS.includes(currentRole)) {
-      allowedRoles = null; // everyone except AGENT
-    } else if (currentRole === 'COO') {
-      allowedRoles = ['CEO', 'CoS', 'CFO', 'EA', 'CTO', 'OPERATIONS_USER', 'HEAD_OF_TRAINERS', 'TRAINER', 'SALES_MANAGER', 'CLIENT_SUCCESS_USER', 'ACCOUNT_EXECUTIVE', 'SENIOR_ACCOUNT_MANAGER', 'MARKETING_USER', 'MARKETING_OFFICER'];
-    } else if (currentRole === 'CTO') {
-      // CTO chats with higher-ups + TECH_STAFF + DEVELOPER team leaders
-      // We'll include all DEVELOPER and filter team leaders client-side via is_team_leader
-      allowedRoles = ['CEO', 'CoS', 'CFO', 'EA', 'COO', 'TECH_STAFF', 'DEVELOPER'];
-    } else if (currentRole === 'HEAD_OF_TRAINERS') {
-      allowedRoles = ['CEO', 'CoS', 'CFO', 'EA', 'COO', 'CTO'];
-    } else if (currentRole === 'TRAINER') {
-      allowedRoles = ['CEO', 'CoS', 'CFO', 'EA', 'COO', 'CTO', 'HEAD_OF_TRAINERS'];
-    } else if (currentRole === 'DEVELOPER') {
-      // Team leaders → CTO only; non-leaders → no chat (blocked at room creation)
-      allowedRoles = ['CTO'];
-    } else if (currentRole === 'TECH_STAFF') {
-      allowedRoles = ['CEO', 'CoS', 'CFO', 'EA', 'COO', 'CTO'];
-    } else if (currentRole === 'OPERATIONS_USER' || currentRole === 'SALES_MANAGER' ||
-               currentRole === 'CLIENT_SUCCESS_USER' || currentRole === 'ACCOUNT_EXECUTIVE' ||
-               currentRole === 'SENIOR_ACCOUNT_MANAGER' || currentRole === 'MARKETING_USER' ||
-               currentRole === 'MARKETING_OFFICER') {
-      allowedRoles = ['CEO', 'CoS', 'CFO', 'EA', 'COO', 'CTO',
-                      'OPERATIONS_USER', 'SALES_MANAGER', 'CLIENT_SUCCESS_USER',
-                      'ACCOUNT_EXECUTIVE', 'SENIOR_ACCOUNT_MANAGER', 'MARKETING_USER', 'MARKETING_OFFICER'];
-    } else if (currentRole === 'CFO_ASSISTANT') {
-      allowedRoles = ['CEO', 'CoS', 'CFO', 'EA'];
-    } else {
-      // Unknown / AGENT — return empty
-      return res.json({ users: [] });
-    }
-
-    const whereClause = allowedRoles === null
-      ? `r.name != 'AGENT'`
-      : `r.name = ANY($2::text[])`;
-
-    const params: any[] = allowedRoles === null
-      ? [currentUserId]
-      : [currentUserId, allowedRoles];
+    const allowedRoles = CHAT_ROLE_ALLOWLIST[currentRole] || [];
+    if (!allowedRoles.length) return res.json({ users: [] });
 
     const result = await db.query(
       `SELECT u.id, u.full_name, u.email, u.profile_photo_url, r.name as role,
@@ -730,16 +720,16 @@ router.get('/users', authenticate as any, async (req: Request, res: Response) =>
          AND u.suspended_at IS NULL
          AND u.password_hash IS NOT NULL
          AND u.id != $1
-         AND ${whereClause}
+         AND r.name = ANY($2::text[])
        ORDER BY u.full_name ASC`,
-      params
+      [currentUserId, allowedRoles]
     );
 
     const onlineMap = new Map(
       chatServer.getOnlineUsersWithPortal().map(u => [u.userId, u.portal])
     );
 
-    let users = result.rows.map((u: any) => ({
+    const users = result.rows.map((u: any) => ({
       id: u.id,
       name: u.full_name,
       email: u.email,
@@ -750,10 +740,6 @@ router.get('/users', authenticate as any, async (req: Request, res: Response) =>
       online: onlineMap.has(u.id),
       portal: onlineMap.get(u.id) || null,
     }));
-
-    // CTO sees all DEVELOPER but only team leaders can initiate chat
-    // Mark non-leaders so the frontend can show them as view-only
-    // (room creation is blocked server-side for non-leaders anyway)
 
     return res.json({ users });
   } catch (error: any) {
@@ -798,3 +784,4 @@ router.get('/files/:filename', authenticate as any, (req: Request, res: Response
 });
 
 export default router;
+

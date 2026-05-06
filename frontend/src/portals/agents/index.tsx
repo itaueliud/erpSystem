@@ -284,7 +284,11 @@ function RetailDemoSuite({ themeHex }: { themeHex: string }) {
           </select>
         </div>
       </div>
-      <p className="text-xs text-gray-500 mb-3">Selected: <span className="font-semibold text-gray-700">{industry}</span> -> <span className="font-semibold text-gray-700">{MODULE_OPTIONS.find(m => m.key === tab)?.label}</span></p>
+      <p className="text-xs text-gray-500 mb-3">
+        Selected: <span className="font-semibold text-gray-700">{industry}</span>
+        {' -> '}
+        <span className="font-semibold text-gray-700">{MODULE_OPTIONS.find(m => m.key === tab)?.label}</span>
+      </p>
 
       {tab === 'ecommerce' && (
         <div id="demo-ecommerce" className="grid grid-cols-1 sm:grid-cols-3 gap-3">

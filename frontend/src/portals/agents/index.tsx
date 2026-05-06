@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from '../../shared/utils/router';
 import { PortalLayout, StatCard, SectionHeader, DataTable, StatusBadge, PortalButton } from '../../shared/components/layout/PortalLayout';
 import { PORTAL_THEMES } from '../../shared/theme/portalThemes';
@@ -222,6 +222,8 @@ function SoftwareCategoryAccordion({ category, icon, items, selected, themeHex, 
 function RetailDemoSuite({ themeHex }: { themeHex: string }) {
   const [industry, setIndustry] = useState('A. Schools');
   const [tab, setTab] = useState<RetailDemoKey>('ecommerce');
+  const [serviceAmounts, setServiceAmounts] = useState<Array<{ serviceName: string; currentAmount: number }>>([]);
+  const [pricingMsg, setPricingMsg] = useState('');
   const [cart, setCart] = useState<Array<{ id: number; name: string; price: number; qty: number }>>([]);
   const [inventory, setInventory] = useState([
     { sku: 'SKU-001', name: 'TST Backpack', stock: 18, reorderAt: 10 },
@@ -312,6 +314,53 @@ function RetailDemoSuite({ themeHex }: { themeHex: string }) {
     { key: 'inventory', label: '3. Inventory System' },
     { key: 'loyalty', label: '4. Customer Loyalty System' },
   ];
+  const MODULE_PRICE_KEYS: Record<RetailDemoKey, string[]> = {
+    ecommerce: ['e-commerce website', 'ecommerce website', 'e-commerce', 'ecommerce'],
+    pos: ['pos system', 'point-of-sale', 'point of sale', 'pos'],
+    inventory: ['inventory system', 'inventory management', 'inventory'],
+    loyalty: ['customer loyalty system', 'loyalty rewards', 'loyalty system', 'loyalty'],
+  };
+  const MODULE_LINKS: Record<RetailDemoKey, string> = {
+    ecommerce: '#demo-ecommerce',
+    pos: '#demo-pos',
+    inventory: '#demo-inventory',
+    loyalty: '#demo-loyalty',
+  };
+  const resolvedModulePrices = useMemo(() => {
+    const byName = new Map<string, number>(
+      serviceAmounts.map(s => [String(s.serviceName || '').toLowerCase(), Number(s.currentAmount || 0)])
+    );
+    const resolve = (k: RetailDemoKey) => {
+      for (const alias of MODULE_PRICE_KEYS[k]) {
+        if (byName.has(alias)) return byName.get(alias) || 0;
+      }
+      return 0;
+    };
+    return {
+      ecommerce: resolve('ecommerce'),
+      pos: resolve('pos'),
+      inventory: resolve('inventory'),
+      loyalty: resolve('loyalty'),
+    };
+  }, [serviceAmounts]);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const { apiClient } = await import('../../shared/api/apiClient');
+        const r = await apiClient.get('/api/v1/service-amounts');
+        const rows = (r.data as any)?.data || [];
+        if (!mounted) return;
+        setServiceAmounts(Array.isArray(rows) ? rows : []);
+        setPricingMsg(Array.isArray(rows) && rows.length > 0 ? 'EA pricing loaded from Service Amounts.' : 'No EA pricing rows found, using demo fallback prices.');
+      } catch {
+        if (!mounted) return;
+        setPricingMsg('Could not load EA pricing in this session, using demo fallback prices.');
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-4 mb-6">
@@ -344,6 +393,32 @@ function RetailDemoSuite({ themeHex }: { themeHex: string }) {
         {' -> '}
         <span className="font-semibold text-gray-700">{MODULE_OPTIONS.find(m => m.key === tab)?.label}</span>
       </p>
+      <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 mb-3 text-sm">
+        <p className="text-xs font-semibold text-gray-600 mb-2">Demo Links</p>
+        <div className="flex flex-wrap gap-3">
+          {MODULE_OPTIONS.map(opt => (
+            <a
+              key={opt.key}
+              href={MODULE_LINKS[opt.key]}
+              onClick={() => setTab(opt.key)}
+              className="underline decoration-dotted font-medium"
+              style={{ color: tab === opt.key ? themeHex : '#374151' }}
+            >
+              {opt.label}
+            </a>
+          ))}
+        </div>
+      </div>
+      <div className="rounded-xl border border-gray-200 bg-white p-3 mb-3">
+        <p className="text-xs font-semibold text-gray-700 mb-1">Pricing Connection (EA Managed)</p>
+        <p className="text-xs text-gray-500 mb-2">{pricingMsg}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+          <p>1. E-commerce Website: <span className="font-semibold">KSh {(resolvedModulePrices.ecommerce || 120000).toLocaleString()}</span></p>
+          <p>2. POS: <span className="font-semibold">KSh {(resolvedModulePrices.pos || 65000).toLocaleString()}</span></p>
+          <p>3. Inventory System: <span className="font-semibold">KSh {(resolvedModulePrices.inventory || 70000).toLocaleString()}</span></p>
+          <p>4. Customer Loyalty System: <span className="font-semibold">KSh {(resolvedModulePrices.loyalty || 60000).toLocaleString()}</span></p>
+        </div>
+      </div>
 
       {tab === 'ecommerce' && (
         <div id="demo-ecommerce" className="space-y-3">

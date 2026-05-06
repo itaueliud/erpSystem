@@ -233,11 +233,47 @@ function RetailDemoSuite({ themeHex }: { themeHex: string }) {
     { name: 'James Kato', points: 190 },
     { name: 'Grace Njeri', points: 1230 },
   ]);
-  const products = [
-    { id: 1, name: 'TST Backpack', price: 3500 },
-    { id: 2, name: 'TST Headphones', price: 6200 },
-    { id: 3, name: 'TST Notebook', price: 900 },
-  ];
+  const [cashReceived, setCashReceived] = useState('0');
+  const [lastSale, setLastSale] = useState<{ total: number; paid: number; change: number } | null>(null);
+  const [inventoryLog, setInventoryLog] = useState<string[]>([]);
+  const INDUSTRY_PRODUCTS: Record<string, Array<{ id: number; name: string; price: number }>> = {
+    'A. Schools': [
+      { id: 1, name: 'School Backpack', price: 3500 },
+      { id: 2, name: 'Scientific Calculator', price: 1800 },
+      { id: 3, name: 'Exercise Books Pack', price: 900 },
+    ],
+    'B. Churches': [
+      { id: 1, name: 'Choir Uniform Set', price: 4200 },
+      { id: 2, name: 'Audio Cable Kit', price: 2600 },
+      { id: 3, name: 'Ushering Badge Pack', price: 1200 },
+    ],
+    'C. Hotels & Lodges': [
+      { id: 1, name: 'Guest Towel Set', price: 2800 },
+      { id: 2, name: 'Room Slippers Pair', price: 950 },
+      { id: 3, name: 'Mini-Bar Snacks Box', price: 1600 },
+    ],
+    'D. Hospitals & Clinics': [
+      { id: 1, name: 'Medical Gloves Box', price: 2100 },
+      { id: 2, name: 'Face Mask Pack', price: 1400 },
+      { id: 3, name: 'Sanitizer Refill', price: 800 },
+    ],
+    'E. Companies & Organizations': [
+      { id: 1, name: 'Office Backpack', price: 3900 },
+      { id: 2, name: 'Wireless Mouse', price: 2200 },
+      { id: 3, name: 'Notebook Bundle', price: 1100 },
+    ],
+    'F. Real Estate & Property': [
+      { id: 1, name: 'Key Tag Set', price: 700 },
+      { id: 2, name: 'Tenant Welcome Pack', price: 3200 },
+      { id: 3, name: 'Maintenance Toolkit', price: 5400 },
+    ],
+    'G. Shops & Businesses (Retail)': [
+      { id: 1, name: 'TST Backpack', price: 3500 },
+      { id: 2, name: 'TST Headphones', price: 6200 },
+      { id: 3, name: 'TST Notebook', price: 900 },
+    ],
+  };
+  const products = INDUSTRY_PRODUCTS[industry] || INDUSTRY_PRODUCTS['G. Shops & Businesses (Retail)'];
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const addToCart = (id: number) => {
     const product = products.find(p => p.id === id);
@@ -248,6 +284,25 @@ function RetailDemoSuite({ themeHex }: { themeHex: string }) {
       return [...prev, { ...product, qty: 1 }];
     });
   };
+  const updateQty = (id: number, delta: number) => {
+    setCart(prev =>
+      prev
+        .map(item => item.id === id ? { ...item, qty: Math.max(0, item.qty + delta) } : item)
+        .filter(item => item.qty > 0)
+    );
+  };
+  const clearCart = () => setCart([]);
+  const checkout = () => {
+    const paid = Number(cashReceived || 0);
+    if (paid < total || total <= 0) return;
+    setLastSale({ total, paid, change: paid - total });
+    clearCart();
+  };
+  const recordInventoryAction = (sku: string, name: string, action: 'IN' | 'OUT') => {
+    setInventoryLog(prev => [`${new Date().toLocaleTimeString()} - ${action} - ${name} (${sku})`, ...prev].slice(0, 6));
+  };
+  const tierForPoints = (pts: number) => pts >= 1000 ? 'Gold' : pts >= 500 ? 'Silver' : 'Bronze';
+  const canRedeem = (pts: number, reward: number) => pts >= reward;
   const INDUSTRY_OPTIONS = SOFTWARE_CATALOGUE
     .filter(c => /^[A-G]\.\s/.test(c.category))
     .map(c => c.category);
@@ -291,50 +346,105 @@ function RetailDemoSuite({ themeHex }: { themeHex: string }) {
       </p>
 
       {tab === 'ecommerce' && (
-        <div id="demo-ecommerce" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {products.map(p => (
-            <div key={p.id} className="border border-gray-200 rounded-xl p-3">
-              <p className="text-sm font-medium text-gray-800">{p.name}</p>
-              <p className="text-xs text-gray-500 mb-2">KSh {p.price.toLocaleString()}</p>
-              <button type="button" onClick={() => addToCart(p.id)} className="text-xs font-semibold underline" style={{ color: themeHex }}>
-                Add to Cart
-              </button>
-            </div>
-          ))}
+        <div id="demo-ecommerce" className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {products.map(p => (
+              <div key={p.id} className="border border-gray-200 rounded-xl p-3">
+                <p className="text-sm font-medium text-gray-800">{p.name}</p>
+                <p className="text-xs text-gray-500 mb-2">KSh {p.price.toLocaleString()}</p>
+                <button type="button" onClick={() => addToCart(p.id)} className="text-xs font-semibold underline" style={{ color: themeHex }}>
+                  Add to Cart
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-xl border border-gray-200 p-3">
+            <p className="text-xs font-semibold text-gray-600 mb-2">Cart</p>
+            {cart.length === 0 ? <p className="text-xs text-gray-500">No items in cart.</p> : (
+              <div className="space-y-2">
+                {cart.map(item => (
+                  <div key={item.id} className="flex items-center justify-between text-sm">
+                    <span>{item.name} x{item.qty}</span>
+                    <div className="flex items-center gap-2">
+                      <button type="button" className="px-2 border rounded" onClick={() => updateQty(item.id, -1)}>-</button>
+                      <button type="button" className="px-2 border rounded" onClick={() => updateQty(item.id, 1)}>+</button>
+                      <span className="font-semibold">KSh {(item.price * item.qty).toLocaleString()}</span>
+                    </div>
+                  </div>
+                ))}
+                <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
+                  <span className="font-semibold">Total</span>
+                  <span className="font-semibold">KSh {total.toLocaleString()}</span>
+                </div>
+                <button type="button" onClick={clearCart} className="text-xs underline text-gray-600">Clear Cart</button>
+              </div>
+            )}
+          </div>
         </div>
       )}
       {tab === 'pos' && (
-        <div id="demo-pos">
-          <p className="text-xs text-gray-500 mb-2">Quick receipt preview</p>
+        <div id="demo-pos" className="space-y-3">
+          <p className="text-xs text-gray-500">POS checkout uses the same cart from E-commerce demo.</p>
           <div className="rounded-xl border border-gray-200 p-3 text-sm">
             {cart.length === 0 ? <p className="text-gray-500">No items yet</p> : cart.map(i => <p key={i.id}>{i.name} x{i.qty} - KSh {(i.price * i.qty).toLocaleString()}</p>)}
             <p className="mt-2 font-semibold">Total: KSh {total.toLocaleString()}</p>
           </div>
+          <div className="rounded-xl border border-gray-200 p-3">
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Cash Received (KSh)</label>
+            <input type="number" min={0} value={cashReceived} onChange={e => setCashReceived(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm" />
+            <button type="button" onClick={checkout} disabled={Number(cashReceived || 0) < total || total <= 0}
+              className="mt-2 px-3 py-2 rounded-lg text-white text-xs font-semibold disabled:opacity-40"
+              style={{ backgroundColor: themeHex }}>
+              Complete Checkout
+            </button>
+            {lastSale && (
+              <p className="mt-2 text-xs text-green-700">
+                Sale complete. Paid: KSh {lastSale.paid.toLocaleString()} | Change: KSh {lastSale.change.toLocaleString()}
+              </p>
+            )}
+          </div>
         </div>
       )}
       {tab === 'inventory' && (
-        <div id="demo-inventory" className="space-y-2">
+        <div id="demo-inventory" className="space-y-3">
           {inventory.map((it, idx) => (
             <div key={it.sku} className="rounded-xl border border-gray-200 p-2 text-sm flex items-center justify-between gap-2">
               <span>{it.name} ({it.sku}) - Stock: {it.stock}</span>
               <div className="flex items-center gap-2">
-                <button type="button" className="px-2 py-0.5 border rounded" onClick={() => setInventory(prev => prev.map((x, i) => i === idx ? { ...x, stock: x.stock + 1 } : x))}>+1</button>
-                <button type="button" className="px-2 py-0.5 border rounded" onClick={() => setInventory(prev => prev.map((x, i) => i === idx ? { ...x, stock: Math.max(0, x.stock - 1) } : x))}>-1</button>
+                <button type="button" className="px-2 py-0.5 border rounded" onClick={() => {
+                  setInventory(prev => prev.map((x, i) => i === idx ? { ...x, stock: x.stock + 1 } : x));
+                  recordInventoryAction(it.sku, it.name, 'IN');
+                }}>+1</button>
+                <button type="button" className="px-2 py-0.5 border rounded" onClick={() => {
+                  setInventory(prev => prev.map((x, i) => i === idx ? { ...x, stock: Math.max(0, x.stock - 1) } : x));
+                  recordInventoryAction(it.sku, it.name, 'OUT');
+                }}>-1</button>
                 {it.stock <= it.reorderAt && <span className="text-red-600 text-xs font-semibold">Reorder</span>}
               </div>
             </div>
           ))}
+          <div className="rounded-xl border border-gray-200 p-3">
+            <p className="text-xs font-semibold text-gray-600 mb-2">Recent Stock Movements</p>
+            {inventoryLog.length === 0 ? <p className="text-xs text-gray-500">No movements recorded.</p> : (
+              <ul className="text-xs text-gray-600 space-y-1">
+                {inventoryLog.map((entry, i) => <li key={`${entry}-${i}`}>{entry}</li>)}
+              </ul>
+            )}
+          </div>
         </div>
       )}
       {tab === 'loyalty' && (
         <div id="demo-loyalty" className="space-y-2">
           {loyalty.map((c, idx) => (
             <div key={c.name} className="rounded-xl border border-gray-200 p-2 text-sm flex items-center justify-between">
-              <span>{c.name}</span>
+              <div>
+                <span>{c.name}</span>
+                <p className="text-xs text-gray-500">{tierForPoints(c.points)} Tier</p>
+              </div>
               <div className="flex items-center gap-2">
                 <span className="font-semibold">{c.points} pts</span>
                 <button type="button" className="px-2 py-0.5 border rounded" onClick={() => setLoyalty(prev => prev.map((x, i) => i === idx ? { ...x, points: x.points + 20 } : x))}>+20</button>
-                <button type="button" className="px-2 py-0.5 border rounded" onClick={() => setLoyalty(prev => prev.map((x, i) => i === idx ? { ...x, points: Math.max(0, x.points - 50) } : x))}>Redeem 50</button>
+                <button type="button" className="px-2 py-0.5 border rounded disabled:opacity-40" disabled={!canRedeem(c.points, 50)} onClick={() => setLoyalty(prev => prev.map((x, i) => i === idx ? { ...x, points: Math.max(0, x.points - 50) } : x))}>Redeem 50</button>
               </div>
             </div>
           ))}

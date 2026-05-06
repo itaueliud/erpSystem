@@ -32,84 +32,94 @@ function clientStatusLabel(status: string): string {
 }
 
 // ─── Categorised software catalogue ──────────────────────────────────────────
-const SOFTWARE_CATALOGUE = [
+type RetailDemoKey = 'ecommerce' | 'pos' | 'inventory' | 'loyalty';
+type CatalogueItem = {
+  name: string;
+  desc: string;
+  priceFrom?: string;
+  demoLabel?: string;
+  demoHref?: string;
+  retailDemoKey?: RetailDemoKey;
+};
+
+const SOFTWARE_CATALOGUE: Array<{ category: string; icon: string; items: CatalogueItem[] }> = [
   {
-    category: 'Education',
+    category: 'A. Schools',
     icon: '🎓',
     items: [
-      { name: 'School Portal / LMS',     desc: 'Learning management, student portals & e-learning' },
-      { name: 'Fee Management System',    desc: 'Fee collection, receipts & arrears tracking' },
-      { name: 'Exam & Results System',    desc: 'Online exams, grading & report cards' },
-      { name: 'Library Management',       desc: 'Book catalogue, borrowing & returns' },
+      { name: 'School Portal / LMS', desc: 'Learning management, student portals & e-learning', priceFrom: 'From KSh 95,000', demoLabel: 'School Demo', demoHref: 'https://demo.techswifttrix.com/schools/portal' },
+      { name: 'Fee Management System', desc: 'Fee collection, receipts & arrears tracking', priceFrom: 'From KSh 70,000', demoLabel: 'Fees Demo', demoHref: 'https://demo.techswifttrix.com/schools/fees' },
+      { name: 'Exam & Results System', desc: 'Online exams, grading & report cards', priceFrom: 'From KSh 60,000', demoLabel: 'Results Demo', demoHref: 'https://demo.techswifttrix.com/schools/results' },
+      { name: 'Library Management', desc: 'Book catalogue, borrowing & returns', priceFrom: 'From KSh 45,000', demoLabel: 'Library Demo', demoHref: 'https://demo.techswifttrix.com/schools/library' },
     ],
   },
   {
-    category: 'Church / Religious',
+    category: 'B. Churches',
     icon: '⛪',
     items: [
-      { name: 'Member Management System', desc: 'Member records, attendance & groups' },
-      { name: 'Online Giving System',     desc: 'Digital tithes, offerings & donation tracking' },
-      { name: 'Event Management',         desc: 'Church events, registrations & reminders' },
+      { name: 'Member Management System', desc: 'Member records, attendance & groups', priceFrom: 'From KSh 65,000', demoLabel: 'Members Demo', demoHref: 'https://demo.techswifttrix.com/church/members' },
+      { name: 'Online Giving System', desc: 'Digital tithes, offerings & donation tracking', priceFrom: 'From KSh 55,000', demoLabel: 'Giving Demo', demoHref: 'https://demo.techswifttrix.com/church/giving' },
+      { name: 'Event Management', desc: 'Church events, registrations & reminders', priceFrom: 'From KSh 50,000', demoLabel: 'Events Demo', demoHref: 'https://demo.techswifttrix.com/church/events' },
     ],
   },
   {
-    category: 'Hospitality',
+    category: 'C. Hotels & Lodges',
     icon: '🏨',
     items: [
-      { name: 'Hotel Booking System',     desc: 'Online reservations, room availability & check-in' },
-      { name: 'Room Management System',   desc: 'Room allocation, housekeeping & occupancy' },
-      { name: 'Hotel Billing System',     desc: 'Guest invoicing, POS & payment reconciliation' },
-      { name: 'Restaurant POS',           desc: 'Table orders, kitchen display & billing' },
+      { name: 'Hotel Booking System', desc: 'Online reservations, room availability & check-in', priceFrom: 'From KSh 120,000', demoLabel: 'Booking Demo', demoHref: 'https://demo.techswifttrix.com/hotel/booking' },
+      { name: 'Room Management System', desc: 'Room allocation, housekeeping & occupancy', priceFrom: 'From KSh 85,000', demoLabel: 'Rooms Demo', demoHref: 'https://demo.techswifttrix.com/hotel/rooms' },
+      { name: 'Hotel Billing System', desc: 'Guest invoicing, POS & payment reconciliation', priceFrom: 'From KSh 90,000', demoLabel: 'Billing Demo', demoHref: 'https://demo.techswifttrix.com/hotel/billing' },
+      { name: 'Restaurant POS', desc: 'Table orders, kitchen display & billing', priceFrom: 'From KSh 75,000', demoLabel: 'POS Demo', demoHref: 'https://demo.techswifttrix.com/hotel/restaurant-pos' },
     ],
   },
   {
-    category: 'Healthcare',
+    category: 'D. Hospitals & Clinics',
     icon: '🏥',
     items: [
-      { name: 'Patient Management System',    desc: 'Patient records, visits & medical history' },
-      { name: 'Appointment Booking System',   desc: 'Doctor scheduling, reminders & queue management' },
-      { name: 'Pharmacy Stock System',        desc: 'Drug inventory, dispensing & expiry tracking' },
-      { name: 'Lab Results System',           desc: 'Lab tests, results & patient notifications' },
+      { name: 'Patient Management System', desc: 'Patient records, visits & medical history', priceFrom: 'From KSh 140,000', demoLabel: 'Patient Demo', demoHref: 'https://demo.techswifttrix.com/health/patients' },
+      { name: 'Appointment Booking System', desc: 'Doctor scheduling, reminders & queue management', priceFrom: 'From KSh 80,000', demoLabel: 'Appointment Demo', demoHref: 'https://demo.techswifttrix.com/health/appointments' },
+      { name: 'Pharmacy Stock System', desc: 'Drug inventory, dispensing & expiry tracking', priceFrom: 'From KSh 95,000', demoLabel: 'Pharmacy Demo', demoHref: 'https://demo.techswifttrix.com/health/pharmacy' },
+      { name: 'Lab Results System', desc: 'Lab tests, results & patient notifications', priceFrom: 'From KSh 90,000', demoLabel: 'Lab Demo', demoHref: 'https://demo.techswifttrix.com/health/labs' },
     ],
   },
   {
-    category: 'Business / Corporate',
+    category: 'E. Companies & Organizations',
     icon: '🏢',
     items: [
-      { name: 'HR & Payroll System',          desc: 'Staff records, payroll, leave & payslips' },
-      { name: 'CRM System',                   desc: 'Customer pipeline, follow-ups & sales tracking' },
-      { name: 'Inventory Management System',  desc: 'Stock control, purchase orders & suppliers' },
-      { name: 'Accounting System',            desc: 'Invoicing, expenses, P&L & financial reports' },
-      { name: 'Project Management System',    desc: 'Tasks, milestones, teams & progress tracking' },
+      { name: 'HR & Payroll System', desc: 'Staff records, payroll, leave & payslips', priceFrom: 'From KSh 110,000', demoLabel: 'HR Demo', demoHref: 'https://demo.techswifttrix.com/company/hr' },
+      { name: 'CRM System', desc: 'Customer pipeline, follow-ups & sales tracking', priceFrom: 'From KSh 90,000', demoLabel: 'CRM Demo', demoHref: 'https://demo.techswifttrix.com/company/crm' },
+      { name: 'Inventory Management System', desc: 'Stock control, purchase orders & suppliers', priceFrom: 'From KSh 75,000', demoLabel: 'Inventory Demo', demoHref: 'https://demo.techswifttrix.com/company/inventory' },
+      { name: 'Accounting System', desc: 'Invoicing, expenses, P&L & financial reports', priceFrom: 'From KSh 100,000', demoLabel: 'Accounts Demo', demoHref: 'https://demo.techswifttrix.com/company/accounting' },
+      { name: 'Project Management System', desc: 'Tasks, milestones, teams & progress tracking', priceFrom: 'From KSh 80,000', demoLabel: 'Projects Demo', demoHref: 'https://demo.techswifttrix.com/company/projects' },
     ],
   },
   {
-    category: 'Real Estate',
+    category: 'F. Real Estate & Property',
     icon: '🏠',
     items: [
-      { name: 'Rent Management System',       desc: 'Tenant records, rent collection & lease tracking' },
-      { name: 'Property Listing Platform',    desc: 'Online listings with search & enquiries' },
-      { name: 'Tenant Management System',     desc: 'Onboarding, maintenance requests & payments' },
-      { name: 'Caretaker / Agent Portal',     desc: 'Agent dashboards, commissions & reporting' },
+      { name: 'Rent Management System', desc: 'Tenant records, rent collection & lease tracking', priceFrom: 'From KSh 95,000', demoLabel: 'Rent Demo', demoHref: 'https://demo.techswifttrix.com/property/rent' },
+      { name: 'Property Listing Platform', desc: 'Online listings with search & enquiries', priceFrom: 'From KSh 130,000', demoLabel: 'Listings Demo', demoHref: 'https://demo.techswifttrix.com/property/listings' },
+      { name: 'Tenant Management System', desc: 'Onboarding, maintenance requests & payments', priceFrom: 'From KSh 85,000', demoLabel: 'Tenant Demo', demoHref: 'https://demo.techswifttrix.com/property/tenants' },
+      { name: 'Caretaker / Agent Portal', desc: 'Agent dashboards, commissions & reporting', priceFrom: 'From KSh 70,000', demoLabel: 'Agent Demo', demoHref: 'https://demo.techswifttrix.com/property/agents' },
     ],
   },
   {
-    category: 'Retail / E-commerce',
+    category: 'G. Shops & Businesses (Retail)',
     icon: '🛒',
     items: [
-      { name: 'POS System',                   desc: 'Point-of-sale for shops & restaurants' },
-      { name: 'E-commerce Website',           desc: 'Online store with cart, payments & orders' },
-      { name: 'Inventory System',             desc: 'Stock levels, reorder alerts & supplier orders' },
-      { name: 'Loyalty & Rewards System',     desc: 'Customer points, vouchers & retention' },
+      { name: 'POS System', desc: 'Point-of-sale for shops & restaurants', priceFrom: 'From KSh 65,000', demoLabel: 'POS Demo', demoHref: '#retail-demo-pos', retailDemoKey: 'pos' },
+      { name: 'E-commerce Website', desc: 'Online store with cart, payments & orders', priceFrom: 'From KSh 120,000', demoLabel: 'E-commerce Demo', demoHref: '#retail-demo-ecommerce', retailDemoKey: 'ecommerce' },
+      { name: 'Inventory System', desc: 'Stock levels, reorder alerts & supplier orders', priceFrom: 'From KSh 70,000', demoLabel: 'Inventory Demo', demoHref: '#retail-demo-inventory', retailDemoKey: 'inventory' },
+      { name: 'Loyalty & Rewards System', desc: 'Customer points, vouchers & retention', priceFrom: 'From KSh 60,000', demoLabel: 'Loyalty Demo', demoHref: '#retail-demo-loyalty', retailDemoKey: 'loyalty' },
     ],
   },
   {
     category: 'Web & Digital',
     icon: '🌐',
     items: [
-      { name: 'Custom Website',               desc: 'Branded website tailored to your business' },
-      { name: 'Mobile App',                   desc: 'Android / iOS app for your business' },
-      { name: 'Digital Marketing Dashboard',  desc: 'Campaign tracking, leads & analytics' },
+      { name: 'Custom Website', desc: 'Branded website tailored to your business', priceFrom: 'From KSh 55,000', demoLabel: 'Website Demo', demoHref: 'https://demo.techswifttrix.com/web/custom-site' },
+      { name: 'Mobile App', desc: 'Android / iOS app for your business', priceFrom: 'From KSh 160,000', demoLabel: 'App Demo', demoHref: 'https://demo.techswifttrix.com/web/mobile-app' },
+      { name: 'Digital Marketing Dashboard', desc: 'Campaign tracking, leads & analytics', priceFrom: 'From KSh 75,000', demoLabel: 'Marketing Demo', demoHref: 'https://demo.techswifttrix.com/web/marketing' },
     ],
   },
 ];
@@ -146,7 +156,7 @@ function StepIndicator({ step }: { step: 1 | 2 | '3a' | '3b' }) {
 // ─── Software Category Accordion ─────────────────────────────────────────────
 function SoftwareCategoryAccordion({ category, icon, items, selected, themeHex, onToggle }: {
   category: string; icon: string;
-  items: { name: string; desc: string }[];
+  items: CatalogueItem[];
   selected: string[]; themeHex: string;
   onToggle: (name: string) => void;
 }) {
@@ -192,10 +202,119 @@ function SoftwareCategoryAccordion({ category, icon, items, selected, themeHex, 
                 <div>
                   <p className="text-sm font-medium text-gray-800">{item.name}</p>
                   <p className="text-xs text-gray-400">{item.desc}</p>
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+                    <span className="font-semibold text-gray-600">Pricing: EA managed</span>
+                    <a href="#demo-ecommerce" className="font-semibold underline decoration-dotted" style={{ color: themeHex }} onClick={e => e.stopPropagation()}>E-commerce Demo</a>
+                    <a href="#demo-pos" className="font-semibold underline decoration-dotted" style={{ color: themeHex }} onClick={e => e.stopPropagation()}>POS Demo</a>
+                    <a href="#demo-inventory" className="font-semibold underline decoration-dotted" style={{ color: themeHex }} onClick={e => e.stopPropagation()}>Inventory Demo</a>
+                    <a href="#demo-loyalty" className="font-semibold underline decoration-dotted" style={{ color: themeHex }} onClick={e => e.stopPropagation()}>Loyalty Demo</a>
+                  </div>
                 </div>
               </button>
             );
           })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RetailDemoSuite({ themeHex }: { themeHex: string }) {
+  const [tab, setTab] = useState<RetailDemoKey>('ecommerce');
+  const [cart, setCart] = useState<Array<{ id: number; name: string; price: number; qty: number }>>([]);
+  const [inventory, setInventory] = useState([
+    { sku: 'SKU-001', name: 'TST Backpack', stock: 18, reorderAt: 10 },
+    { sku: 'SKU-002', name: 'TST Headphones', stock: 7, reorderAt: 8 },
+    { sku: 'SKU-003', name: 'TST Notebook', stock: 32, reorderAt: 12 },
+  ]);
+  const [loyalty, setLoyalty] = useState([
+    { name: 'Amina Otieno', points: 820 },
+    { name: 'James Kato', points: 190 },
+    { name: 'Grace Njeri', points: 1230 },
+  ]);
+  const products = [
+    { id: 1, name: 'TST Backpack', price: 3500 },
+    { id: 2, name: 'TST Headphones', price: 6200 },
+    { id: 3, name: 'TST Notebook', price: 900 },
+  ];
+  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  const addToCart = (id: number) => {
+    const product = products.find(p => p.id === id);
+    if (!product) return;
+    setCart(prev => {
+      const existing = prev.find(x => x.id === id);
+      if (existing) return prev.map(x => x.id === id ? { ...x, qty: x.qty + 1 } : x);
+      return [...prev, { ...product, qty: 1 }];
+    });
+  };
+
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-white p-4 mb-6">
+      <p className="text-sm font-semibold text-gray-800 mb-1">Demo Suite For A-G (Fully Interactive)</p>
+      <p className="text-xs text-gray-500 mb-3">Applies to all industries A through G. Pricing is managed centrally by EA.</p>
+      <div className="flex flex-wrap gap-2 mb-4">
+        {[
+          { key: 'ecommerce' as const, label: '1. E-commerce Website', id: 'demo-ecommerce' },
+          { key: 'pos' as const, label: '2. POS', id: 'demo-pos' },
+          { key: 'inventory' as const, label: '3. Inventory System', id: 'demo-inventory' },
+          { key: 'loyalty' as const, label: '4. Customer Loyalty', id: 'demo-loyalty' },
+        ].map(t => (
+          <button key={t.key} id={t.id} type="button" onClick={() => setTab(t.key)}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${tab === t.key ? 'text-white border-transparent' : 'text-gray-600 border-gray-300'}`}
+            style={tab === t.key ? { backgroundColor: themeHex } : {}}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'ecommerce' && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {products.map(p => (
+            <div key={p.id} className="border border-gray-200 rounded-xl p-3">
+              <p className="text-sm font-medium text-gray-800">{p.name}</p>
+              <p className="text-xs text-gray-500 mb-2">KSh {p.price.toLocaleString()}</p>
+              <button type="button" onClick={() => addToCart(p.id)} className="text-xs font-semibold underline" style={{ color: themeHex }}>
+                Add to Cart
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      {tab === 'pos' && (
+        <div>
+          <p className="text-xs text-gray-500 mb-2">Quick receipt preview</p>
+          <div className="rounded-xl border border-gray-200 p-3 text-sm">
+            {cart.length === 0 ? <p className="text-gray-500">No items yet</p> : cart.map(i => <p key={i.id}>{i.name} x{i.qty} - KSh {(i.price * i.qty).toLocaleString()}</p>)}
+            <p className="mt-2 font-semibold">Total: KSh {total.toLocaleString()}</p>
+          </div>
+        </div>
+      )}
+      {tab === 'inventory' && (
+        <div className="space-y-2">
+          {inventory.map((it, idx) => (
+            <div key={it.sku} className="rounded-xl border border-gray-200 p-2 text-sm flex items-center justify-between gap-2">
+              <span>{it.name} ({it.sku}) - Stock: {it.stock}</span>
+              <div className="flex items-center gap-2">
+                <button type="button" className="px-2 py-0.5 border rounded" onClick={() => setInventory(prev => prev.map((x, i) => i === idx ? { ...x, stock: x.stock + 1 } : x))}>+1</button>
+                <button type="button" className="px-2 py-0.5 border rounded" onClick={() => setInventory(prev => prev.map((x, i) => i === idx ? { ...x, stock: Math.max(0, x.stock - 1) } : x))}>-1</button>
+                {it.stock <= it.reorderAt && <span className="text-red-600 text-xs font-semibold">Reorder</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {tab === 'loyalty' && (
+        <div className="space-y-2">
+          {loyalty.map((c, idx) => (
+            <div key={c.name} className="rounded-xl border border-gray-200 p-2 text-sm flex items-center justify-between">
+              <span>{c.name}</span>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold">{c.points} pts</span>
+                <button type="button" className="px-2 py-0.5 border rounded" onClick={() => setLoyalty(prev => prev.map((x, i) => i === idx ? { ...x, points: x.points + 20 } : x))}>+20</button>
+                <button type="button" className="px-2 py-0.5 border rounded" onClick={() => setLoyalty(prev => prev.map((x, i) => i === idx ? { ...x, points: Math.max(0, x.points - 50) } : x))}>Redeem 50</button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -263,19 +382,19 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
 
       // Derive industryCategory from whichever catalogue category has the most selected items
       const CATEGORY_MAP: Record<string, string> = {
-        'Education':          'SCHOOLS',
-        'Church / Religious': 'CHURCHES',
-        'Hospitality':        'HOTELS',
-        'Healthcare':         'HOSPITALS',
-        'Business / Corporate': 'COMPANIES',
-        'Real Estate':        'REAL_ESTATE',
-        'Retail / E-commerce': 'SHOPS',
+        'A. Schools':          'SCHOOLS',
+        'B. Churches':         'CHURCHES',
+        'C. Hotels & Lodges':  'HOTELS',
+        'D. Hospitals & Clinics': 'HOSPITALS',
+        'E. Companies & Organizations': 'COMPANIES',
+        'F. Real Estate & Property': 'REAL_ESTATE',
+        'G. Shops & Businesses (Retail)': 'SHOPS',
         'Web & Digital':      'COMPANIES',
       };
       const bestCat = SOFTWARE_CATALOGUE.reduce((best, cat) => {
         const count = cat.items.filter(i => captureServices.includes(i.name)).length;
         return count > best.count ? { name: cat.category, count } : best;
-      }, { name: 'Business / Corporate', count: 0 }).name;
+      }, { name: 'E. Companies & Organizations', count: 0 }).name;
       const derivedIndustry = captureIndustry || CATEGORY_MAP[bestCat] || 'COMPANIES';
 
       // Step 1 — Save client (always succeeds independently of payment)
@@ -456,6 +575,7 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
       {captureStep === '3a' && (
         <form onSubmit={handleSystemSubmit}>
           <button type="button" onClick={() => setCaptureStep(1)} className="text-sm text-gray-500 hover:text-gray-700 mb-4 flex items-center gap-1">← Back</button>
+          <RetailDemoSuite themeHex={themeHex} />
 
           {/* Categorised software picker */}
           <div className="mb-5">

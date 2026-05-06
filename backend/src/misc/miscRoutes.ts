@@ -29,7 +29,7 @@ router.get('/service-amounts', async (_req, res) => {
     return res.status(403).json({ success: false, error: 'Pricing view is not allowed for this role' });
   }
   const r = await safeQuery(`SELECT id, service_name as "serviceName", current_amount as "currentAmount", status, updated_at as "updatedAt" FROM service_amounts ORDER BY service_name`);
-  res.json({ success: true, data: r.rows });
+  return res.json({ success: true, data: r.rows });
 });
 
 router.post('/service-amounts/:id/propose', async (req: Request, res: Response) => {
@@ -46,9 +46,9 @@ router.post('/service-amounts/:id/propose', async (req: Request, res: Response) 
        VALUES ($1, $2, $3, $4, 'PENDING', NOW())`,
       [id, newAmount, reason, requestedBy]
     );
-    res.json({ success: true, message: 'Proposal submitted for CEO approval' });
+    return res.json({ success: true, message: 'Proposal submitted for CEO approval' });
   } catch (e: any) {
-    res.status(400).json({ success: false, error: e.message || 'Failed to propose change' });
+    return res.status(400).json({ success: false, error: e.message || 'Failed to propose change' });
   }
 });
 
@@ -62,9 +62,9 @@ router.post('/service-amounts/:id/approve', async (req: Request, res: Response) 
     const { newAmount, reason } = req.body;
     await safeQuery(`UPDATE service_amounts SET current_amount = $1, updated_at = NOW() WHERE id = $2`, [newAmount, id]);
     logger.info('Service amount approved', { id, newAmount, reason });
-    res.json({ success: true, message: 'Amount updated' });
+    return res.json({ success: true, message: 'Amount updated' });
   } catch (e: any) {
-    res.status(400).json({ success: false, error: e.message || 'Failed to update amount' });
+    return res.status(400).json({ success: false, error: e.message || 'Failed to update amount' });
   }
 });
 

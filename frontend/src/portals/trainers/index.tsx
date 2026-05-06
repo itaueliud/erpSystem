@@ -388,24 +388,40 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
     e.preventDefault(); setAdding(true); setAddMsg('');
     try {
       const { apiClient } = await import('../../shared/api/apiClient');
-      if (!addForm.password.trim()) {
+      const phone = addForm.phone.trim();
+      const idNumber = addForm.idNumber.trim();
+      const country = addForm.country.trim();
+      const paymentAccount = addForm.paymentAccount.trim();
+      const password = addForm.password.trim();
+      const fullName = addForm.fullName.toUpperCase().trim();
+      const phoneRegex = /^\+?\d{10,15}$/;
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{12,}$/;
+      if (!fullName || !phone || !idNumber || !country || !paymentAccount || !password) {
+        setAddOk(false); setAddMsg('Please complete all required fields.'); setAdding(false); return;
+      }
+      if (!phoneRegex.test(phone.replace(/\s+/g, ''))) {
+        setAddOk(false); setAddMsg('Phone number must be 10-15 digits (optional + prefix).'); setAdding(false); return;
+      }
+      if (!passwordRegex.test(password)) {
         setAddOk(false);
-        setAddMsg('Password is required');
+        setAddMsg('Password must be at least 12 characters with uppercase, lowercase, number, and special character.');
         setAdding(false);
         return;
       }
       const payload: any = {
-        fullName: addForm.fullName.toUpperCase().trim(),
-        phone: addForm.phone,
-        idNumber: addForm.idNumber,
-        country: addForm.country,
+        fullName,
+        phone,
+        idNumber,
+        country,
         paymentMethod: addForm.paymentType,
-        password: addForm.password.trim(),
+        password,
       };
-      if (addForm.paymentType === 'MPESA') payload.mpesaNumber = addForm.paymentAccount;
-      else payload.payoutPhone = addForm.paymentAccount;
-      await apiClient.post('/api/v1/agents/create', payload);
-      setAddOk(true); setAddMsg('Agent account created!');
+      if (addForm.paymentType === 'MPESA') payload.mpesaNumber = paymentAccount;
+      else payload.payoutPhone = paymentAccount;
+      const res = await apiClient.post('/api/v1/agents/create', payload);
+      const created = (res.data as any)?.data;
+      const createdEmail = created?.email;
+      setAddOk(true); setAddMsg(createdEmail ? `Agent account created successfully. Login email: ${createdEmail}` : 'Agent account created successfully.');
       setAddForm({ fullName: '', phone: '', idNumber: '', country: '', paymentType: 'MPESA', paymentAccount: '', password: '', coverPhoto: null });
       refetch(['myAgents']);
     } catch (err: any) { setAddOk(false); setAddMsg(err?.response?.data?.error || 'Failed'); }
@@ -650,12 +666,13 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
                   className={inputCls}
                   placeholder="At least 12 chars, upper/lower/number/special"
                 />
+                <p className="text-xs text-gray-400 mt-1">Minimum 12 chars, include uppercase, lowercase, number and special character.</p>
               </div>
               <div className="mb-6">
                 <label className={labelCls}>Cover Photo</label>
                 <input type="file" accept="image/*" onChange={e => setAddForm(f => ({ ...f, coverPhoto: e.target.files?.[0] || null }))} className="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200" />
               </div>
-              <PortalButton color={theme.hex} fullWidth disabled={adding}>{adding ? 'Creating…' : 'Create Agent'}</PortalButton>
+              <PortalButton color={theme.hex} fullWidth disabled={adding || !addForm.fullName.trim() || !addForm.phone.trim() || !addForm.idNumber.trim() || !addForm.country.trim() || !addForm.paymentAccount.trim() || !addForm.password.trim()}>{adding ? 'Creating…' : 'Create Agent'}</PortalButton>
             </form>
           </div>
         </div>

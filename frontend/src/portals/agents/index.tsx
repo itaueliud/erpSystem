@@ -226,53 +226,53 @@ function RetailDemoSuite({ themeHex }: { themeHex: string }) {
   const [pricingMsg, setPricingMsg] = useState('');
   const [cart, setCart] = useState<Array<{ id: number; name: string; price: number; qty: number }>>([]);
   const [inventory, setInventory] = useState([
-    { sku: 'SKU-001', name: 'TST Backpack', stock: 18, reorderAt: 10 },
-    { sku: 'SKU-002', name: 'TST Headphones', stock: 7, reorderAt: 8 },
-    { sku: 'SKU-003', name: 'TST Notebook', stock: 32, reorderAt: 12 },
+    { sku: 'DEMO-POS-001', name: 'POS License Seats', stock: 12, reorderAt: 5 },
+    { sku: 'DEMO-INV-001', name: 'Inventory Setup Slots', stock: 9, reorderAt: 4 },
+    { sku: 'DEMO-LOY-001', name: 'Loyalty Campaign Bundles', stock: 15, reorderAt: 6 },
   ]);
   const [loyalty, setLoyalty] = useState([
-    { name: 'Amina Otieno', points: 820 },
-    { name: 'James Kato', points: 190 },
-    { name: 'Grace Njeri', points: 1230 },
+    { name: 'Nairobi Pilot Client', points: 820 },
+    { name: 'Kampala Rollout Client', points: 190 },
+    { name: 'Dar Program Client', points: 1230 },
   ]);
   const [cashReceived, setCashReceived] = useState('0');
   const [lastSale, setLastSale] = useState<{ total: number; paid: number; change: number } | null>(null);
   const [inventoryLog, setInventoryLog] = useState<string[]>([]);
   const INDUSTRY_PRODUCTS: Record<string, Array<{ id: number; name: string; price: number }>> = {
     'A. Schools': [
-      { id: 1, name: 'School Backpack', price: 3500 },
-      { id: 2, name: 'Scientific Calculator', price: 1800 },
-      { id: 3, name: 'Exercise Books Pack', price: 900 },
+      { id: 1, name: 'School Portal Setup', price: 95000 },
+      { id: 2, name: 'LMS Module Bundle', price: 70000 },
+      { id: 3, name: 'Fee Tracking Add-on', price: 60000 },
     ],
     'B. Churches': [
-      { id: 1, name: 'Choir Uniform Set', price: 4200 },
-      { id: 2, name: 'Audio Cable Kit', price: 2600 },
-      { id: 3, name: 'Ushering Badge Pack', price: 1200 },
+      { id: 1, name: 'Member Records Module', price: 65000 },
+      { id: 2, name: 'Online Giving Integration', price: 55000 },
+      { id: 3, name: 'Events & Service Scheduler', price: 50000 },
     ],
     'C. Hotels & Lodges': [
-      { id: 1, name: 'Guest Towel Set', price: 2800 },
-      { id: 2, name: 'Room Slippers Pair', price: 950 },
-      { id: 3, name: 'Mini-Bar Snacks Box', price: 1600 },
+      { id: 1, name: 'Booking Engine Package', price: 120000 },
+      { id: 2, name: 'Room Management Suite', price: 85000 },
+      { id: 3, name: 'Hotel Billing + POS', price: 90000 },
     ],
     'D. Hospitals & Clinics': [
-      { id: 1, name: 'Medical Gloves Box', price: 2100 },
-      { id: 2, name: 'Face Mask Pack', price: 1400 },
-      { id: 3, name: 'Sanitizer Refill', price: 800 },
+      { id: 1, name: 'Patient Records Core', price: 140000 },
+      { id: 2, name: 'Appointment Workflow', price: 80000 },
+      { id: 3, name: 'Pharmacy Stock Module', price: 95000 },
     ],
     'E. Companies & Organizations': [
-      { id: 1, name: 'Office Backpack', price: 3900 },
-      { id: 2, name: 'Wireless Mouse', price: 2200 },
-      { id: 3, name: 'Notebook Bundle', price: 1100 },
+      { id: 1, name: 'HR & Payroll Suite', price: 110000 },
+      { id: 2, name: 'CRM Rollout Package', price: 90000 },
+      { id: 3, name: 'Business Inventory Module', price: 75000 },
     ],
     'F. Real Estate & Property': [
-      { id: 1, name: 'Key Tag Set', price: 700 },
-      { id: 2, name: 'Tenant Welcome Pack', price: 3200 },
-      { id: 3, name: 'Maintenance Toolkit', price: 5400 },
+      { id: 1, name: 'Property Listing Platform', price: 130000 },
+      { id: 2, name: 'Tenant & Rent Manager', price: 95000 },
+      { id: 3, name: 'Agent Operations Portal', price: 70000 },
     ],
     'G. Shops & Businesses (Retail)': [
-      { id: 1, name: 'TST Backpack', price: 3500 },
-      { id: 2, name: 'TST Headphones', price: 6200 },
-      { id: 3, name: 'TST Notebook', price: 900 },
+      { id: 1, name: 'E-commerce Website Package', price: 120000 },
+      { id: 2, name: 'POS System Package', price: 65000 },
+      { id: 3, name: 'Inventory + Loyalty Bundle', price: 70000 },
     ],
   };
   const products = INDUSTRY_PRODUCTS[industry] || INDUSTRY_PRODUCTS['G. Shops & Businesses (Retail)'];
@@ -459,22 +459,22 @@ function RetailDemoSuite({ themeHex }: { themeHex: string }) {
       )}
       {tab === 'pos' && (
         <div id="demo-pos" className="space-y-3">
-          <p className="text-xs text-gray-500">POS checkout uses the same cart from E-commerce demo.</p>
+          <p className="text-xs text-gray-500">POS checkout uses selected package(s) from the E-commerce demo and follows commitment flow logic.</p>
           <div className="rounded-xl border border-gray-200 p-3 text-sm">
             {cart.length === 0 ? <p className="text-gray-500">No items yet</p> : cart.map(i => <p key={i.id}>{i.name} x{i.qty} - KSh {(i.price * i.qty).toLocaleString()}</p>)}
             <p className="mt-2 font-semibold">Total: KSh {total.toLocaleString()}</p>
           </div>
           <div className="rounded-xl border border-gray-200 p-3">
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Cash Received (KSh)</label>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Commitment Received (KSh)</label>
             <input type="number" min={0} value={cashReceived} onChange={e => setCashReceived(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm" />
             <button type="button" onClick={checkout} disabled={Number(cashReceived || 0) < total || total <= 0}
               className="mt-2 px-3 py-2 rounded-lg text-white text-xs font-semibold disabled:opacity-40"
               style={{ backgroundColor: themeHex }}>
-              Complete Checkout
+              Confirm Demo Payment
             </button>
             {lastSale && (
               <p className="mt-2 text-xs text-green-700">
-                Sale complete. Paid: KSh {lastSale.paid.toLocaleString()} | Change: KSh {lastSale.change.toLocaleString()}
+                Payment recorded. Received: KSh {lastSale.paid.toLocaleString()} | Balance/Change: KSh {lastSale.change.toLocaleString()}
               </p>
             )}
           </div>
@@ -499,7 +499,7 @@ function RetailDemoSuite({ themeHex }: { themeHex: string }) {
             </div>
           ))}
           <div className="rounded-xl border border-gray-200 p-3">
-            <p className="text-xs font-semibold text-gray-600 mb-2">Recent Stock Movements</p>
+            <p className="text-xs font-semibold text-gray-600 mb-2">Recent Demo Capacity Movements</p>
             {inventoryLog.length === 0 ? <p className="text-xs text-gray-500">No movements recorded.</p> : (
               <ul className="text-xs text-gray-600 space-y-1">
                 {inventoryLog.map((entry, i) => <li key={`${entry}-${i}`}>{entry}</li>)}
@@ -514,7 +514,7 @@ function RetailDemoSuite({ themeHex }: { themeHex: string }) {
             <div key={c.name} className="rounded-xl border border-gray-200 p-2 text-sm flex items-center justify-between">
               <div>
                 <span>{c.name}</span>
-                <p className="text-xs text-gray-500">{tierForPoints(c.points)} Tier</p>
+                <p className="text-xs text-gray-500">{tierForPoints(c.points)} Tier - Client retention status</p>
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-semibold">{c.points} pts</span>

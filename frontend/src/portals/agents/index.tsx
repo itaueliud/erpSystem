@@ -220,6 +220,7 @@ function SoftwareCategoryAccordion({ category, icon, items, selected, themeHex, 
 }
 
 function RetailDemoSuite({ themeHex }: { themeHex: string }) {
+  const [industry, setIndustry] = useState('A. Schools');
   const [tab, setTab] = useState<RetailDemoKey>('ecommerce');
   const [cart, setCart] = useState<Array<{ id: number; name: string; price: number; qty: number }>>([]);
   const [inventory, setInventory] = useState([
@@ -247,28 +248,46 @@ function RetailDemoSuite({ themeHex }: { themeHex: string }) {
       return [...prev, { ...product, qty: 1 }];
     });
   };
+  const INDUSTRY_OPTIONS = SOFTWARE_CATALOGUE
+    .filter(c => /^[A-G]\.\s/.test(c.category))
+    .map(c => c.category);
+  const MODULE_OPTIONS: Array<{ key: RetailDemoKey; label: string }> = [
+    { key: 'ecommerce', label: '1. E-commerce Website' },
+    { key: 'pos', label: '2. POS' },
+    { key: 'inventory', label: '3. Inventory System' },
+    { key: 'loyalty', label: '4. Customer Loyalty System' },
+  ];
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-4 mb-6">
       <p className="text-sm font-semibold text-gray-800 mb-1">Demo Suite For A-G (Fully Interactive)</p>
-      <p className="text-xs text-gray-500 mb-3">Applies to all industries A through G. Pricing is managed centrally by EA.</p>
-      <div className="flex flex-wrap gap-2 mb-4">
-        {[
-          { key: 'ecommerce' as const, label: '1. E-commerce Website', id: 'demo-ecommerce' },
-          { key: 'pos' as const, label: '2. POS', id: 'demo-pos' },
-          { key: 'inventory' as const, label: '3. Inventory System', id: 'demo-inventory' },
-          { key: 'loyalty' as const, label: '4. Customer Loyalty', id: 'demo-loyalty' },
-        ].map(t => (
-          <button key={t.key} id={t.id} type="button" onClick={() => setTab(t.key)}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${tab === t.key ? 'text-white border-transparent' : 'text-gray-600 border-gray-300'}`}
-            style={tab === t.key ? { backgroundColor: themeHex } : {}}>
-            {t.label}
-          </button>
-        ))}
+      <p className="text-xs text-gray-500 mb-3">Step 1: choose industry A-G. Step 2: choose option 1-4. Pricing is managed by EA.</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+        <div>
+          <label className="block text-xs font-semibold text-gray-600 mb-1">Industry (A-G)</label>
+          <select
+            value={industry}
+            onChange={e => setIndustry(e.target.value)}
+            className="w-full px-3 py-2 rounded-xl border border-gray-300 text-sm"
+          >
+            {INDUSTRY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-gray-600 mb-1">Demo Option</label>
+          <select
+            value={tab}
+            onChange={e => setTab(e.target.value as RetailDemoKey)}
+            className="w-full px-3 py-2 rounded-xl border border-gray-300 text-sm"
+          >
+            {MODULE_OPTIONS.map(opt => <option key={opt.key} value={opt.key}>{opt.label}</option>)}
+          </select>
+        </div>
       </div>
+      <p className="text-xs text-gray-500 mb-3">Selected: <span className="font-semibold text-gray-700">{industry}</span> -> <span className="font-semibold text-gray-700">{MODULE_OPTIONS.find(m => m.key === tab)?.label}</span></p>
 
       {tab === 'ecommerce' && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div id="demo-ecommerce" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {products.map(p => (
             <div key={p.id} className="border border-gray-200 rounded-xl p-3">
               <p className="text-sm font-medium text-gray-800">{p.name}</p>
@@ -281,7 +300,7 @@ function RetailDemoSuite({ themeHex }: { themeHex: string }) {
         </div>
       )}
       {tab === 'pos' && (
-        <div>
+        <div id="demo-pos">
           <p className="text-xs text-gray-500 mb-2">Quick receipt preview</p>
           <div className="rounded-xl border border-gray-200 p-3 text-sm">
             {cart.length === 0 ? <p className="text-gray-500">No items yet</p> : cart.map(i => <p key={i.id}>{i.name} x{i.qty} - KSh {(i.price * i.qty).toLocaleString()}</p>)}
@@ -290,7 +309,7 @@ function RetailDemoSuite({ themeHex }: { themeHex: string }) {
         </div>
       )}
       {tab === 'inventory' && (
-        <div className="space-y-2">
+        <div id="demo-inventory" className="space-y-2">
           {inventory.map((it, idx) => (
             <div key={it.sku} className="rounded-xl border border-gray-200 p-2 text-sm flex items-center justify-between gap-2">
               <span>{it.name} ({it.sku}) - Stock: {it.stock}</span>
@@ -304,7 +323,7 @@ function RetailDemoSuite({ themeHex }: { themeHex: string }) {
         </div>
       )}
       {tab === 'loyalty' && (
-        <div className="space-y-2">
+        <div id="demo-loyalty" className="space-y-2">
           {loyalty.map((c, idx) => (
             <div key={c.name} className="rounded-xl border border-gray-200 p-2 text-sm flex items-center justify-between">
               <span>{c.name}</span>

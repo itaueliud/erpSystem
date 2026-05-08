@@ -1,0 +1,14 @@
+{
+  "buildCommand": "bash ./scripts/vercel-build.sh",
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/gatewaynexus(.*)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/((?!.*\\.).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

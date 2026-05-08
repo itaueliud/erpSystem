@@ -8,6 +8,26 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Ensure core.techswifttrix.com always lands on /login
+      (function() {
+        try {
+          var host = location.hostname;
+          var path = location.pathname || '/';
+          if (host === 'core.techswifttrix.com') {
+            // If not already on /login (and not requesting assets), redirect.
+            var isLogin = /^\/login(\/|$)/i.test(path);
+            var isAsset = /\.[a-zA-Z0-9]{2,6}$/.test(path);
+            if (!isLogin && !isAsset) {
+              // Use replace to avoid polluting history
+              location.replace('https://core.techswifttrix.com/login');
+            }
+          }
+        } catch (e) {
+          // no-op
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

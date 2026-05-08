@@ -13,10 +13,10 @@ npm run "build:${PORTAL}"
 
 # Keep Vercel outputDirectory stable at frontend/dist
 if [ -d "dist/${PORTAL}" ]; then
-  rm -rf dist/_deploy
-  mkdir -p dist/_deploy
-  cp -a "dist/${PORTAL}/." dist/_deploy/
-  rm -rf dist/*
-  mv dist/_deploy/* dist/ 2>/dev/null || true
-  rm -rf dist/_deploy
+  tmpdir="$(mktemp -d)"
+  cp -a "dist/${PORTAL}/." "${tmpdir}/"
+  rm -rf dist
+  mkdir -p dist
+  cp -a "${tmpdir}/." dist/
+  rm -rf "${tmpdir}"
 fi

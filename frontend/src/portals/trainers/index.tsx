@@ -820,13 +820,13 @@ export default function TrainersPortal() {
   ]);
 
   if (!user) {
-    navigate('/login');
+    navigate('/login', { state: { from: { pathname: '/gatewaynexus' } } });
     return null;
   }
 
   const props = { data: data || {}, refetch, user };
 
-  const logoutFn = () => { logout(); navigate('/login'); };
+  const logoutFn = () => { logout(); navigate('/login', { state: { from: { pathname: '/gatewaynexus' } } }); };
   if (user.role === 'HEAD_OF_TRAINERS') return <HoTDashboard {...props} onLogout={logoutFn} />;
   return <TrainerDashboard {...props} onLogout={logoutFn} />;
 }

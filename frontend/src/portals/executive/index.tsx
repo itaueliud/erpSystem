@@ -2030,7 +2030,7 @@ export default function ExecutivePortal() {
     'data:contract:generated', 'data:client:status_changed', 'data:property:updated',
   ]);
 
-  const handleLogout = () => { logout(); navigate('/login'); };
+  const handleLogout = () => { logout(); navigate('/login', { state: { from: { pathname: '/gatewaydelta' } } }); };
   const role = user?.role;
 
   // Wrap logout into each sub-dashboard via a patched user object

@@ -1404,16 +1404,16 @@ export default function CLevelPortal() {
   }
 
   if (!user) {
-    navigate('/login');
+    navigate('/login', { state: { from: { pathname: '/gatewaysigma' } } });
     return null;
   }
 
   if (user.role === 'COO') {
-    return <COODashboard data={data} refetch={refetch} user={user} onLogout={() => { logout(); navigate('/login'); }} />;
+    return <COODashboard data={data} refetch={refetch} user={user} onLogout={() => { logout(); navigate('/login', { state: { from: { pathname: '/gatewaysigma' } } }); }} />;
   }
 
   if (user.role === 'CTO') {
-    return <CTODashboard data={data} refetch={refetch} user={user} onLogout={() => { logout(); navigate('/login'); }} />;
+    return <CTODashboard data={data} refetch={refetch} user={user} onLogout={() => { logout(); navigate('/login', { state: { from: { pathname: '/gatewaysigma' } } }); }} />;
   }
 
   // Fallback for unexpected roles
@@ -1422,7 +1422,7 @@ export default function CLevelPortal() {
       <div className={`${cardCls} text-center max-w-sm`} style={cardStyle}>
         <p className="text-gray-700 font-medium mb-2">Access Restricted</p>
         <p className="text-sm text-gray-500 mb-4">This portal is for COO and CTO roles only.</p>
-        <PortalButton color={theme.hex} onClick={() => { logout(); navigate('/login'); }}>Sign Out</PortalButton>
+        <PortalButton color={theme.hex} onClick={() => { logout(); navigate('/login', { state: { from: { pathname: '/gatewaysigma' } } }); }}>Sign Out</PortalButton>
       </div>
     </div>
   );

@@ -198,7 +198,7 @@ export function SalesClientAcquisitionDashboard() {
 
   const nav = NAV;
 
-  const handleLogout = () => { logout(); navigate('/login'); };
+  const handleLogout = () => { logout(); navigate('/login', { state: { from: { pathname: '/gatewaynexus' } } }); };
   const portalUser = { name: user?.name || 'Operations', email: user?.email || 'ops@tst.com', role: 'Operations Manager' };
 
   return (

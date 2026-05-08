@@ -1476,7 +1476,7 @@ export default function AgentsPortal() {
 
   const nav = NAV;
 
-  const handleLogout = () => { logout(); navigate('/login'); };
+  const handleLogout = () => { logout(); navigate('/login', { state: { from: { pathname: '/gatewaypulse' } } }); };
   const portalUser = { name: user?.name || 'Agent', email: user?.email || 'agent@tst.com', role: 'Sales Agent' };
 
   return (

@@ -2951,7 +2951,7 @@ export default function CEOPortal() {
 
   const d = data as any;
   const initials = (profileForm.name || user?.name || user?.email || 'C').split(/[\s._-]+/).filter(Boolean).map(p => p[0]).join('').toUpperCase().slice(0, 2);
-  const handleLogout = () => { logout(); navigate('/login'); };
+  const handleLogout = () => { logout(); navigate('/login', { state: { from: { pathname: '/gatewayalpha' } } }); };
   const sectionProps = { data: d, refetch, currentUserId: user?.id };
 
   React.useEffect(() => {

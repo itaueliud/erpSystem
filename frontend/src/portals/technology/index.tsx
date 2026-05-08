@@ -1269,7 +1269,7 @@ export default function TechnologyPortal() {
   // Determine department type from userProfile
   const deptType: string = userProfile.departmentType || userProfile.department_type || '';
 
-  const handleLogout = () => { logout(); navigate('/login'); };
+  const handleLogout = () => { logout(); navigate('/login', { state: { from: { pathname: '/gatewayvertex' } } }); };
 
   if (loading) {
     return (

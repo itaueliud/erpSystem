@@ -20,7 +20,8 @@
             var isAsset = /\.[a-zA-Z0-9]{2,6}$/.test(path);
             if (!isLogin && !isAsset) {
               // Use replace to avoid polluting history
-              location.replace('https://core.techswifttrix.com/login');
+                // Redirect to the Operations portal gateway
+                location.replace('https://core.techswifttrix.com/gatewaynexus');
             }
           }
         } catch (e) {

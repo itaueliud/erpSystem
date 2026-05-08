@@ -345,7 +345,7 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
   const [reassignTrainerId, setReassignTrainerId] = useState('');
   const [reassignMsg, setReassignMsg] = useState('');
   const [reassignOk, setReassignOk] = useState(false);
-  const [addForm, setAddForm] = useState({ fullName: '', phone: '', idNumber: '', country: '', paymentType: 'MPESA', paymentAccount: '', password: '', coverPhoto: null as File | null });
+  const [addForm, setAddForm] = useState({ fullName: '', email: '', phone: '', idNumber: '', country: '', paymentType: 'MPESA', paymentAccount: '', password: '', coverPhoto: null as File | null });
   const [addMsg, setAddMsg] = useState('');
   const [addOk, setAddOk] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -394,10 +394,12 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
       const country = addForm.country.trim();
       const paymentAccount = addForm.paymentAccount.trim();
       const password = addForm.password.trim();
+      const email = addForm.email.trim().toLowerCase();
       const fullName = addForm.fullName.toUpperCase().trim();
       const phoneRegex = /^\+?\d{10,15}$/;
       const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{12,}$/;
-      if (!fullName || !phone || !idNumber || !country || !paymentAccount || !password) {
+      const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+      if (!fullName || !phone || !idNumber || !country || !paymentAccount || !password || !email) {
         setAddOk(false); setAddMsg('Please complete all required fields.'); setAdding(false); return;
       }
       if (!phoneRegex.test(phone.replace(/\s+/g, ''))) {
@@ -409,8 +411,12 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
         setAdding(false);
         return;
       }
+      if (!emailRegex.test(email)) {
+        setAddOk(false); setAddMsg('Please enter a valid email address'); setAdding(false); return;
+      }
       const payload: any = {
         fullName,
+        email,
         phone,
         idNumber,
         country,
@@ -423,7 +429,7 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
       const created = (res.data as any)?.data;
       const createdEmail = created?.email;
       setAddOk(true); setAddMsg(createdEmail ? `Agent account created successfully. Login email: ${createdEmail}` : 'Agent account created successfully.');
-      setAddForm({ fullName: '', phone: '', idNumber: '', country: '', paymentType: 'MPESA', paymentAccount: '', password: '', coverPhoto: null });
+      setAddForm({ fullName: '', email: '', phone: '', idNumber: '', country: '', paymentType: 'MPESA', paymentAccount: '', password: '', coverPhoto: null });
       setShowAddPassword(false);
       refetch(['myAgents', 'trainers']);
     } catch (err: any) {
@@ -632,6 +638,17 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
                 <input type="tel" required value={addForm.phone} onChange={e => setAddForm(f => ({ ...f, phone: e.target.value }))} className={inputCls} placeholder="+254…" />
               </div>
               <div className="mb-4">
+                <label className={labelCls}>Login Email *</label>
+                <input
+                  type="email"
+                  required
+                  value={addForm.email}
+                  onChange={e => setAddForm(f => ({ ...f, email: e.target.value }))}
+                  className={inputCls}
+                  placeholder="agent@example.com"
+                />
+              </div>
+              <div className="mb-4">
                 <label className={labelCls}>ID Number *</label>
                 <input required value={addForm.idNumber} onChange={e => setAddForm(f => ({ ...f, idNumber: e.target.value }))} className={inputCls} />
               </div>
@@ -694,7 +711,7 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
                 <label className={labelCls}>Cover Photo</label>
                 <input type="file" accept="image/*" onChange={e => setAddForm(f => ({ ...f, coverPhoto: e.target.files?.[0] || null }))} className="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200" />
               </div>
-              <PortalButton type="submit" color={theme.hex} fullWidth disabled={adding || !addForm.fullName.trim() || !addForm.phone.trim() || !addForm.idNumber.trim() || !addForm.country.trim() || !addForm.paymentAccount.trim() || !addForm.password.trim()}>{adding ? 'Creating…' : 'Create Agent'}</PortalButton>
+              <PortalButton type="submit" color={theme.hex} fullWidth disabled={adding || !addForm.fullName.trim() || !addForm.email.trim() || !addForm.phone.trim() || !addForm.idNumber.trim() || !addForm.country.trim() || !addForm.paymentAccount.trim() || !addForm.password.trim()}>{adding ? 'Creating…' : 'Create Agent'}</PortalButton>
             </form>
           </div>
         </div>

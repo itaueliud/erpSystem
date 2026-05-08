@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm --workspace=frontend run build:operations",
+  "buildCommand": "npm ci --prefix frontend && npm run build:operations --prefix frontend",
   "outputDirectory": "frontend/dist",
   "rewrites": [
     {

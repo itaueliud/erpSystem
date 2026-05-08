@@ -3,7 +3,6 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
-      {
       "source": "/gatewaynexus(.*)",
       "destination": "/operations/index.html"
     },

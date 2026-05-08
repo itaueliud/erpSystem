@@ -38,6 +38,11 @@ CREATE TABLE IF NOT EXISTS marketer_properties (
   updated_at           TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE marketer_properties
+  ADD COLUMN IF NOT EXISTS submitted_by UUID REFERENCES users(id),
+  ADD COLUMN IF NOT EXISTS status VARCHAR(50),
+  ADD COLUMN IF NOT EXISTS payment_status VARCHAR(50);
+
 CREATE INDEX IF NOT EXISTS idx_marketer_properties_submitted_by ON marketer_properties(submitted_by);
 CREATE INDEX IF NOT EXISTS idx_marketer_properties_status       ON marketer_properties(status);
 CREATE INDEX IF NOT EXISTS idx_marketer_properties_payment      ON marketer_properties(payment_status);
@@ -53,6 +58,9 @@ CREATE TABLE IF NOT EXISTS marketer_property_images (
   created_at  TIMESTAMP   NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE marketer_property_images
+  ADD COLUMN IF NOT EXISTS property_id UUID REFERENCES marketer_properties(id);
+
 CREATE INDEX IF NOT EXISTS idx_marketer_property_images_property ON marketer_property_images(property_id);
 
 -- Manual M-Pesa messages (Tab 5)
@@ -63,6 +71,9 @@ CREATE TABLE IF NOT EXISTS marketer_mpesa_messages (
   sent_by    UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   created_at TIMESTAMP   NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE marketer_mpesa_messages
+  ADD COLUMN IF NOT EXISTS sent_by UUID REFERENCES users(id);
 
 CREATE INDEX IF NOT EXISTS idx_marketer_mpesa_messages_sent_by ON marketer_mpesa_messages(sent_by);
 

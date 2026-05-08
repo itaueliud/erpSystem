@@ -349,6 +349,7 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
   const [addMsg, setAddMsg] = useState('');
   const [addOk, setAddOk] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [showAddPassword, setShowAddPassword] = useState(false);
   const [inviteTrainerEmail, setInviteTrainerEmail] = useState('');
   const [inviteTrainerMsg, setInviteTrainerMsg] = useState('');
   const [inviteTrainerOk, setInviteTrainerOk] = useState(false);
@@ -385,7 +386,7 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
   };
 
   const submitAddAgent = async (e: React.FormEvent) => {
-    e.preventDefault(); setAdding(true); setAddMsg('');
+    e.preventDefault(); setAdding(true); setAddOk(false); setAddMsg('Creating agent account...');
     try {
       const { apiClient } = await import('../../shared/api/apiClient');
       const phone = addForm.phone.trim();
@@ -423,8 +424,19 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
       const createdEmail = created?.email;
       setAddOk(true); setAddMsg(createdEmail ? `Agent account created successfully. Login email: ${createdEmail}` : 'Agent account created successfully.');
       setAddForm({ fullName: '', phone: '', idNumber: '', country: '', paymentType: 'MPESA', paymentAccount: '', password: '', coverPhoto: null });
-      refetch(['myAgents']);
-    } catch (err: any) { setAddOk(false); setAddMsg(err?.response?.data?.error || 'Failed'); }
+      setShowAddPassword(false);
+      refetch(['myAgents', 'trainers']);
+    } catch (err: any) {
+      const status = err?.response?.status;
+      const apiError = err?.response?.data?.error;
+      if (status === 404) {
+        setAddOk(false);
+        setAddMsg(apiError || 'Create-agent API route not found (404). Confirm backend is running and `/api/v1/agents/create` is available.');
+      } else {
+        setAddOk(false);
+        setAddMsg(apiError || err?.message || 'Failed to create agent');
+      }
+    }
     finally { setAdding(false); }
   };
 
@@ -658,21 +670,31 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
               </div>
               <div className="mb-6">
                 <label className={labelCls}>Password *</label>
-                <input
-                  type="password"
-                  required
-                  value={addForm.password}
-                  onChange={e => setAddForm(f => ({ ...f, password: e.target.value }))}
-                  className={inputCls}
-                  placeholder="At least 12 chars, upper/lower/number/special"
-                />
+                <div className="relative">
+                  <input
+                    type={showAddPassword ? 'text' : 'password'}
+                    required
+                    autoComplete="new-password"
+                    value={addForm.password}
+                    onChange={e => setAddForm(f => ({ ...f, password: e.target.value }))}
+                    className={`${inputCls} pr-20`}
+                    placeholder="At least 12 chars, upper/lower/number/special"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAddPassword(v => !v)}
+                    className="absolute inset-y-0 right-3 text-xs font-medium text-gray-500 hover:text-gray-700"
+                  >
+                    {showAddPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
                 <p className="text-xs text-gray-400 mt-1">Minimum 12 chars, include uppercase, lowercase, number and special character.</p>
               </div>
               <div className="mb-6">
                 <label className={labelCls}>Cover Photo</label>
                 <input type="file" accept="image/*" onChange={e => setAddForm(f => ({ ...f, coverPhoto: e.target.files?.[0] || null }))} className="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200" />
               </div>
-              <PortalButton color={theme.hex} fullWidth disabled={adding || !addForm.fullName.trim() || !addForm.phone.trim() || !addForm.idNumber.trim() || !addForm.country.trim() || !addForm.paymentAccount.trim() || !addForm.password.trim()}>{adding ? 'Creating…' : 'Create Agent'}</PortalButton>
+              <PortalButton type="submit" color={theme.hex} fullWidth disabled={adding || !addForm.fullName.trim() || !addForm.phone.trim() || !addForm.idNumber.trim() || !addForm.country.trim() || !addForm.paymentAccount.trim() || !addForm.password.trim()}>{adding ? 'Creating…' : 'Create Agent'}</PortalButton>
             </form>
           </div>
         </div>

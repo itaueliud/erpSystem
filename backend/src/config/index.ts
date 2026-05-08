@@ -42,14 +42,19 @@ export const config = {
     password: process.env.DB_PASSWORD!,
     poolMin: parseInt(process.env.DB_POOL_MIN || '10', 10),
     poolMax: parseInt(process.env.DB_POOL_MAX || '100', 10),
+    sslEnabled: (process.env.DB_SSL || '').toLowerCase() === 'true',
+    sslRejectUnauthorized: (process.env.DB_SSL_REJECT_UNAUTHORIZED || '').toLowerCase() !== 'false',
   },
 
   // Redis Configuration
   redis: {
     host: process.env.REDIS_HOST!,
     port: parseInt(process.env.REDIS_PORT || '6379', 10),
+    username: process.env.REDIS_USERNAME || undefined,
     password: process.env.REDIS_PASSWORD || undefined,
     db: parseInt(process.env.REDIS_DB || '0', 10),
+    tlsEnabled: (process.env.REDIS_TLS || '').toLowerCase() === 'true',
+    tlsServerName: process.env.REDIS_TLS_SERVERNAME || undefined,
   },
 
   // JWT Configuration

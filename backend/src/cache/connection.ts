@@ -12,7 +12,10 @@ class RedisCache {
       socket: {
         host: config.redis.host,
         port: config.redis.port,
+        tls: config.redis.tlsEnabled || undefined,
+        servername: config.redis.tlsServerName || config.redis.host,
       },
+      username: config.redis.username,
       password: config.redis.password,
       database: config.redis.db,
     });
@@ -28,7 +31,11 @@ class RedisCache {
     });
 
     this.client.on('error', (err) => {
-      logger.error('Redis client error', { error: err });
+      logger.error('Redis client error', {
+        message: err?.message,
+        name: err?.name,
+        code: (err as any)?.code,
+      });
     });
 
     this.client.on('end', () => {

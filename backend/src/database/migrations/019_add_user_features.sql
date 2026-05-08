@@ -78,11 +78,26 @@ CREATE INDEX IF NOT EXISTS idx_contract_templates_is_default ON contract_templat
 CREATE INDEX IF NOT EXISTS idx_contract_templates_is_active  ON contract_templates(is_active);
 
 -- ── Projects: default currency KES ───────────────────────────────────────────
-ALTER TABLE projects
-  ALTER COLUMN currency SET DEFAULT 'KES';
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'projects' AND column_name = 'currency'
+  ) THEN
+    ALTER TABLE projects ALTER COLUMN currency SET DEFAULT 'KES';
+  END IF;
 
-ALTER TABLE payments
-  ALTER COLUMN currency SET DEFAULT 'KES';
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'payments' AND column_name = 'currency'
+  ) THEN
+    ALTER TABLE payments ALTER COLUMN currency SET DEFAULT 'KES';
+  END IF;
 
-ALTER TABLE property_listings
-  ALTER COLUMN currency SET DEFAULT 'KES';
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'property_listings' AND column_name = 'currency'
+  ) THEN
+    ALTER TABLE property_listings ALTER COLUMN currency SET DEFAULT 'KES';
+  END IF;
+END $$;

@@ -17,6 +17,9 @@ class Database {
       max: config.database.poolMax,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 10000,
+      ssl: config.database.sslEnabled
+        ? { rejectUnauthorized: config.database.sslRejectUnauthorized }
+        : undefined,
     });
 
     // Handle pool errors

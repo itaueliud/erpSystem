@@ -123,11 +123,21 @@ CREATE TABLE IF NOT EXISTS developer_teams (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+ALTER TABLE developer_teams
+  ADD COLUMN IF NOT EXISTS department_id UUID REFERENCES departments(id),
+  ADD COLUMN IF NOT EXISTS team_leader_id UUID REFERENCES users(id);
+
 CREATE INDEX IF NOT EXISTS idx_developer_teams_dept ON developer_teams(department_id);
 
 -- Link users to teams (already have team_id on users, add FK if missing)
 DO $$
 BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'users' AND column_name = 'team_id'
+  ) THEN
+    ALTER TABLE users ADD COLUMN team_id UUID;
+  END IF;
   IF NOT EXISTS (
     SELECT 1 FROM information_schema.table_constraints
     WHERE constraint_name = 'fk_users_team_id'
@@ -149,6 +159,10 @@ CREATE TABLE IF NOT EXISTS contract_signatures (
     uploaded_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+ALTER TABLE contract_signatures
+  ADD COLUMN IF NOT EXISTS contract_id UUID REFERENCES contracts(id),
+  ADD COLUMN IF NOT EXISTS team_leader_id UUID REFERENCES users(id);
 
 CREATE INDEX IF NOT EXISTS idx_contract_signatures_contract ON contract_signatures(contract_id);
 CREATE INDEX IF NOT EXISTS idx_contract_signatures_leader ON contract_signatures(team_leader_id);
@@ -172,6 +186,10 @@ CREATE TABLE IF NOT EXISTS portal_access_log (
     CONSTRAINT valid_portal CHECK (portal IN ('ALPHA','DELTA','SIGMA','NEXUS','VERTEX','PULSE'))
 );
 
+ALTER TABLE portal_access_log
+  ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES users(id),
+  ADD COLUMN IF NOT EXISTS portal VARCHAR(30);
+
 CREATE INDEX IF NOT EXISTS idx_portal_access_user ON portal_access_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_portal_access_portal ON portal_access_log(portal);
 
@@ -192,6 +210,9 @@ CREATE TABLE IF NOT EXISTS user_github_links (
     linked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_synced TIMESTAMP
 );
+
+ALTER TABLE user_github_links
+  ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES users(id);
 
 CREATE INDEX IF NOT EXISTS idx_github_links_user ON user_github_links(user_id);
 

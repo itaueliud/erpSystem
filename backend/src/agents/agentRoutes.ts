@@ -202,9 +202,14 @@ router.post('/create', requireRole(Role.HEAD_OF_TRAINERS), async (req: Request, 
     const generatedEmail = `agent.${normalizedPhone.replace(/[^\d+]/g, '')}@techswifttrix.com`;
     const effectiveEmail = (email || generatedEmail).toLowerCase().trim();
 
-    const existing = await db.query(`SELECT id FROM users WHERE email = $1`, [effectiveEmail]);
+    const existing = await db.query(`SELECT id FROM users WHERE lower(email) = lower($1)`, [effectiveEmail]);
     if (existing.rows.length > 0) {
       return res.status(409).json({ success: false, error: 'User with this email already exists' });
+    }
+
+    const existingPhone = await db.query(`SELECT id FROM users WHERE phone = $1`, [phone]);
+    if (existingPhone.rows.length > 0) {
+      return res.status(409).json({ success: false, error: 'User with this phone number already exists' });
     }
 
     const effectivePassword = String(password || '').trim();
@@ -234,6 +239,13 @@ router.post('/create', requireRole(Role.HEAD_OF_TRAINERS), async (req: Request, 
     const insertVals: any[] = [effectiveEmail, passwordHash, fullName, phone, agentCountry, roleId];
 
     if (existingColumns.has('national_id_number')) {
+      const existingNationalId = await db.query(
+        `SELECT id FROM users WHERE national_id_number = $1`,
+        [idNumber]
+      );
+      if (existingNationalId.rows.length > 0) {
+        return res.status(409).json({ success: false, error: 'User with this national ID already exists' });
+      }
       insertCols.push('national_id_number');
       insertVals.push(idNumber);
     }
@@ -281,8 +293,29 @@ router.post('/create', requireRole(Role.HEAD_OF_TRAINERS), async (req: Request, 
       message: 'Agent created successfully. Ask the agent to change this password after first login.',
     });
   } catch (error: any) {
-    logger.error('Create agent error', { error });
-    return res.status(400).json({ success: false, error: error.message });
+    logger.error('Create agent error', {
+      message: error?.message,
+      code: error?.code,
+      detail: error?.detail,
+      constraint: error?.constraint,
+      table: error?.table,
+    });
+
+    if (error?.code === '23505') {
+      const c = String(error?.constraint || '').toLowerCase();
+      if (c.includes('email')) {
+        return res.status(409).json({ success: false, error: 'User with this email already exists' });
+      }
+      if (c.includes('phone')) {
+        return res.status(409).json({ success: false, error: 'User with this phone number already exists' });
+      }
+      if (c.includes('national') || c.includes('id')) {
+        return res.status(409).json({ success: false, error: 'User with this national ID already exists' });
+      }
+      return res.status(409).json({ success: false, error: 'User already exists with duplicate details' });
+    }
+
+    return res.status(400).json({ success: false, error: error?.message || 'Failed to create agent account' });
   }
 });
 

@@ -200,6 +200,7 @@ CREATE TABLE payments (
     project_id UUID REFERENCES projects(id),
     error_code VARCHAR(50),
     error_message TEXT,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
     CONSTRAINT valid_payment_method CHECK (payment_method IN ('MPESA', 'AIRTEL_MONEY', 'BANK_TRANSFER', 'VISA', 'MASTERCARD')),
@@ -618,12 +619,14 @@ CREATE TABLE audit_logs (
     id UUID DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id),
     action VARCHAR(100) NOT NULL,
+    action_type VARCHAR(100),
     resource_type VARCHAR(100) NOT NULL,
     resource_id UUID,
     ip_address INET NOT NULL,
     user_agent TEXT,
     result VARCHAR(20) NOT NULL,
     metadata JSONB,
+    timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     
     PRIMARY KEY (id, created_at),

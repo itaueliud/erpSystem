@@ -23,6 +23,13 @@ CREATE TABLE IF NOT EXISTS security_alerts (
     CONSTRAINT valid_status CHECK (status IN ('OPEN', 'ACKNOWLEDGED', 'RESOLVED'))
 );
 
+ALTER TABLE security_alerts
+    ADD COLUMN IF NOT EXISTS type VARCHAR(100),
+    ADD COLUMN IF NOT EXISTS severity VARCHAR(20),
+    ADD COLUMN IF NOT EXISTS status VARCHAR(20),
+    ADD COLUMN IF NOT EXISTS affected_user_id UUID REFERENCES users(id),
+    ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
 CREATE INDEX IF NOT EXISTS idx_security_alerts_type ON security_alerts(type);
 CREATE INDEX IF NOT EXISTS idx_security_alerts_severity ON security_alerts(severity);
 CREATE INDEX IF NOT EXISTS idx_security_alerts_status ON security_alerts(status);

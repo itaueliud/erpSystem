@@ -1,9 +1,11 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-const resolvedApiBaseUrl =
+const envApiBaseUrl =
   (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim() ||
-  (import.meta.env.VITE_API_URL as string | undefined)?.trim() ||
-  'https://erpsystem-nt2h.onrender.com';
+  (import.meta.env.VITE_API_URL as string | undefined)?.trim();
+
+// In dev, let axios use relative URLs so Vite proxy can handle `/api/*`.
+const resolvedApiBaseUrl = envApiBaseUrl || (import.meta.env.DEV ? '' : 'https://erpsystem-nt2h.onrender.com');
 
 export const apiClient = axios.create({
   // Use relative URL so requests go through the Vite dev proxy (avoids CORS).

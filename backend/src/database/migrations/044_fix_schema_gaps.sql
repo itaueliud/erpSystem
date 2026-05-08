@@ -8,7 +8,15 @@ ALTER TABLE marketer_properties
   ADD COLUMN IF NOT EXISTS placement_tier VARCHAR(20);
 
 -- Backfill from existing package value
-UPDATE marketer_properties SET placement_tier = package WHERE placement_tier IS NULL;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'marketer_properties' AND column_name = 'package'
+  ) THEN
+    UPDATE marketer_properties SET placement_tier = package WHERE placement_tier IS NULL;
+  END IF;
+END $$;
 
 -- 2. property_id on payments — so STK push can be linked back to marketer_properties
 ALTER TABLE payments

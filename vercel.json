@@ -1,5 +1,5 @@
 {
-  "buildCommand": "bash ./scripts/vercel-build.sh",
+  "buildCommand": "bash -c 'if [ -f ./scripts/vercel-build.sh ]; then bash ./scripts/vercel-build.sh; elif [ -f ../scripts/vercel-build.sh ]; then bash ../scripts/vercel-build.sh; else echo \"vercel-build.sh not found\" && exit 1; fi'",
   "outputDirectory": "frontend/dist",
   "rewrites": [
     {

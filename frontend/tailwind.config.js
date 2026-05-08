@@ -40,6 +40,5 @@ export default {
     { pattern: /border-(violet|blue|slate|emerald|indigo|orange|rose)-(100|200|700|800)/ },
     { pattern: /from-(violet|blue|slate|emerald|indigo|orange|rose)-(500|600|700)/ },
     { pattern: /to-(violet|blue|slate|emerald|indigo|orange|rose)-(700|800|900)/ },
-    { pattern: /hover:bg-(violet|blue|slate|emerald|indigo|orange|rose)-(700|800)/ },
   ],
 };

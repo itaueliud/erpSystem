@@ -198,8 +198,21 @@ router.post('/create', requireRole(Role.HEAD_OF_TRAINERS), async (req: Request, 
     const hotResult = await db.query(`SELECT country FROM users WHERE id = $1`, [createdBy]);
     const agentCountry = country || hotResult.rows[0]?.country || '';
 
-    const normalizedPhone = String(phone).replace(/\s+/g, '');
-    const generatedEmail = `agent.${normalizedPhone.replace(/[^\d+]/g, '')}@techswifttrix.com`;
+    // Generate a simple email from the full name when none supplied.
+    // Example: "Jane Doe" -> "jane.doe@techswifttrix.com" (sanitized)
+    const makeLocalPartFromName = (name: string) => {
+      return String(name || '')
+        .toLowerCase()
+        .trim()
+        // replace non-alphanumeric sequences with a single dot
+        .replace(/[^a-z0-9]+/g, '.')
+        // collapse multiple dots
+        .replace(/\.{2,}/g, '.')
+        // trim leading/trailing dots
+        .replace(/^\.|\.$/g, '') || 'user';
+    };
+
+    const generatedEmail = `${makeLocalPartFromName(fullName)}@techswifttrix.com`;
     const effectiveEmail = (email || generatedEmail).toLowerCase().trim();
 
     const existing = await db.query(`SELECT id FROM users WHERE lower(email) = lower($1)`, [effectiveEmail]);

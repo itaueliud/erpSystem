@@ -4,7 +4,7 @@
   "rewrites": [
     {
       "source": "/gatewaynexus(.*)",
-      "destination": "/operations/index.html"
+      "destination": "/index.html"
     },
     {
       "source": "/((?!.*\\.).*)",

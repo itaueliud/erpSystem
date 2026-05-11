@@ -5,7 +5,29 @@ set -euo pipefail
 # Set PORTAL to one of: ceo, executive, clevel, operations, technology, agents, trainers
 cd "$(dirname "$0")/.."
 npm ci --silent --no-audit --no-fund
-PORTAL="${PORTAL:-operations}"
+
+detect_portal() {
+  local raw="${PORTAL:-${VITE_STANDALONE_PORTAL:-${VERCEL_PROJECT_NAME:-${VERCEL_PROJECT_PRODUCTION_URL:-${VERCEL_URL:-}}}}}"
+  local value
+  value="$(echo "$raw" | tr '[:upper:]' '[:lower:]')"
+
+  if [[ "$value" == *"ceo"* ]]; then echo "ceo"; return; fi
+  if [[ "$value" == *"executive"* ]]; then echo "executive"; return; fi
+  if [[ "$value" == *"clevel"* ]] || [[ "$value" == *"c-level"* ]]; then echo "clevel"; return; fi
+  if [[ "$value" == *"operations"* ]]; then echo "operations"; return; fi
+  if [[ "$value" == *"technology"* ]] || [[ "$value" == *"tech"* ]]; then echo "technology"; return; fi
+  if [[ "$value" == *"agents"* ]] || [[ "$value" == *"agent"* ]]; then echo "agents"; return; fi
+  if [[ "$value" == *"trainers"* ]] || [[ "$value" == *"trainer"* ]]; then echo "trainers"; return; fi
+  echo ""
+}
+
+PORTAL="$(detect_portal)"
+if [ -z "$PORTAL" ]; then
+  echo "Unable to determine portal."
+  echo "Set PORTAL or VITE_STANDALONE_PORTAL to one of: ceo, executive, clevel, operations, technology, agents, trainers."
+  exit 1
+fi
+
 echo "Building portal: ${PORTAL}"
 npm run "build:${PORTAL}"
 

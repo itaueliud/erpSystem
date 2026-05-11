@@ -15,7 +15,7 @@ The system is split into a Node.js/Express backend API and a React frontend with
 Portals
 -------
 
-The frontend ships as six separate portals, each with its own Vite build config and entry point:
+The frontend ships as seven separate portals, each with its own Vite build config and entry point:
 
 - CEO Portal
 - Executive Portal
@@ -23,6 +23,7 @@ The frontend ships as six separate portals, each with its own Vite build config 
 - Operations Portal
 - Technology Portal
 - Agents Portal
+- Trainers Portal
 
 Each portal exposes only the features and data relevant to its target role group.
 
@@ -187,7 +188,32 @@ Frontend setup:
   cd frontend
   npm install
   npm run dev          # default portal
-  npm run dev:all      # all six portals concurrently
+  npm run dev:all      # all seven portals concurrently
+
+Netlify CLI direct deploy (faster than waiting for GitHub-triggered builds):
+
+  # 1) Authenticate once (local machine)
+  npx netlify login
+
+  # 2) Export auth token + per-portal Site IDs
+  # PowerShell examples:
+  $env:NETLIFY_AUTH_TOKEN="your_token"
+  $env:NETLIFY_SITE_ID_CEO="site_id_for_ceo"
+  $env:NETLIFY_SITE_ID_EXECUTIVE="site_id_for_executive"
+  $env:NETLIFY_SITE_ID_CLEVEL="site_id_for_clevel"
+  $env:NETLIFY_SITE_ID_OPERATIONS="site_id_for_operations"
+  $env:NETLIFY_SITE_ID_TECHNOLOGY="site_id_for_technology"
+  $env:NETLIFY_SITE_ID_AGENTS="site_id_for_agents"
+  $env:NETLIFY_SITE_ID_TRAINERS="site_id_for_trainers"
+
+  # 3) Deploy any portal directly
+  npm run deploy:ceo
+  npm run deploy:executive
+  npm run deploy:clevel
+  npm run deploy:operations
+  npm run deploy:technology
+  npm run deploy:agents
+  npm run deploy:trainers
 
 Run all backend tests:
 

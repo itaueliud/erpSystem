@@ -241,6 +241,11 @@ The following variables must be set before starting the backend:
 
 See backend/.env.example for the full list including optional variables for S3, SendGrid, Firebase, Sentry, GitHub OAuth, and M-Pesa.
 
+Invitation/registration portal URL:
+
+  FRONTEND_URL
+  FRONTEND_REGISTRATION_URL   # optional override for invite links; defaults to FRONTEND_URL
+
 ---
 
 Docker

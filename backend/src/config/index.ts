@@ -32,6 +32,7 @@ export const config = {
   port: parseInt(process.env.PORT || '3000', 10),
   apiBaseUrl: process.env.API_BASE_URL || 'http://localhost:3000',
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
+  frontendRegistrationUrl: process.env.FRONTEND_REGISTRATION_URL || process.env.FRONTEND_URL || 'http://localhost:5173',
 
   // Database Configuration
   database: {

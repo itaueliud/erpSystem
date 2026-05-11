@@ -219,7 +219,7 @@ export class UserService {
       const invitation = result.rows[0];
 
       // Generate registration link — points to the frontend register page
-      const registrationLink = `${config.frontendUrl}/register?token=${token}`;
+      const registrationLink = `${config.frontendRegistrationUrl}/register?token=${token}`;
 
       // Send invitation email (reuse targetRoleName already fetched above).
       // Do not fail invitation creation when the mail provider rejects delivery
@@ -935,7 +935,7 @@ export class UserService {
         [email, token, user.role_id, expiresAt, requestedBy]
       );
 
-      const resetLink = `${config.frontendUrl}/register?token=${token}`;
+      const resetLink = `${config.frontendRegistrationUrl}/register?token=${token}`;
       await sendgridClient.sendPasswordResetEmail(email, resetLink, user.full_name);
 
       logger.info('Invitation resent as password reset', { email, requestedBy });

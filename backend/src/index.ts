@@ -60,6 +60,9 @@ const configuredCorsOrigins = new Set(
 if (config.frontendUrl) {
   configuredCorsOrigins.add(normalizeOrigin(config.frontendUrl));
 }
+if (config.frontendRegistrationUrl) {
+  configuredCorsOrigins.add(normalizeOrigin(config.frontendRegistrationUrl));
+}
 
 function isAllowedOrigin(origin: string): boolean {
   const normalized = normalizeOrigin(origin);

@@ -20,6 +20,7 @@
     "build": "npm run build --workspace=backend && npm run build --workspace=frontend",
     "build:backend": "npm run build --workspace=backend",
     "build:frontend": "npm run build --workspace=frontend",
+    "build:operations": "npm run build:operations --workspace=frontend && node scripts/netlify-sync-operations-build.mjs",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npx tsc --noEmit -p backend/tsconfig.json && npx tsc --noEmit -p frontend/tsconfig.json",
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx",

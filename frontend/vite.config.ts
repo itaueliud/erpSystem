@@ -6,11 +6,32 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
   // CDN base URL for static assets in production (Req 37.6)
-  const cdnBase = env.VITE_CDN_BASE_URL ?? '';
+  const cdnBaseRaw = (env.VITE_CDN_BASE_URL ?? '').trim();
+
+  const resolveBase = (): string => {
+    if (mode !== 'production') return '/';
+    if (!cdnBaseRaw) return '/';
+
+    const lowered = cdnBaseRaw.toLowerCase();
+    if (lowered === 'undefined' || lowered === 'null') return '/';
+
+    // Accept absolute HTTP(S) URLs and root-relative paths only.
+    if (cdnBaseRaw.startsWith('/')) return cdnBaseRaw.endsWith('/') ? cdnBaseRaw : `${cdnBaseRaw}/`;
+    try {
+      const parsed = new URL(cdnBaseRaw);
+      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+        return cdnBaseRaw.endsWith('/') ? cdnBaseRaw : `${cdnBaseRaw}/`;
+      }
+    } catch {
+      return '/';
+    }
+
+    return '/';
+  };
 
   return {
-    // Use CDN base in production builds so all asset URLs are CDN-prefixed
-    base: mode === 'production' && cdnBase ? cdnBase : '/',
+    // Use CDN base in production only when it is valid; otherwise stay same-origin.
+    base: resolveBase(),
 
     plugins: [react()],
 

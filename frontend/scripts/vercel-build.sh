@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Vercel build when project root is /frontend
-# Set PORTAL to one of: ceo, executive, clevel, operations, technology, agents, trainers
+# Set PORTAL to one of: ceo, executive, clevel, operations, technology, agents, trainers, registration
 cd "$(dirname "$0")/.."
 npm ci --silent --no-audit --no-fund
 
@@ -15,6 +15,7 @@ detect_portal() {
   if [[ "$value" == *"executive"* ]]; then echo "executive"; return; fi
   if [[ "$value" == *"clevel"* ]] || [[ "$value" == *"c-level"* ]]; then echo "clevel"; return; fi
   if [[ "$value" == *"operations"* ]]; then echo "operations"; return; fi
+  if [[ "$value" == *"registration"* ]] || [[ "$value" == *"register"* ]]; then echo "registration"; return; fi
   if [[ "$value" == *"technology"* ]] || [[ "$value" == *"tech"* ]]; then echo "technology"; return; fi
   if [[ "$value" == *"agents"* ]] || [[ "$value" == *"agent"* ]]; then echo "agents"; return; fi
   if [[ "$value" == *"trainers"* ]] || [[ "$value" == *"trainer"* ]]; then echo "trainers"; return; fi
@@ -24,12 +25,16 @@ detect_portal() {
 PORTAL="$(detect_portal)"
 if [ -z "$PORTAL" ]; then
   echo "Unable to determine portal."
-  echo "Set PORTAL or VITE_STANDALONE_PORTAL to one of: ceo, executive, clevel, operations, technology, agents, trainers."
+  echo "Set PORTAL or VITE_STANDALONE_PORTAL to one of: ceo, executive, clevel, operations, technology, agents, trainers, registration."
   exit 1
 fi
 
 echo "Building portal: ${PORTAL}"
-npm run "build:${PORTAL}"
+if [ "$PORTAL" = "registration" ]; then
+  npm run build
+else
+  npm run "build:${PORTAL}"
+fi
 
 # Keep Vercel outputDirectory stable at frontend/dist
 if [ -d "dist/${PORTAL}" ]; then

@@ -147,6 +147,7 @@ function SearchBox({ value, onChange, placeholder }: { value: string; onChange: 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function ChatPanel({ token, currentUserId, portal, inlineMode = false }: ChatPanelProps) {
   const [open, setOpen] = useState(inlineMode);
+  const [isMobile, setIsMobile] = useState<boolean>(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
   const [view, setView] = useState<'list' | 'users' | 'chat'>('list');
   const [users, setUsers] = useState<ChatUser[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -169,6 +170,13 @@ export default function ChatPanel({ token, currentUserId, portal, inlineMode = f
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const conversationsRef = useRef<Conversation[]>([]);
   conversationsRef.current = conversations;
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 768);
+    onResize();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   // ── Socket ──────────────────────────────────────────────────────────────────
   const handleMessage = useCallback((msg: ChatMessage) => {
@@ -468,7 +476,7 @@ export default function ChatPanel({ token, currentUserId, portal, inlineMode = f
 
   // ── Left panel ───────────────────────────────────────────────────────────────
   const renderLeft = () => (
-    <div style={{ width: 240, minWidth: 240, display: 'flex', flexDirection: 'column', background: C.sidebarBg, borderRight: `1px solid ${C.sidebarBorder}`, height: '100%' }}>
+    <div style={{ width: (isMobile && inlineMode) ? '100%' : 240, minWidth: (isMobile && inlineMode) ? '100%' : 240, display: 'flex', flexDirection: 'column', background: C.sidebarBg, borderRight: `1px solid ${C.sidebarBorder}`, height: '100%' }}>
       {/* Header */}
       <div style={{ padding: '16px 14px 4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1136,9 +1144,19 @@ export default function ChatPanel({ token, currentUserId, portal, inlineMode = f
         @keyframes slideDown { from { opacity: 0; transform: translateX(-50%) translateY(-8px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
         .chat-msg-row:hover .chat-del-btn { opacity: 1 !important; }
       `}</style>
-      {renderLeft()}
-      {renderMiddle()}
-      {renderRight()}
+      {(isMobile && inlineMode)
+        ? (
+          <>
+            {view === 'chat' ? renderMiddle() : renderLeft()}
+          </>
+        )
+        : (
+          <>
+            {renderLeft()}
+            {renderMiddle()}
+            {renderRight()}
+          </>
+        )}
     </div>
   );
 

@@ -1449,6 +1449,7 @@ const HOME_SUB_NAV_IDS = new Set(HOME_SECTIONS);
 // ─── Main Portal ──────────────────────────────────────────────────────────────
 export default function AgentsPortal() {
   const [section, setSection] = useState('overview');
+  const [homeMenuOpen, setHomeMenuOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -1500,6 +1501,10 @@ export default function AgentsPortal() {
     { id: 'daily-report', label: 'Daily Reports' },
   ];
 
+  useEffect(() => {
+    if (!HOME_SUB_NAV_IDS.has(section)) setHomeMenuOpen(false);
+  }, [section]);
+
   const handleLogout = () => { logout(); navigate('/login', { state: { from: { pathname: '/gatewaypulse' } } }); };
   const portalUser = { name: user?.name || 'Agent', email: user?.email || 'agent@tst.com', role: 'Sales Agent' };
 
@@ -1518,7 +1523,7 @@ export default function AgentsPortal() {
       hideMobileHamburger
       mainContentClassName="pb-36"
       mobileBottomNav={(
-        <div className="border-t shadow-2xl" style={{ borderColor: '#7a2713', background: 'linear-gradient(90deg, #5b1200 0%, #6a1904 55%, #7a2713 100%)' }}>
+        <div className="relative border-t shadow-2xl" style={{ borderColor: '#7a2713', background: 'linear-gradient(90deg, #5b1200 0%, #6a1904 55%, #7a2713 100%)' }}>
           <div className="px-2 pt-2 pb-1">
             <div className="grid grid-cols-4 gap-1">
               {topTabs.map((tab) => {
@@ -1528,8 +1533,10 @@ export default function AgentsPortal() {
                     key={tab.id}
                     onClick={() => {
                       if (tab.id === 'home') {
+                        setHomeMenuOpen((v) => !v);
                         setSection((prev) => (HOME_SUB_NAV_IDS.has(prev) ? prev : tab.section));
                       } else {
+                        setHomeMenuOpen(false);
                         setSection(tab.section);
                       }
                     }}
@@ -1549,16 +1556,16 @@ export default function AgentsPortal() {
               })}
             </div>
           </div>
-          {activeTopTab === 'home' && (
-            <div className="border-t border-white/15 bg-black/15 px-2 py-1.5">
-              <div className="flex gap-1 overflow-x-auto no-scrollbar">
+          {activeTopTab === 'home' && homeMenuOpen && (
+            <div className="absolute left-2 right-2 bottom-[62px] rounded-2xl border border-white/15 bg-[#5b1200]/95 p-2 shadow-2xl backdrop-blur-sm">
+              <div className="grid grid-cols-2 gap-1.5">
                 {homeSubTabs.map((tab) => {
                   const active = section === tab.id;
                   return (
                     <button
                       key={tab.id}
-                      onClick={() => setSection(tab.id)}
-                      className={`shrink-0 rounded-full px-3 py-1.5 text-[11px] font-medium transition-all ${active ? 'bg-white' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                      onClick={() => { setSection(tab.id); setHomeMenuOpen(false); }}
+                      className={`rounded-xl px-3 py-2 text-[12px] font-medium transition-all ${active ? 'bg-white' : 'bg-white/10 text-white hover:bg-white/20'}`}
                       style={active ? { color: '#5b1200' } : undefined}
                       aria-current={active ? 'page' : undefined}
                     >

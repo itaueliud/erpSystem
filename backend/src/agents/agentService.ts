@@ -82,8 +82,8 @@ export class AgentService {
     const result = await db.query(
       `INSERT INTO clients
          (reference_number, name, organization_name, phone, email, location, country,
-          notes, status, agent_id, industry_category, service_description)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'NEW_LEAD',$9,'SCHOOLS','Pending service selection')
+          notes, status, agent_id, industry_category, service_description, payment_plan)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'NEW_LEAD',$9,'SCHOOLS','Pending service selection','FULL_PAYMENT')
        RETURNING *`,
       [
         referenceNumber,

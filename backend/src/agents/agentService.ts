@@ -53,6 +53,13 @@ export interface AgentDashboardMetrics {
 }
 
 export class AgentService {
+  private normalizePhone(input: string): string {
+    const digits = String(input || '').replace(/\D/g, '');
+    if (!digits) return '';
+    if (digits.startsWith('254')) return `+${digits}`;
+    if (digits.startsWith('0')) return `+254${digits.slice(1)}`;
+    return `+${digits}`;
+  }
   // ── Step 1: Client Capture ────────────────────────────────────────────────
   async captureClient(input: ClientCaptureInput) {
     // Verify agent exists and is active
@@ -78,6 +85,17 @@ export class AgentService {
       seq = parseInt(lastRef.rows[0].reference_number.split('-')[2]) + 1;
     }
     const referenceNumber = `${prefix}${seq.toString().padStart(6, '0')}`;
+    const normalizedPhone = this.normalizePhone(input.phoneNumber);
+
+    const existingPhone = await db.query(
+      `SELECT id, name FROM clients
+       WHERE regexp_replace(phone, '\D', '', 'g') = regexp_replace($1, '\D', '', 'g')
+       LIMIT 1`,
+      [normalizedPhone]
+    );
+    if (existingPhone.rows.length > 0) {
+      throw new Error(`Phone number already in use by another client (${existingPhone.rows[0].name}).`);
+    }
 
     const result = await db.query(
       `INSERT INTO clients
@@ -89,7 +107,7 @@ export class AgentService {
         referenceNumber,
         input.clientName,
         input.organizationName || null,
-        input.phoneNumber,
+        normalizedPhone,
         input.email,
         input.location,
         agentCountry,   // inherited from agent's country

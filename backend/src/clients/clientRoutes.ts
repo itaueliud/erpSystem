@@ -5,6 +5,14 @@ import logger from '../utils/logger';
 
 const router = Router();
 
+function normalizePhone(input: string): string {
+  const digits = String(input || '').replace(/\D/g, '');
+  if (!digits) return '';
+  if (digits.startsWith('254')) return `+${digits}`;
+  if (digits.startsWith('0')) return `+254${digits.slice(1)}`;
+  return `+${digits}`;
+}
+
 /**
  * Create new client
  * POST /api/clients
@@ -44,21 +52,24 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     // Duplicate check — same agent, same email + phone
+    const normalizedPhone = normalizePhone(phone);
     const { db } = await import('../database/connection');
     const existing = await db.query(
-      `SELECT id, name FROM clients WHERE agent_id = $1 AND lower(email) = lower($2) AND phone = $3 LIMIT 1`,
-      [agentId, email, phone]
+      `SELECT id, name FROM clients
+       WHERE regexp_replace(phone, '\D', '', 'g') = regexp_replace($1, '\D', '', 'g')
+       LIMIT 1`,
+      [normalizedPhone]
     );
     if (existing.rows.length > 0) {
       return res.status(409).json({
-        error: `Client already registered. A client with this email and phone number already exists (${existing.rows[0].name}).`,
+        error: `Client already registered. This phone number is already in use (${existing.rows[0].name}).`,
       });
     }
 
     const clientInput: CreateClientInput = {
       name,
       email,
-      phone,
+      phone: normalizedPhone,
       country: resolvedCountry,
       industryCategory,
       serviceDescription,

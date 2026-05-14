@@ -536,7 +536,7 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
   const [captureProduct, setCaptureProduct] = useState<'SYSTEM' | 'PLOTCONNECT' | null>(null);
   const [savedClientId, setSavedClientId] = useState<string | null>(null);
   const [isClientSaved, setIsClientSaved] = useState(false);
-  const [captureInfo, setCaptureInfo] = useState({ clientName: '', organizationName: '', phone: '', email: '', location: '', notes: '' });
+  const [captureInfo, setCaptureInfo] = useState({ clientName: '', organizationName: '', phone: '+254', email: '', location: '', notes: '' });
   const [captureIndustry, _setCaptureIndustry] = useState(''); // kept for backend compatibility
   const [captureServices, setCaptureServices] = useState<string[]>([]);
   const [capturePlan, setCapturePlan] = useState<'FULL' | '50_50' | 'MILESTONE'>('FULL');
@@ -578,6 +578,11 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
     e.preventDefault();
     if (!captureInfo.clientName.trim() || !captureInfo.phone.trim() || !captureInfo.email.trim() || !captureInfo.location.trim()) {
       setCaptureMsg('Please fill in Client Name, Phone, Email, and Location before saving.');
+      setCaptureSuccess(false);
+      return;
+    }
+    if (captureInfo.phone.trim() === '+254') {
+      setCaptureMsg('Please enter the rest of the phone number after +254.');
       setCaptureSuccess(false);
       return;
     }
@@ -798,7 +803,37 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
             </div>
             <div>
               <label className={labelCls}>Phone Number *</label>
-              <input type="tel" required placeholder="+254 7XX XXX XXX" value={captureInfo.phone} onChange={e => setCaptureInfo(f => ({ ...f, phone: e.target.value }))} className={inputCls} />
+              <input
+                type="tel"
+                required
+                placeholder="+254 7XX XXX XXX"
+                value={captureInfo.phone}
+                onChange={e => {
+                  const raw = e.target.value || '';
+                  const digits = raw.replace(/\D/g, '');
+                  if (!digits) {
+                    setCaptureInfo(f => ({ ...f, phone: '+254' }));
+                    return;
+                  }
+                  if (raw.startsWith('+')) {
+                    setCaptureInfo(f => ({ ...f, phone: '+' + digits }));
+                    return;
+                  }
+                  if (digits.startsWith('254')) {
+                    setCaptureInfo(f => ({ ...f, phone: '+' + digits }));
+                    return;
+                  }
+                  if (digits.startsWith('0')) {
+                    setCaptureInfo(f => ({ ...f, phone: `+254${digits.slice(1)}` }));
+                    return;
+                  }
+                  setCaptureInfo(f => ({ ...f, phone: `+254${digits}` }));
+                }}
+                onFocus={() => {
+                  if (!captureInfo.phone) setCaptureInfo(f => ({ ...f, phone: '+254' }));
+                }}
+                className={inputCls}
+              />
             </div>
             <div>
               <label className={labelCls}>Email *</label>

@@ -534,6 +534,8 @@ function RetailDemoSuite({ themeHex }: { themeHex: string }) {
 function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClientSaved?: () => void }) {
   const [captureStep, setCaptureStep] = useState<1 | 2 | '3a' | '3b'>(1);
   const [captureProduct, setCaptureProduct] = useState<'SYSTEM' | 'PLOTCONNECT' | null>(null);
+  const [savedClientId, setSavedClientId] = useState<string | null>(null);
+  const [isClientSaved, setIsClientSaved] = useState(false);
   const [captureInfo, setCaptureInfo] = useState({ clientName: '', organizationName: '', phone: '', email: '', location: '', notes: '' });
   const [captureIndustry, _setCaptureIndustry] = useState(''); // kept for backend compatibility
   const [captureServices, setCaptureServices] = useState<string[]>([]);
@@ -550,17 +552,65 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
   const inputCls = 'w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 transition-all';
   const labelCls = 'block text-sm font-medium text-gray-700 mb-1.5';
 
-  const handleStep1Submit = (e: React.FormEvent) => {
+  useEffect(() => {
+    const continueFromClientList = (event: Event) => {
+      const client = (event as CustomEvent).detail;
+      if (!client) return;
+      setCaptureInfo({
+        clientName: client.name || '',
+        organizationName: client.organizationName || '',
+        phone: client.phone || '',
+        email: client.email || '',
+        location: client.location || client.country || '',
+        notes: client.notes || '',
+      });
+      setSavedClientId(client.id || null);
+      setIsClientSaved(true);
+      setCaptureMsg('Client loaded. Continue with product selection.');
+      setCaptureSuccess(true);
+      setCaptureStep(2);
+    };
+    window.addEventListener('agents:continue-product', continueFromClientList as EventListener);
+    return () => window.removeEventListener('agents:continue-product', continueFromClientList as EventListener);
+  }, []);
+
+  const handleStep1Submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!captureInfo.clientName.trim() || !captureInfo.phone.trim() || !captureInfo.email.trim()) {
-      setCaptureMsg('Please fill in Client Name, Phone, and Email before continuing.');
+    if (!captureInfo.clientName.trim() || !captureInfo.phone.trim() || !captureInfo.email.trim() || !captureInfo.location.trim()) {
+      setCaptureMsg('Please fill in Client Name, Phone, Email, and Location before saving.');
       setCaptureSuccess(false);
       return;
     }
+    if (isClientSaved && savedClientId) {
+      setCaptureMsg('Client already saved. Continue to product selection.');
+      setCaptureSuccess(true);
+      return;
+    }
+
+    setCaptureSubmitting(true);
     setCaptureMsg('');
-    // Only one product (SYSTEM) — skip product selection step
-    setCaptureProduct('SYSTEM');
-    setCaptureStep('3a');
+    try {
+      const { apiClient } = await import('../../shared/api/apiClient');
+      const clientRes = await apiClient.post('/api/v1/agents/clients', {
+        clientName: captureInfo.clientName.trim(),
+        organizationName: captureInfo.organizationName.trim(),
+        phoneNumber: captureInfo.phone.trim(),
+        email: captureInfo.email.trim(),
+        location: captureInfo.location.trim(),
+        notes: captureInfo.notes.trim(),
+      });
+      setSavedClientId((clientRes.data as any)?.data?.id || (clientRes.data as any)?.id || null);
+      setIsClientSaved(true);
+      setCaptureSuccess(true);
+      setCaptureMsg('✓ Client saved successfully. You can now select product.');
+      onClientSaved?.();
+    } catch (err: any) {
+      setCaptureSuccess(false);
+      const errMsg = err?.response?.data?.error || err?.message || 'Failed to save client';
+      setCaptureMsg(`Error: ${errMsg}`);
+    } finally {
+      setCaptureSubmitting(false);
+    }
   };
 
   const handleProductSelect = (p: 'SYSTEM' | 'PLOTCONNECT') => {
@@ -606,22 +656,31 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
       }, { name: 'E. Companies & Organizations', count: 0 }).name;
       const derivedIndustry = captureIndustry || CATEGORY_MAP[bestCat] || 'COMPANIES';
 
-      // Step 1 — Save client (always succeeds independently of payment)
-      const clientRes = await apiClient.post('/api/v1/clients', {
-        name: captureInfo.clientName.trim(),
-        organizationName: captureInfo.organizationName.trim(),
-        phone: captureInfo.phone.trim(),
-        email: captureInfo.email.trim(),
-        country: agentCountry,
-        location: captureInfo.location.trim(),
-        notes: captureInfo.notes.trim(),
-        industryCategory: derivedIndustry,
-        serviceDescription: captureServices.join(', '),
-        paymentPlan: capturePlan,
-        mpesaNumber: captureMpesa.trim(),
-        commitmentAmount,
-      });
-      const clientId = (clientRes.data as any).id;
+      // Client should already be saved from step 1; update it with product details.
+      let clientId = savedClientId;
+      if (clientId) {
+        await apiClient.put(`/api/v1/clients/${clientId}`, {
+          industryCategory: derivedIndustry,
+          serviceDescription: captureServices.join(', '),
+        });
+        await apiClient.patch(`/api/v1/clients/${clientId}/status`, { status: 'CONVERTED' });
+      } else {
+        const clientRes = await apiClient.post('/api/v1/clients', {
+          name: captureInfo.clientName.trim(),
+          organizationName: captureInfo.organizationName.trim(),
+          phone: captureInfo.phone.trim(),
+          email: captureInfo.email.trim(),
+          country: agentCountry,
+          location: captureInfo.location.trim(),
+          notes: captureInfo.notes.trim(),
+          industryCategory: derivedIndustry,
+          serviceDescription: captureServices.join(', '),
+          paymentPlan: capturePlan,
+          mpesaNumber: captureMpesa.trim(),
+          commitmentAmount,
+        });
+        clientId = (clientRes.data as any).id;
+      }
 
       // Step 2 — Attempt M-Pesa STK Push (non-blocking — client is already saved)
       let paymentMsg = '';
@@ -632,7 +691,7 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
           currency: 'KES',
           reference: `CLIENT-${Date.now()}`,
           description: `Commitment payment - ${capturePlan}`,
-          clientId,
+          clientId: clientId!,
         });
         paymentMsg = `M-Pesa STK Push sent to ${captureMpesa}. Ask client to approve on their phone.`;
       } catch {
@@ -754,8 +813,15 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
               <textarea rows={3} value={captureInfo.notes} onChange={e => setCaptureInfo(f => ({ ...f, notes: e.target.value }))} className={`${inputCls} resize-none`} />
             </div>
           </div>
-          <div className="sticky bottom-0 bg-white pt-3 pb-1 -mx-6 px-6 border-t border-gray-100 mt-2">
-            <PortalButton color={themeHex} type="submit" fullWidth>Next: Select Product →</PortalButton>
+          <div className="sticky bottom-0 bg-white pt-3 pb-1 -mx-6 px-6 border-t border-gray-100 mt-2 space-y-2">
+            <PortalButton color={themeHex} type="submit" fullWidth disabled={captureSubmitting}>
+              {captureSubmitting ? 'Saving Client…' : 'Save Client'}
+            </PortalButton>
+            {isClientSaved && (
+              <PortalButton color={themeHex} type="button" fullWidth onClick={() => setCaptureStep(2)}>
+                Next: Select Product →
+              </PortalButton>
+            )}
           </div>
         </form>
       )}
@@ -763,7 +829,7 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
       {/* Step 2 — Product Selection */}
       {captureStep === 2 && (
         <div>
-          <button onClick={() => setCaptureStep(1)} className="text-sm text-gray-500 hover:text-gray-700 mb-4 flex items-center gap-1">← Back</button>
+          <button onClick={() => setCaptureStep(1)} className="text-sm mb-4 flex items-center gap-1 font-medium" style={{ color: themeHex }}>← Back</button>
           <p className="text-sm font-medium text-gray-700 mb-4">Select a product for this client:</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
@@ -783,7 +849,7 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
       {/* Step 3a — SYSTEM */}
       {captureStep === '3a' && (
         <form onSubmit={handleSystemSubmit}>
-          <button type="button" onClick={() => setCaptureStep(1)} className="text-sm text-gray-500 hover:text-gray-700 mb-4 flex items-center gap-1">← Back</button>
+          <button type="button" onClick={() => setCaptureStep(1)} className="text-sm mb-4 flex items-center gap-1 font-medium" style={{ color: themeHex }}>← Back</button>
           <RetailDemoSuite themeHex={themeHex} />
 
           {/* Categorised software picker */}
@@ -882,7 +948,7 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
       {/* Step 3b — TST PlotConnect */}
       {captureStep === '3b' && (
         <form onSubmit={handlePlotSubmit}>
-          <button type="button" onClick={() => setCaptureStep(2)} className="text-sm text-gray-500 hover:text-gray-700 mb-4 flex items-center gap-1">← Back</button>
+          <button type="button" onClick={() => setCaptureStep(2)} className="text-sm mb-4 flex items-center gap-1 font-medium" style={{ color: themeHex }}>← Back</button>
           <div className="mb-5">
             <label className={labelCls}>Property Type *</label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1260,6 +1326,18 @@ function ClientsSection({ clients, themeHex, refetch, setSection }: {
                         style={{ backgroundColor: themeHex }}>
                         View
                       </button>
+                      {c.status === 'NEW_LEAD' && (
+                        <button
+                          onClick={() => {
+                            setSection('capture');
+                            window.dispatchEvent(new CustomEvent('agents:continue-product', { detail: c }));
+                          }}
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:bg-gray-50 active:scale-[0.97]"
+                          style={{ borderColor: themeHex, color: themeHex }}
+                        >
+                          Continue Product
+                        </button>
+                      )}
                       {canAgentAdvance(c.status) && (
                         <button onClick={() => advanceStatus(c)} disabled={statusBusy}
                           className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:bg-gray-50 active:scale-[0.97] disabled:opacity-40"

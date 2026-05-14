@@ -151,14 +151,13 @@ export class AuthenticationService {
       }
 
       // Completely BYPASS 2FA for CEO role (legacy behavior)
-      const MANDATORY_2FA_ROLES = ['CEO', 'CoS', 'CFO', 'EA'];
       const isDev = process.env.NODE_ENV === 'development';
 
       if (!isExecutivePortalLogin && user.role !== 'CEO') {
-        const requires2FA = user.two_fa_enabled || (!isDev && MANDATORY_2FA_ROLES.includes(user.role));
+        const requires2FA = user.two_fa_enabled || (!isDev && user.two_fa_mandatory === true);
         if (requires2FA) {
           // If 2FA is mandatory but not yet set up, force setup (production only)
-          if (!isDev && MANDATORY_2FA_ROLES.includes(user.role) && !user.two_fa_enabled) {
+          if (!isDev && user.two_fa_mandatory === true && !user.two_fa_enabled) {
             logger.warn('Executive role login without 2FA — forcing 2FA setup', { email: credentials.email, role: user.role });
             return {
               success: false,

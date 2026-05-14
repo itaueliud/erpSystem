@@ -187,7 +187,7 @@ export class StorageClient {
         Key: key,
       });
 
-      const url = await getSignedUrl(this.client, command, { expiresIn });
+      const url = await getSignedUrl(this.client as any, command, { expiresIn });
 
       logger.info('Generated signed download URL', { key, expiresIn });
 
@@ -213,7 +213,7 @@ export class StorageClient {
         ContentType: contentType,
       });
 
-      const url = await getSignedUrl(this.client, command, { expiresIn });
+      const url = await getSignedUrl(this.client as any, command, { expiresIn });
 
       logger.info('Generated signed upload URL', { key, expiresIn });
 

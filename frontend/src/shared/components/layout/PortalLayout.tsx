@@ -22,6 +22,9 @@ export interface PortalLayoutProps {
   onNotificationRead?: (id: string) => void;
   /** FAQ data — when provided a ? button appears in the top bar */
   faqs?: FAQCategory[];
+  hideMobileHamburger?: boolean;
+  mobileBottomNav?: React.ReactNode;
+  mainContentClassName?: string;
 }
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
@@ -185,6 +188,7 @@ export function StatusBadge({ status }: { status: string }) {
 export function PortalLayout({
   theme, user, navItems, activeSection, onSectionChange, onLogout, children, portalName,
   notifications = [], onNotificationRead, faqs,
+  hideMobileHamburger = false, mobileBottomNav, mainContentClassName = '',
 }: PortalLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileOpen, setMobileOpen]   = useState(false);
@@ -365,11 +369,13 @@ export function PortalLayout({
         <header className="h-14 flex items-center justify-between px-4 bg-white border-b border-slate-200 flex-shrink-0">
           <div className="flex items-center gap-3">
             {/* Mobile hamburger */}
-            <button onClick={() => setMobileOpen(o => !o)} className="lg:hidden p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
+            {!hideMobileHamburger && (
+              <button onClick={() => setMobileOpen(o => !o)} className="lg:hidden p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            )}
             {/* Portal badge */}
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-white"
               style={{ backgroundColor: theme.hex }}>
@@ -478,11 +484,17 @@ export function PortalLayout({
 
         {/* Page content + chat side panel */}
         <div className="flex-1 flex min-h-0 overflow-hidden">
-          <main className="flex-1 overflow-y-auto p-5">
+          <main className={`flex-1 overflow-y-auto p-5 ${mainContentClassName}`}>
             {children}
           </main>
         </div>
       </div>
+
+      {mobileBottomNav && (
+        <div className="lg:hidden fixed bottom-0 inset-x-0 z-[65]">
+          {mobileBottomNav}
+        </div>
+      )}
 
       {/* ── FAQ slide-in panel ──────────────────────────────────────────────── */}
       {faqOpen && faqs && (

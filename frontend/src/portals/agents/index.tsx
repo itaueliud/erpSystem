@@ -1443,6 +1443,9 @@ const NAV = [
   { id: 'daily-report', label: 'Daily Report',      icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg> },
 ];
 
+const HOME_SECTIONS = ['overview', 'clients', 'lead-status', 'chat', 'daily-report'];
+const HOME_SUB_NAV_IDS = new Set(HOME_SECTIONS);
+
 // ─── Main Portal ──────────────────────────────────────────────────────────────
 export default function AgentsPortal() {
   const [section, setSection] = useState('overview');
@@ -1475,12 +1478,98 @@ export default function AgentsPortal() {
   const properties  = (data as any).properties?.data  || (data as any).properties  || [];
 
   const nav = NAV;
+  const navById = useMemo(() => Object.fromEntries(nav.map((n: any) => [n.id, n])), [nav]);
+
+  const activeTopTab: 'home' | 'capture' | 'marketer' | 'demos' =
+    HOME_SUB_NAV_IDS.has(section) ? 'home' :
+    section === 'capture' ? 'capture' :
+    section === 'marketer' ? 'marketer' : 'demos';
+
+  const topTabs: Array<{ id: 'home' | 'capture' | 'marketer' | 'demos'; label: string; section: string }> = [
+    { id: 'home', label: 'Home', section: 'overview' },
+    { id: 'capture', label: 'Add Client', section: 'capture' },
+    { id: 'marketer', label: 'Add Property', section: 'marketer' },
+    { id: 'demos', label: 'Demos', section: 'demos' },
+  ];
+
+  const homeSubTabs: Array<{ id: string; label: string }> = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'clients', label: 'My Clients' },
+    { id: 'lead-status', label: 'Lead Status' },
+    { id: 'chat', label: 'Chat' },
+    { id: 'daily-report', label: 'Daily Reports' },
+  ];
 
   const handleLogout = () => { logout(); navigate('/login', { state: { from: { pathname: '/gatewaypulse' } } }); };
   const portalUser = { name: user?.name || 'Agent', email: user?.email || 'agent@tst.com', role: 'Sales Agent' };
 
   return (
-    <PortalLayout theme={theme} user={portalUser} navItems={nav} activeSection={section} onSectionChange={setSection} onLogout={handleLogout} notifications={notifs} onNotificationRead={async (id) => { try { const { apiClient } = await import('../../shared/api/apiClient'); await apiClient.patch(`/api/v1/notifications/${id}/read`); refetch(['notifications']); } catch { /* silent */ } }} faqs={AGENTS_FAQS} portalName="Agents Portal">
+    <PortalLayout
+      theme={theme}
+      user={portalUser}
+      navItems={nav}
+      activeSection={section}
+      onSectionChange={setSection}
+      onLogout={handleLogout}
+      notifications={notifs}
+      onNotificationRead={async (id) => { try { const { apiClient } = await import('../../shared/api/apiClient'); await apiClient.patch(`/api/v1/notifications/${id}/read`); refetch(['notifications']); } catch { /* silent */ } }}
+      faqs={AGENTS_FAQS}
+      portalName="Agents Portal"
+      hideMobileHamburger
+      mainContentClassName="pb-36"
+      mobileBottomNav={(
+        <div className="border-t border-emerald-100 bg-gradient-to-r from-emerald-900 via-emerald-800 to-teal-800 shadow-2xl">
+          <div className="px-2 pt-2 pb-1">
+            <div className="grid grid-cols-4 gap-1">
+              {topTabs.map((tab) => {
+                const active = activeTopTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => {
+                      if (tab.id === 'home') {
+                        setSection((prev) => (HOME_SUB_NAV_IDS.has(prev) ? prev : tab.section));
+                      } else {
+                        setSection(tab.section);
+                      }
+                    }}
+                    className={`rounded-xl px-1.5 py-2 text-[11px] font-semibold transition-all ${active ? 'bg-white text-emerald-900 shadow-md' : 'text-emerald-50/90 hover:bg-white/10'}`}
+                    aria-current={active ? 'page' : undefined}
+                  >
+                    <div className="mx-auto mb-1 flex w-4 h-4 items-center justify-center">
+                      {tab.id === 'home' && navById.overview?.icon}
+                      {tab.id === 'capture' && navById.capture?.icon}
+                      {tab.id === 'marketer' && navById.marketer?.icon}
+                      {tab.id === 'demos' && navById.demos?.icon}
+                    </div>
+                    <span className="block truncate">{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          {activeTopTab === 'home' && (
+            <div className="border-t border-white/15 bg-black/15 px-2 py-1.5">
+              <div className="flex gap-1 overflow-x-auto no-scrollbar">
+                {homeSubTabs.map((tab) => {
+                  const active = section === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setSection(tab.id)}
+                      className={`shrink-0 rounded-full px-3 py-1.5 text-[11px] font-medium transition-all ${active ? 'bg-white text-emerald-900' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                      aria-current={active ? 'page' : undefined}
+                    >
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    >
 
       {section === 'overview' && (
         <div>

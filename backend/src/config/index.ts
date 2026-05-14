@@ -96,6 +96,7 @@ export const config = {
     passKey: process.env.DARAJA_PASS_KEY || '',
     callbackUrl: process.env.DARAJA_CALLBACK_URL || 'http://localhost:3000',
     webhookSecret: process.env.DARAJA_WEBHOOK_SECRET || '',
+    allowUnsignedWebhooks: (process.env.DARAJA_ALLOW_UNSIGNED_WEBHOOKS || '').toLowerCase() === 'true',
     b2cInitiatorName: process.env.DARAJA_B2C_INITIATOR_NAME || '',
     b2cSecurityCredential: process.env.DARAJA_B2C_SECURITY_CREDENTIAL || '',
     // true when using sandbox.safaricom.co.ke — auto-detected from URL

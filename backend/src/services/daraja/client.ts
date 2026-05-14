@@ -427,10 +427,17 @@ export class DarajaAPIClient {
   verifyWebhookSignature(signature: string, payload: string): boolean {
     const secret = config.daraja.webhookSecret;
     const isProduction = !this.sandboxMode;
+    const allowUnsignedInProd = config.daraja.allowUnsignedWebhooks === true;
 
-    // In production, a missing secret is a misconfiguration — reject all callbacks
+    // In production, a missing secret is usually a misconfiguration.
+    // However, some Daraja setups deliver callbacks without signature headers.
+    // For that case, allow explicit opt-in via DARAJA_ALLOW_UNSIGNED_WEBHOOKS=true.
     if (!secret) {
       if (isProduction) {
+        if (allowUnsignedInProd) {
+          logger.warn('[DARAJA] SECURITY WARNING: accepting unsigned production webhooks because DARAJA_ALLOW_UNSIGNED_WEBHOOKS=true');
+          return true;
+        }
         logger.error('[DARAJA] SECURITY: DARAJA_WEBHOOK_SECRET is not configured in production — rejecting all webhook callbacks');
         return false;
       }

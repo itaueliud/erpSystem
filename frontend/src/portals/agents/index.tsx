@@ -1518,7 +1518,7 @@ export default function AgentsPortal() {
       hideMobileHamburger
       mainContentClassName="pb-36"
       mobileBottomNav={(
-        <div className="border-t border-emerald-100 bg-gradient-to-r from-emerald-900 via-emerald-800 to-teal-800 shadow-2xl">
+        <div className="border-t shadow-2xl" style={{ borderColor: '#7a2713', background: 'linear-gradient(90deg, #5b1200 0%, #6a1904 55%, #7a2713 100%)' }}>
           <div className="px-2 pt-2 pb-1">
             <div className="grid grid-cols-4 gap-1">
               {topTabs.map((tab) => {
@@ -1533,7 +1533,8 @@ export default function AgentsPortal() {
                         setSection(tab.section);
                       }
                     }}
-                    className={`rounded-xl px-1.5 py-2 text-[11px] font-semibold transition-all ${active ? 'bg-white text-emerald-900 shadow-md' : 'text-emerald-50/90 hover:bg-white/10'}`}
+                    className={`rounded-xl px-1.5 py-2 text-[11px] font-semibold transition-all ${active ? 'bg-white shadow-md' : 'text-white/90 hover:bg-white/10'}`}
+                    style={active ? { color: '#5b1200' } : undefined}
                     aria-current={active ? 'page' : undefined}
                   >
                     <div className="mx-auto mb-1 flex w-4 h-4 items-center justify-center">
@@ -1557,7 +1558,8 @@ export default function AgentsPortal() {
                     <button
                       key={tab.id}
                       onClick={() => setSection(tab.id)}
-                      className={`shrink-0 rounded-full px-3 py-1.5 text-[11px] font-medium transition-all ${active ? 'bg-white text-emerald-900' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                      className={`shrink-0 rounded-full px-3 py-1.5 text-[11px] font-medium transition-all ${active ? 'bg-white' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                      style={active ? { color: '#5b1200' } : undefined}
                       aria-current={active ? 'page' : undefined}
                     >
                       {tab.label}

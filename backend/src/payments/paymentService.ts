@@ -411,6 +411,11 @@ export class PaymentProcessingService {
         const cb = payload.Body.stkCallback;
         transactionId = cb.CheckoutRequestID;
         status = cb.ResultCode === 0 ? 'COMPLETED' : 'FAILED';
+        logger.info('Daraja STK callback received', {
+          transactionId,
+          resultCode: cb.ResultCode,
+          resultDesc: cb.ResultDesc,
+        });
         if (cb.ResultCode !== 0) {
           errorCode = String(cb.ResultCode);
           errorMessage = cb.ResultDesc;
@@ -420,6 +425,11 @@ export class PaymentProcessingService {
         const result = payload.Body.Result;
         transactionId = result.ConversationID || result.TransactionID;
         status = result.ResultCode === 0 ? 'COMPLETED' : 'FAILED';
+        logger.info('Daraja B2C callback received', {
+          transactionId,
+          resultCode: result.ResultCode,
+          resultDesc: result.ResultDesc,
+        });
         if (result.ResultCode !== 0) {
           errorCode = String(result.ResultCode);
           errorMessage = result.ResultDesc;
@@ -442,7 +452,12 @@ export class PaymentProcessingService {
         [paymentStatus, errorCode, errorMessage, transactionId]
       );
 
-      logger.info('Payment status updated from Daraja webhook', { transactionId, status: paymentStatus });
+      logger.info('Payment status updated from Daraja webhook', {
+        transactionId,
+        status: paymentStatus,
+        errorCode,
+        errorMessage,
+      });
 
       // Only trigger downstream effects if this is the first time we're marking it COMPLETED
       if (paymentStatus !== PaymentStatus.COMPLETED || updateResult.rowCount === 0) {

@@ -1370,7 +1370,7 @@ function ClientsSection({ clients, themeHex, refetch, setSection }: {
                           className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:bg-gray-50 active:scale-[0.97]"
                           style={{ borderColor: themeHex, color: themeHex }}
                         >
-                          Continue Product
+                          Add Product
                         </button>
                       )}
                       {canAgentAdvance(c.status) && (

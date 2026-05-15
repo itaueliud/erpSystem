@@ -689,7 +689,7 @@ export class UserService {
         [newEmail, token, expiresAt, userId]
       );
 
-      const verifyLink = `${config.apiBaseUrl}/users/verify-email?token=${token}`;
+      const verifyLink = `${config.apiBaseUrl}/api/v1/users/verify-email?token=${token}`;
       await sendgridClient.sendEmail({
         to: newEmail,
         subject: 'Verify your new email address — TechSwiftTrix',

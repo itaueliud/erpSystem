@@ -14,6 +14,15 @@ export async function authenticate(
   next: NextFunction
 ): Promise<void> {
   try {
+    // Public endpoint: email verification link must work without prior login.
+    if (
+      req.method === 'GET' &&
+      (req.path === '/verify-email' || req.originalUrl.startsWith('/api/v1/users/verify-email'))
+    ) {
+      next();
+      return;
+    }
+
     // Extract token from Authorization header or cookie
     const authHeader = req.headers.authorization;
     const token =

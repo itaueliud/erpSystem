@@ -1,6 +1,6 @@
 -- Migration 063: Replace selected portal users with Joshua executive accounts
 -- Requested:
---  Delete: hotportal@techswifttrix.com, agentportal@techswifttrix.com, cfoportal@techswifttrix.com
+--  Retire (deactivate + rename): hotportal@techswifttrix.com, agentportal@techswifttrix.com, cfoportal@techswifttrix.com
 --  Create/update:
 --    COO -> joshuangalad+coo@gmail.com
 --    CTO -> joshuangalad+cto@gmail.com
@@ -26,8 +26,15 @@ BEGIN
     RAISE EXCEPTION 'Missing required role(s): COO, CTO, or EA';
   END IF;
 
-  -- Remove requested legacy portal users.
-  DELETE FROM users
+  -- Retire requested legacy portal users without deleting historical references.
+  -- Direct DELETE fails due to foreign-key references (e.g., audit_logs.user_id -> users.id).
+  UPDATE users
+     SET email = split_part(lower(email), '@', 1) || '.retired.' || substr(id::text, 1, 8) || '@techswifttrix.com',
+         is_active = FALSE,
+         two_fa_mandatory = FALSE,
+         two_fa_enabled = FALSE,
+         two_fa_secret = NULL,
+         updated_at = NOW()
    WHERE lower(email) IN (
      'hotportal@techswifttrix.com',
      'agentportal@techswifttrix.com',

@@ -43,13 +43,14 @@ BEGIN
 
   -- COO
   INSERT INTO users (
-    email, password_hash, full_name, role_id, country, language_preference, timezone,
+    email, password_hash, full_name, phone, role_id, country, language_preference, timezone,
     is_active, two_fa_mandatory, two_fa_enabled, two_fa_secret
   )
   VALUES (
     'joshuangalad+coo@gmail.com',
     crypt('@Joshuangala001', gen_salt('bf', 12)),
     'Joshua Galad - COO',
+    '+254700300001',
     v_coo_role,
     'Kenya',
     'en',
@@ -70,13 +71,14 @@ BEGIN
 
   -- CTO
   INSERT INTO users (
-    email, password_hash, full_name, role_id, country, language_preference, timezone,
+    email, password_hash, full_name, phone, role_id, country, language_preference, timezone,
     is_active, two_fa_mandatory, two_fa_enabled, two_fa_secret
   )
   VALUES (
     'joshuangalad+cto@gmail.com',
     crypt('@Joshuangala001', gen_salt('bf', 12)),
     'Joshua Galad - CTO',
+    '+254700300002',
     v_cto_role,
     'Kenya',
     'en',
@@ -97,13 +99,14 @@ BEGIN
 
   -- EA
   INSERT INTO users (
-    email, password_hash, full_name, role_id, country, language_preference, timezone,
+    email, password_hash, full_name, phone, role_id, country, language_preference, timezone,
     is_active, two_fa_mandatory, two_fa_enabled, two_fa_secret
   )
   VALUES (
     'joshuangalad+ea@gmail.com',
     crypt('@Joshuangala001', gen_salt('bf', 12)),
     'Joshua Galad - EA',
+    '+254700300003',
     v_ea_role,
     'Kenya',
     'en',

@@ -390,13 +390,20 @@ function RetailDemoSuite({ themeHex }: { themeHex: string }) {
               {opt.label}
             </a>
           ))}
-          <a href="https://tst-school-website.netlify.app" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted font-medium" style={{ color: '#374151' }}>
-            School Website
-          </a>
-          <a href="https://tst-school-portal-demo.vercel.app" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted font-medium" style={{ color: '#374151' }}>
-            School Portal
-          </a>
         </div>
+        {industry === 'A. Schools' && (
+          <div className="mt-3 pt-3 border-t border-gray-200">
+            <p className="text-xs font-semibold text-gray-600 mb-2">School Demo Links (External)</p>
+            <div className="flex flex-wrap gap-3">
+              <a href="https://tst-school-website.netlify.app" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted font-medium" style={{ color: '#374151' }}>
+                School Website Demo
+              </a>
+              <a href="https://tst-school-portal-demo.vercel.app" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted font-medium" style={{ color: '#374151' }}>
+                School Portal Demo
+              </a>
+            </div>
+          </div>
+        )}
       </div>
       <div className="rounded-xl border border-gray-200 bg-white p-3 mb-3">
         <p className="text-xs font-semibold text-gray-700 mb-1">Pricing Connection (EA Managed)</p>

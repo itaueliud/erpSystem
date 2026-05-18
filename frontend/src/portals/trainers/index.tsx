@@ -230,11 +230,11 @@ function TrainerDashboard({ data, refetch, user, onLogout }: { data: any; refetc
       notifications={notifs}
       onNotificationRead={async (id) => { try { const { apiClient } = await import('../../shared/api/apiClient'); await apiClient.patch(`/api/v1/notifications/${id}/read`); refetch(['notifications']); } catch { /* silent */ } }}
       faqs={TRAINERS_FAQS}
-      portalName="Trainers Portal"
+      portalName="Regional Managers Portal"
     >
       {section === 'overview' && (
         <div>
-          <SectionHeader title="Trainer Overview" subtitle="Your performance at a glance" />
+          <SectionHeader title="Regional Manager Overview" subtitle="Your performance at a glance" />
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard label="My Agents" value={agents.length || metrics.agentCount || 0} icon={I.agents} color={theme.hex} />
             <StatCard label="Active Leads" value={activeLeads || metrics.activeLeads || 0} icon={I.leads} color={theme.hex} />
@@ -305,10 +305,10 @@ function TrainerDashboard({ data, refetch, user, onLogout }: { data: any; refetc
 
       {section === 'achievements' && (
         <div>
-          <SectionHeader title="Achievements" subtitle="Trainer achievements within your country (no revenue data)" />
+          <SectionHeader title="Achievements" subtitle="Regional manager achievements within your country (no revenue data)" />
           <DataTable
             columns={[
-              { key: 'trainerName', label: 'Trainer', render: (v, r: any) => v || r.name || '—' },
+              { key: 'trainerName', label: 'Regional Manager', render: (v, r: any) => v || r.name || '—' },
               { key: 'country', label: 'Country' },
               { key: 'agentsCount', label: 'Agents', render: v => v ?? '—' },
               { key: 'deals', label: 'Deals', render: v => v ?? '—' },
@@ -329,8 +329,8 @@ function TrainerDashboard({ data, refetch, user, onLogout }: { data: any; refetc
 // ─── HEAD_OF_TRAINERS Dashboard ───────────────────────────────────────────────
 const HOT_NAV = [
   { id: 'overview',       label: 'Overview',              icon: I.overview },
-  { id: 'trainers',       label: 'Trainers',              icon: I.trainers },
-  { id: 'invite-trainer', label: 'Invite Trainer',        icon: I.trainers },
+  { id: 'trainers',       label: 'Regional Managers',              icon: I.trainers },
+  { id: 'invite-trainer', label: 'Invite Regional Manager',        icon: I.trainers },
   { id: 'agents',         label: 'Agents',                icon: I.agents },
   { id: 'achievements',   label: 'Achievements',          icon: I.achieve },
   { id: 'add-agent',      label: 'Add Agent',             icon: I.addAgent },
@@ -363,6 +363,7 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
   const agents = data.myAgents || [];
   const unassignedAgents = agents.filter((a: any) => !a.trainerId);
   const trainers = data.trainers || [];
+  const selectableTrainers = trainers.filter((t: any) => (t.roleName || '').toUpperCase() === 'TRAINER');
   const achievements = data.achievements || [];
   const notifs = data.notifications || [];
   const metrics = data.metrics || {};
@@ -472,7 +473,7 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
   return (
     <PortalLayout
       theme={theme}
-      user={{ name: user?.name || 'Head of Trainers', email: user?.email || '', role: 'HEAD_OF_TRAINERS' }}
+      user={{ name: user?.name || 'Sales Manager', email: user?.email || '', role: 'HEAD_OF_TRAINERS' }}
       navItems={nav}
       activeSection={section}
       onSectionChange={setSection}
@@ -480,15 +481,15 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
       notifications={notifs}
       onNotificationRead={async (id) => { try { const { apiClient } = await import('../../shared/api/apiClient'); await apiClient.patch(`/api/v1/notifications/${id}/read`); refetch(['notifications']); } catch { /* silent */ } }}
       faqs={TRAINERS_FAQS}
-      portalName="Trainers Portal"
+      portalName="Regional Managers Portal"
     >
       {section === 'overview' && (
         <div>
-          <SectionHeader title="Head of Trainers Overview" subtitle="Country-wide performance" />
+          <SectionHeader title="Sales Manager Overview" subtitle="Country-wide performance" />
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard label="Total Trainers" value={trainers.length || metrics.totalTrainers || 0} icon={I.trainers} color={theme.hex} />
+            <StatCard label="Total Regional Managers" value={trainers.length || metrics.totalTrainers || 0} icon={I.trainers} color={theme.hex} />
             <StatCard label="Total Agents" value={agents.length || metrics.totalAgents || 0} icon={I.agents} color={theme.hex} />
-            <StatCard label="Best Trainer This Month" value={bestTrainer?.name || metrics.bestTrainer || '—'} icon={I.achieve} color={theme.hex} />
+            <StatCard label="Best Regional Manager This Month" value={bestTrainer?.name || metrics.bestTrainer || '—'} icon={I.achieve} color={theme.hex} />
             <StatCard label="Active Leads (Country)" value={activeLeads || metrics.activeLeads || 0} icon={I.leads} color={theme.hex} />
           </div>
         </div>
@@ -496,7 +497,7 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
 
       {section === 'trainers' && (
         <div>
-          <SectionHeader title="Trainers" subtitle="Country-wide trainer performance (no revenue)" />
+          <SectionHeader title="Regional Managers" subtitle="Country-wide regional manager performance (no revenue)" />
           <DataTable
             columns={[
               { key: 'name', label: 'Name' },
@@ -508,26 +509,26 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
               )},
             ]}
             rows={trainers}
-            emptyMessage="No trainers found"
+            emptyMessage="No regional managers found"
           />
         </div>
       )}
 
       {section === 'invite-trainer' && (
         <div>
-          <SectionHeader title="Invite Trainer" subtitle="Send trainer invitation link by email" />
+          <SectionHeader title="Invite Regional Manager" subtitle="Send regional manager invitation link by email" />
           <div className="max-w-md">
             {inviteTrainerMsg && <div className={`p-3 rounded-xl text-sm mb-4 ${inviteTrainerOk ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{inviteTrainerMsg}</div>}
             <form onSubmit={submitInviteTrainer} className={cardCls} style={cardStyle}>
               <div className="mb-4">
-                <label className={labelCls}>Trainer Email *</label>
+                <label className={labelCls}>Regional Manager Email *</label>
                 <input
                   type="email"
                   required
                   value={inviteTrainerEmail}
                   onChange={e => setInviteTrainerEmail(e.target.value)}
                   className={inputCls}
-                  placeholder="trainer@techswifttrix.com"
+                  placeholder="regional.manager@techswifttrix.com"
                 />
               </div>
               <PortalButton type="submit" color={theme.hex} fullWidth disabled={inviteTrainerBusy || !inviteTrainerEmail.trim()}>
@@ -545,7 +546,7 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
           <DataTable
             columns={[
               { key: 'name', label: 'Name' },
-              { key: 'trainerName', label: 'Trainer', render: (v, r: any) => v || r.trainer || '—' },
+              { key: 'trainerName', label: 'Regional Manager', render: (v, r: any) => v || r.trainer || '—' },
               { key: 'region', label: 'Region' },
               { key: 'deals', label: 'Deals', render: v => v ?? '—' },
               { key: 'leads', label: 'Leads', render: v => v ?? '—' },
@@ -556,7 +557,7 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
                     <div className="flex gap-2 items-center flex-wrap">
                       <select value={reassignTrainerId} onChange={e => setReassignTrainerId(e.target.value)} className="px-2 py-1 rounded-lg border border-gray-200 text-xs">
                         <option value="">Select trainer…</option>
-                        {trainers.map((t: any) => (
+                        {selectableTrainers.map((t: any) => (
                           <option key={t.id || t._id} value={t.id || t._id}>{t.name}</option>
                         ))}
                       </select>
@@ -604,10 +605,10 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
 
       {section === 'achievements' && (
         <div>
-          <SectionHeader title="Achievements" subtitle="Trainer achievements within your country" />
+          <SectionHeader title="Achievements" subtitle="Regional manager achievements within your country" />
           <DataTable
             columns={[
-              { key: 'trainerName', label: 'Trainer', render: (v, r: any) => v || r.trainer || '—' },
+              { key: 'trainerName', label: 'Regional Manager', render: (v, r: any) => v || r.trainer || '—' },
               { key: 'achievement', label: 'Achievement' },
               { key: 'period', label: 'Period' },
             ]}
@@ -780,23 +781,23 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
 
             {/* Trainer selector — uses data.trainers already loaded */}
             <div className="mb-6">
-              <label className={labelCls}>Assign to Trainer *</label>
+              <label className={labelCls}>Assign to Regional Manager *</label>
               <select
                 required
                 value={assignClientForm.accountExecutiveId}
                 onChange={e => setAssignClientForm(f => ({ ...f, accountExecutiveId: e.target.value }))}
                 className={inputCls}
               >
-                <option value="">Select trainer…</option>
-                {(data.trainers || []).map((t: any) => (
+                <option value="">Select regional manager…</option>
+                {selectableTrainers.map((t: any) => (
                   <option key={t.id} value={t.id}>
                     {t.fullName || t.full_name || t.name || t.email}
                     {t.assignedClients != null ? ` (${t.assignedClients} clients)` : ''}
                   </option>
                 ))}
               </select>
-              {(data.trainers || []).length === 0 && (
-                <p className="text-xs text-gray-400 mt-1">No trainers found</p>
+              {selectableTrainers.length === 0 && (
+                <p className="text-xs text-gray-400 mt-1">No active regional managers found</p>
               )}
             </div>
 
@@ -819,6 +820,7 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
 export default function TrainersPortal() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const isHoT = user?.role === 'HEAD_OF_TRAINERS';
 
   const { data, refetch } = useMultiPortalData<{
     myAgents: any[]; clients: any[]; achievements: any[];
@@ -827,7 +829,7 @@ export default function TrainersPortal() {
     // /api/v1/clients/all handles both roles: HoT gets all clients, TRAINER gets only their assigned clients
     { key: 'clients', endpoint: '/api/v1/clients/all', fallback: [], transform: (r: any) => Array.isArray(r) ? r : (r?.data ?? r?.clients ?? []) },
     // /api/v1/trainer/agents returns agents for TRAINER; HoT uses training/agent-records
-    { key: 'myAgents', endpoint: '/api/v1/training/agent-records', fallback: [], transform: (r: any) => Array.isArray(r) ? r : (r?.data ?? r?.agents ?? []) },
+    { key: 'myAgents', endpoint: isHoT ? '/api/v1/training/agent-records' : '/api/v1/trainer/agents', fallback: [], transform: (r: any) => Array.isArray(r) ? r : (r?.data ?? r?.agents ?? []) },
     { key: 'achievements', endpoint: '/api/v1/trainer/country-achievements', fallback: [], transform: (r: any) => Array.isArray(r) ? r : (r?.data?.trainers ?? r?.achievements ?? []) },
     { key: 'trainers', endpoint: '/api/v1/trainers/performance', fallback: [], transform: (r: any) => Array.isArray(r) ? r : (r?.data ?? r?.trainers ?? []) },
     { key: 'notifications', endpoint: '/api/v1/notifications', fallback: [], transform: (r: any) => Array.isArray(r) ? r : (r?.notifications ?? r?.data ?? []) },
@@ -848,3 +850,4 @@ export default function TrainersPortal() {
   if (user.role === 'HEAD_OF_TRAINERS') return <HoTDashboard {...props} onLogout={logoutFn} />;
   return <TrainerDashboard {...props} onLogout={logoutFn} />;
 }
+

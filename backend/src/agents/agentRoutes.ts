@@ -404,6 +404,17 @@ router.post('/:agentId/reassign', requireRole(Role.HEAD_OF_TRAINERS), async (req
     if (!trainerId) return res.status(400).json({ success: false, error: 'trainerId is required' });
 
     const { db } = await import('../database/connection');
+    const trainerRoleCheck = await db.query(
+      `SELECT u.id
+       FROM users u
+       JOIN roles r ON r.id = u.role_id
+       WHERE u.id = $1 AND u.is_active = TRUE AND r.name = 'TRAINER'`,
+      [trainerId]
+    );
+    if (!trainerRoleCheck.rows.length) {
+      return res.status(400).json({ success: false, error: 'Selected assignee must be an active TRAINER' });
+    }
+
     await db.query(
       `UPDATE users
        SET trainer_id = $1, updated_at = NOW()

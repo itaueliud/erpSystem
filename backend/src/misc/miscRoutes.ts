@@ -306,7 +306,7 @@ router.put('/finance/tot-rate', async (req: Request, res: Response) => {
 // ─── Trainers Performance ─────────────────────────────────────────────────────
 router.get('/trainers/performance', async (_req, res) => {
   const r = await safeQuery(
-    `SELECT u.id, u.full_name AS name, u.email, u.country,
+    `SELECT u.id, u.full_name AS name, u.email, u.country, ro.name as "roleName",
             COUNT(DISTINCT ag.id)  AS "agentsCount",
             COUNT(DISTINCT cl.id)  AS "assignedClients"
      FROM users u
@@ -316,7 +316,7 @@ router.get('/trainers/performance', async (_req, res) => {
        AND cl.status IN ('NEGOTIATION', 'CONVERTED', 'LEAD_ACTIVATED', 'LEAD_QUALIFIED')
      WHERE ro.name IN ('TRAINER', 'HEAD_OF_TRAINERS')
        AND u.is_active = TRUE
-     GROUP BY u.id, u.full_name, u.email, u.country
+     GROUP BY u.id, u.full_name, u.email, u.country, ro.name
      ORDER BY u.full_name ASC`
   );
   res.json({ success: true, data: r.rows });

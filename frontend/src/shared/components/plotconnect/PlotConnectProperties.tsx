@@ -58,6 +58,8 @@ interface Props {
   canEdit?: boolean;
   showAgent?: boolean;
   showRevenue?: boolean;
+  summaryOnly?: boolean;
+  allowPdfExport?: boolean;
 }
 
 const BOOKING_LABELS: Record<string, string> = {
@@ -112,15 +114,41 @@ function PropertyModal({ prop, themeHex, canApprove, canPublish, canSetTier, can
     mapLink:       prop.mapLink       || '',
   });
 
-  const downloadDetailFile = () => {
-    const payload = JSON.stringify(prop, null, 2);
-    const blob = new Blob([payload], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${(prop.propertyIdNumber || prop.id)}-property-details.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const exportPdf = () => {
+    const safe = (v: any) => String(v ?? '—').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const html = `<!doctype html><html><head><meta charset="utf-8"/><title>Property ${safe(prop.propertyIdNumber || prop.id)}</title>
+      <style>
+        body{font-family:Arial,sans-serif;padding:24px;color:#0f172a} h1{font-size:20px;margin:0 0 8px}
+        h2{font-size:14px;margin:16px 0 6px} .row{display:flex;gap:16px;margin:4px 0}
+        .k{width:180px;color:#64748b;font-weight:700} .v{flex:1}
+        table{width:100%;border-collapse:collapse;margin-top:8px} th,td{border:1px solid #cbd5e1;padding:6px;text-align:left;font-size:12px}
+      </style></head><body>
+      <h1>${safe(prop.propertyName)}</h1>
+      <div class="row"><div class="k">Property ID</div><div class="v">${safe(prop.propertyIdNumber)}</div></div>
+      <div class="row"><div class="k">Owner</div><div class="v">${safe(prop.ownerName)}</div></div>
+      <div class="row"><div class="k">Phone</div><div class="v">${safe(prop.ownerPhone)}</div></div>
+      <div class="row"><div class="k">Location</div><div class="v">${safe(prop.area)}, ${safe(prop.county)}</div></div>
+      <div class="row"><div class="k">Status</div><div class="v">${safe(prop.status)}</div></div>
+      <div class="row"><div class="k">Payment</div><div class="v">${safe(prop.paymentStatus)}</div></div>
+      <div class="row"><div class="k">Package</div><div class="v">${safe(prop.package)}</div></div>
+      <h2>Details</h2>
+      <div class="row"><div class="k">Booking Type</div><div class="v">${safe(prop.bookingType)}</div></div>
+      <div class="row"><div class="k">Types</div><div class="v">${safe((prop.propertyTypes || []).join(', '))}</div></div>
+      <div class="row"><div class="k">Contact Person</div><div class="v">${safe(prop.contactPerson)}</div></div>
+      <div class="row"><div class="k">Description</div><div class="v">${safe(prop.description)}</div></div>
+      <div class="row"><div class="k">Website</div><div class="v">${safe(prop.websiteLink)}</div></div>
+      ${Array.isArray(prop.rooms) && prop.rooms.length ? `
+      <h2>Rooms</h2>
+      <table><thead><tr><th>Type</th><th>Price</th><th>Availability</th><th>Selected</th></tr></thead><tbody>
+      ${prop.rooms.map((r: any) => `<tr><td>${safe(r.type)}</td><td>${safe(r.price)}</td><td>${safe(r.availability)}</td><td>${r.selected ? 'Yes' : 'No'}</td></tr>`).join('')}
+      </tbody></table>` : ''}
+      </body></html>`;
+    const w = window.open('', '_blank');
+    if (!w) return;
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    w.print();
   };
 
   // Load property images
@@ -401,7 +429,7 @@ function PropertyModal({ prop, themeHex, canApprove, canPublish, canSetTier, can
             </div>
           )}
           <div className="pt-3 border-t border-slate-100">
-            <PortalButton variant="secondary" onClick={downloadDetailFile}>Download Details File</PortalButton>
+            <PortalButton variant="secondary" onClick={exportPdf}>Export PDF</PortalButton>
           </div>
         </div>
       </div>
@@ -497,7 +525,7 @@ function PackageManager({ themeHex }: { themeHex: string }) {
 // ─── Main PlotConnectProperties component ────────────────────────────────────
 export default function PlotConnectProperties({
   themeHex, canApprove = false, canPublish = false, canSetTier = false,
-  canManagePkg = false, canEdit = false, showAgent = true, showRevenue = false,
+  canManagePkg = false, canEdit = false, showAgent = true, showRevenue = false, summaryOnly = false,
 }: Props) {
   const [properties, setProperties] = useState<PlotProperty[]>([]);
   const [stats,      setStats]      = useState<any>({});
@@ -623,14 +651,14 @@ export default function PlotConnectProperties({
                 { key: 'paymentStatus', label: 'Payment', render: v => <PayBadge status={v || 'UNPAID'} /> },
                 ...(showAgent ? [{ key: 'agentName', label: 'Agent', render: (v: any) => v || '—' }] : []),
                 { key: 'createdAt',    label: 'Submitted', render: v => v ? new Date(v).toLocaleDateString() : '—' },
-                {
+                ...(summaryOnly ? [] : [{
                   key: 'id', label: 'Actions',
                   render: (_v: any, row: any) => (
                     <PortalButton size="sm" variant="secondary" onClick={() => setSelected(row)}>
                       View
                     </PortalButton>
                   ),
-                },
+                }]),
               ]}
               rows={properties}
               emptyMessage="No properties found"

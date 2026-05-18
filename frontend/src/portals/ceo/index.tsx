@@ -870,10 +870,9 @@ function OperationsSection({ data, refetch: _refetch }: { data: any; refetch: (k
           {tab === 'plotconnect' && (
             <PlotConnectProperties
               themeHex={C.blue2}
-              canApprove
-              canPublish
               showAgent
               showRevenue
+              summaryOnly
             />
           )}
         </div>

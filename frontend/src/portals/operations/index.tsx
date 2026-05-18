@@ -636,9 +636,9 @@ export function SalesClientAcquisitionDashboard() {
       {section === 'properties' && (
         <PlotConnectProperties
           themeHex={theme.hex}
-          canApprove={true}
           showAgent={true}
           showRevenue={false}
+          summaryOnly={true}
         />
       )}
       {section === 'tasks' && (

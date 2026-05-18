@@ -1897,7 +1897,7 @@ function EADashboard({ data, refetch, user, onLogout }: { data: any; refetch: (k
           <div className="mt-8">
             <h2 className="text-base font-semibold text-slate-800 mb-1">TST PlotConnect Package Amounts</h2>
             <p className="text-sm text-slate-500 mb-4">Propose changes to PlotConnect listing package prices. CEO must confirm before changes take effect.</p>
-            <PlotConnectProperties themeHex={theme.hex} canManagePkg={true} canApprove={true} canPublish={true} showAgent={false} showRevenue={false} />
+            <PlotConnectProperties themeHex={theme.hex} canManagePkg={true} showAgent={false} showRevenue={false} summaryOnly={true} />
           </div>
         </div>
       )}

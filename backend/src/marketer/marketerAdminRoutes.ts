@@ -27,7 +27,7 @@ const upload = multer({
 });
 
 // Roles that can read all properties
-const MANAGEMENT_ROLES = [Role.CEO, Role.COO, Role.CoS, Role.CFO, Role.EA, Role.OPERATIONS_USER, Role.HEAD_OF_TRAINERS];
+const MANAGEMENT_ROLES = [Role.CEO, Role.COO, Role.CoS, Role.CFO, Role.EA, Role.OPERATIONS_USER, Role.HEAD_OF_TRAINERS, Role.TECH_STAFF, Role.CTO];
 
 // ─── Shared property row mapper ───────────────────────────────────────────────
 function mapProperty(r: any) {

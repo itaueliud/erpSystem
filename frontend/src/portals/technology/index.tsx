@@ -19,6 +19,7 @@ import { useMultiPortalData } from '../../shared/utils/usePortalData';
 import { projectDisplayStatus } from '../../shared/utils/projectStatus';
 import ChatPanel from '../../shared/components/chat/ChatPanel';
 import { TECHNOLOGY_FAQS } from '../../shared/data/portalFAQs';
+import PlotConnectProperties from '../../shared/components/plotconnect/PlotConnectProperties';
 
 const theme = PORTAL_THEMES.technology;
 
@@ -125,6 +126,7 @@ const INFRA_NAV = [
   { id: 'compliance',    label: 'Client Compliance',       icon: I.compliance },
   { id: 'github',        label: 'GitHub Activity',         icon: I.github },
   { id: 'deployments',   label: 'Deployment Log',          icon: I.assign },
+  { id: 'properties',    label: 'Agent Properties',        icon: I.projects },
   { id: 'achievements',  label: 'Achievements',            icon: I.achieve },
   { id: 'chat',          label: 'Chat',                    icon: I.chat },
   { id: 'daily-report',  label: 'Daily Report',            icon: I.report },
@@ -449,6 +451,17 @@ function InfraSecurityDashboard({ data, refetch, user, onLogout }: { data: any; 
             ]}
             rows={deployments}
             emptyMessage="No deployments logged yet"
+          />
+        </div>
+      )}
+
+      {section === 'properties' && (
+        <div>
+          <SectionHeader title="Agent Added Properties" subtitle="Full property details submitted by agents with PDF export support" />
+          <PlotConnectProperties
+            themeHex={theme.hex}
+            showAgent={true}
+            showRevenue={false}
           />
         </div>
       )}

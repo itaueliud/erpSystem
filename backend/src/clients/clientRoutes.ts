@@ -4,6 +4,11 @@ import { activityTimelineService, TimelineEventType, TimelineFilters } from '../
 import logger from '../utils/logger';
 
 const router = Router();
+const CLIENT_EDITOR_ROLES = new Set([
+  'CEO', 'CoS', 'CFO', 'COO', 'CTO', 'EA', 'CFO_ASSISTANT', 'OPERATIONS_USER',
+  'HEAD_OF_TRAINERS', 'TRAINER', 'REGIONAL_MANAGER', 'SALES_MANAGER', 'RM', 'SM',
+]);
+const REGIONAL_ROLES = new Set(['REGIONAL_MANAGER', 'RM']);
 
 function normalizePhone(input: string): string {
   const digits = String(input || '').replace(/\D/g, '');
@@ -98,7 +103,7 @@ router.get('/all', async (req: Request, res: Response) => {
   try {
     const role = (req as any).user?.role;
     const userId = (req as any).user?.id;
-    const allowed = ['CEO', 'CoS', 'CFO', 'COO', 'CTO', 'EA', 'CFO_ASSISTANT', 'OPERATIONS_USER', 'HEAD_OF_TRAINERS', 'TRAINER'];
+    const allowed = ['CEO', 'CoS', 'CFO', 'COO', 'CTO', 'EA', 'CFO_ASSISTANT', 'OPERATIONS_USER', 'HEAD_OF_TRAINERS', 'TRAINER', 'REGIONAL_MANAGER', 'SALES_MANAGER', 'RM', 'SM'];
     if (!allowed.includes(role)) {
       return res.status(403).json({ error: 'Access denied' });
     }
@@ -116,6 +121,32 @@ router.get('/all', async (req: Request, res: Response) => {
          FROM clients c
          LEFT JOIN users u ON u.id = c.agent_id
          WHERE c.trainer_id = $1
+         ORDER BY c.updated_at DESC`,
+        [userId]
+      );
+      return res.json({ clients: result.rows, total: result.rows.length });
+    }
+
+    // Regional roles only see clients in their own region.
+    if (REGIONAL_ROLES.has(role)) {
+      const { db } = await import('../database/connection');
+      const result = await db.query(
+        `SELECT c.id, c.reference_number, c.name, c.email, c.phone, c.country,
+                c.industry_category, c.service_description, c.status, c.agent_id,
+                c.trainer_id, c.estimated_value, c.priority, c.expected_start_date,
+                c.created_at, c.updated_at,
+                u.full_name AS agent_name
+         FROM clients c
+         LEFT JOIN users u ON u.id = c.agent_id
+         WHERE EXISTS (
+           SELECT 1 FROM users ru
+           LEFT JOIN countries cc ON LOWER(cc.name) = LOWER(c.country)
+           WHERE ru.id = $1
+             AND (
+               (ru.region IS NOT NULL AND ru.region <> '' AND LOWER(cc.region) = LOWER(ru.region))
+               OR (ru.country IS NOT NULL AND ru.country <> '' AND LOWER(c.country) = LOWER(ru.country))
+             )
+         )
          ORDER BY c.updated_at DESC`,
         [userId]
       );
@@ -174,9 +205,10 @@ router.get('/:id', async (req: Request, res: Response) => {
 router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const agentId = (req as any).user?.id;
+    const requesterId = (req as any).user?.id;
+    const requesterRole = (req as any).user?.role;
 
-    if (!agentId) {
+    if (!requesterId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
@@ -193,7 +225,13 @@ router.put('/:id', async (req: Request, res: Response) => {
     if (req.body.priority !== undefined) updates.priority = req.body.priority;
     if (req.body.expectedStartDate !== undefined) updates.expectedStartDate = req.body.expectedStartDate;
 
-    const client = await clientService.updateClient(id, agentId, updates);
+    const elevatedEditor = CLIENT_EDITOR_ROLES.has(requesterRole);
+    const client = await clientService.updateClient(id, requesterId, updates, {
+      bypassOwnership: elevatedEditor,
+      allowedStatuses: elevatedEditor
+        ? [ClientStatus.NEW_LEAD, ClientStatus.CONVERTED, ClientStatus.LEAD_ACTIVATED, ClientStatus.LEAD_QUALIFIED, ClientStatus.NEGOTIATION]
+        : [ClientStatus.NEW_LEAD],
+    });
 
     return res.json(client);
   } catch (error: any) {

@@ -156,9 +156,9 @@ export const clientsApi = {
     apiClient.post<Client>('/api/v1/clients', data),
 
   getCommunications: (clientId?: string) =>
-    apiClient.get<unknown[]>('/api/v1/clients/communications', {
-      params: { clientId },
-    }),
+    clientId
+      ? apiClient.get<unknown[]>(`/api/v1/clients/${clientId}/communications`)
+      : apiClient.get<unknown[]>('/api/v1/clients/communications/all'),
 };
 
 // ---------------------------------------------------------------------------

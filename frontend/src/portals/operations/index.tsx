@@ -174,7 +174,7 @@ export function SalesClientAcquisitionDashboard() {
       transform: (r: any) => Array.isArray(r) ? r : (r.data || r.tasks || []) },
     { key: 'users',          endpoint: '/api/v1/users',                fallback: [],
       transform: (r: any) => Array.isArray(r) ? r : (r.data || r.users || []) },
-    { key: 'communications', endpoint: '/api/v1/communications',       fallback: [],
+    { key: 'communications', endpoint: '/api/v1/clients/communications/all',       fallback: [],
       transform: (r: any) => Array.isArray(r) ? r : (r.data || []) },
     { key: 'teamReports',    endpoint: '/api/v1/daily-reports/team',   fallback: [],
       transform: (r: any) => Array.isArray(r) ? r : (r.data || r.reports || []) },
@@ -720,7 +720,7 @@ export function SalesClientAcquisitionDashboard() {
                         const EXCLUDED = ['CEO', 'EA', 'CFO', 'COO', 'COS'];
                         const ROLE_LABELS: Record<string, string> = {
                           CTO: 'Technology', TECH_STAFF: 'Tech Staff', DEVELOPER: 'Developers',
-                          TRAINER: 'Trainers', HEAD_OF_TRAINERS: 'Head of Trainers',
+                          TRAINER: 'Regional Managers', HEAD_OF_TRAINERS: 'Regional Managers',
                           OPERATIONS_USER: 'Operations', AGENT: 'Sales Agents',
                           SECURITY_MANAGER: 'Security',
                         };

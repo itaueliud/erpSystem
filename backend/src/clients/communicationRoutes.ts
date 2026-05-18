@@ -9,6 +9,48 @@ import { bulkOperationsService } from '../bulk/bulkOperationsService';
 const router = Router();
 
 /**
+ * Get communications across all clients (operations dashboards)
+ * GET /api/clients/communications/all
+ */
+router.get('/communications/all', async (req: Request, res: Response) => {
+  try {
+    const role = (req as any).user?.role;
+    const userId = (req as any).user?.id;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { db } = await import('../database/connection');
+    const params: any[] = [];
+    let where = '';
+    if (role === 'AGENT') {
+      where = 'WHERE c.agent_id = $1';
+      params.push(userId);
+    } else if (role === 'TRAINER' || role === 'HEAD_OF_TRAINERS') {
+      where = 'WHERE c.trainer_id = $1';
+      params.push(userId);
+    }
+
+    const result = await db.query(
+      `SELECT cc.id, cc.client_id, cc.type, cc.communication_date, cc.duration_minutes, cc.summary,
+              cc.participants, cc.outcome, cc.created_at,
+              c.name AS client_name, c.status AS client_status,
+              u.full_name AS agent_name
+       FROM client_communications cc
+       JOIN clients c ON c.id = cc.client_id
+       LEFT JOIN users u ON u.id = c.agent_id
+       ${where}
+       ORDER BY cc.communication_date DESC, cc.created_at DESC
+       LIMIT 1000`,
+      params
+    );
+
+    return res.json({ data: result.rows });
+  } catch (error: any) {
+    logger.error('Error getting all communications', { error });
+    return res.status(500).json({ error: 'Failed to get communications' });
+  }
+});
+
+/**
  * Log a communication record
  * POST /api/clients/:clientId/communications
  * Requirements: 49.3

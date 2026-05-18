@@ -174,13 +174,24 @@ export class ClientService {
     }
   }
 
-  /** Update client — only while NEW_LEAD (doc §10) */
-  async updateClient(clientId: string, agentId: string, updates: UpdateClientInput): Promise<Client> {
+  /** Update client — owner-only by default, with optional elevated override */
+  async updateClient(
+    clientId: string,
+    agentId: string,
+    updates: UpdateClientInput,
+    options?: { bypassOwnership?: boolean; allowedStatuses?: ClientStatus[] }
+  ): Promise<Client> {
     try {
       const currentClient = await this.getClient(clientId);
       if (!currentClient) throw new Error('Client not found');
-      if (currentClient.agentId !== agentId) throw new Error('Unauthorized: You can only update your own clients');
-      if (currentClient.status !== ClientStatus.NEW_LEAD) throw new Error('Client can only be updated while status is NEW_LEAD');
+      const bypassOwnership = options?.bypassOwnership === true;
+      const allowedStatuses = options?.allowedStatuses || [ClientStatus.NEW_LEAD];
+      if (!bypassOwnership && currentClient.agentId !== agentId) {
+        throw new Error('Unauthorized: You can only update your own clients');
+      }
+      if (!allowedStatuses.includes(currentClient.status)) {
+        throw new Error(`Client can only be updated while status is one of: ${allowedStatuses.join(', ')}`);
+      }
 
       if (updates.country) {
         const valid = await this.validateCountry(updates.country);

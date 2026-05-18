@@ -176,7 +176,7 @@ void NotificationsSection;
 const TRAINER_NAV = [
   { id: 'overview',    label: 'Overview',    icon: I.overview },
   { id: 'my-agents',   label: 'My Agents',   icon: I.agents },
-  { id: 'client-leads',label: 'Client Leads',icon: I.leads },
+  { id: 'client-leads',label: 'Agent Leads',icon: I.leads },
   { id: 'achievements',label: 'Achievements',icon: I.achieve },
   { id: 'chat-cfo',    label: 'Chat with CFO',icon: I.chat },
   { id: 'daily-report',label: 'Daily Report',icon: I.report },
@@ -285,7 +285,7 @@ function TrainerDashboard({ data, refetch, user, onLogout }: { data: any; refetc
 
       {section === 'client-leads' && (
         <div>
-          <SectionHeader title="Client Leads" subtitle="Clients from your agents" />
+          <SectionHeader title="Agent Leads" subtitle="Clients from your agents" />
           <DataTable
             columns={[
               { key: 'name', label: 'Client Name', render: (v, r: any) => v || r.clientName || '—' },
@@ -298,7 +298,7 @@ function TrainerDashboard({ data, refetch, user, onLogout }: { data: any; refetc
               )},
             ]}
             rows={clients}
-            emptyMessage="No client leads"
+            emptyMessage="No agent leads"
           />
         </div>
       )}

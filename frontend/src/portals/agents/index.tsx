@@ -226,7 +226,6 @@ function RetailDemoSuite({ themeHex }: { themeHex: string }) {
   const [tab, setTab] = useState<RetailDemoKey>('ecommerce');
   const [serviceAmounts, setServiceAmounts] = useState<Array<{ serviceName: string; currentAmount: number }>>([]);
   const [pricingMsg, setPricingMsg] = useState('');
-  const [cart, setCart] = useState<Array<{ id: number; name: string; price: number; qty: number }>>([]);
   const [inventory, setInventory] = useState([
     { sku: 'DEMO-POS-001', name: 'POS License Seats', stock: 12, reorderAt: 5 },
     { sku: 'DEMO-INV-001', name: 'Inventory Setup Slots', stock: 9, reorderAt: 4 },
@@ -278,29 +277,11 @@ function RetailDemoSuite({ themeHex }: { themeHex: string }) {
     ],
   };
   const products = INDUSTRY_PRODUCTS[industry] || INDUSTRY_PRODUCTS['G. Shops & Businesses (Retail)'];
-  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  const addToCart = (id: number) => {
-    const product = products.find(p => p.id === id);
-    if (!product) return;
-    setCart(prev => {
-      const existing = prev.find(x => x.id === id);
-      if (existing) return prev.map(x => x.id === id ? { ...x, qty: x.qty + 1 } : x);
-      return [...prev, { ...product, qty: 1 }];
-    });
-  };
-  const updateQty = (id: number, delta: number) => {
-    setCart(prev =>
-      prev
-        .map(item => item.id === id ? { ...item, qty: Math.max(0, item.qty + delta) } : item)
-        .filter(item => item.qty > 0)
-    );
-  };
-  const clearCart = () => setCart([]);
+  const total = 0;
   const checkout = () => {
     const paid = Number(cashReceived || 0);
     if (paid < total || total <= 0) return;
     setLastSale({ total, paid, change: paid - total });
-    clearCart();
   };
   const recordInventoryAction = (sku: string, name: string, action: 'IN' | 'OUT') => {
     setInventoryLog(prev => [`${new Date().toLocaleTimeString()} - ${action} - ${name} (${sku})`, ...prev].slice(0, 6));
@@ -409,6 +390,12 @@ function RetailDemoSuite({ themeHex }: { themeHex: string }) {
               {opt.label}
             </a>
           ))}
+          <a href="https://tst-school-website.netlify.app" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted font-medium" style={{ color: '#374151' }}>
+            School Website
+          </a>
+          <a href="https://tst-school-portal-demo.vercel.app" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted font-medium" style={{ color: '#374151' }}>
+            School Portal
+          </a>
         </div>
       </div>
       <div className="rounded-xl border border-gray-200 bg-white p-3 mb-3">
@@ -429,43 +416,14 @@ function RetailDemoSuite({ themeHex }: { themeHex: string }) {
               <div key={p.id} className="border border-gray-200 rounded-xl p-3">
                 <p className="text-sm font-medium text-gray-800">{p.name}</p>
                 <p className="text-xs text-gray-500 mb-2">KSh {p.price.toLocaleString()}</p>
-                <button type="button" onClick={() => addToCart(p.id)} className="text-xs font-semibold underline" style={{ color: themeHex }}>
-                  Add to Cart
-                </button>
               </div>
             ))}
-          </div>
-          <div className="rounded-xl border border-gray-200 p-3">
-            <p className="text-xs font-semibold text-gray-600 mb-2">Cart</p>
-            {cart.length === 0 ? <p className="text-xs text-gray-500">No items in cart.</p> : (
-              <div className="space-y-2">
-                {cart.map(item => (
-                  <div key={item.id} className="flex items-center justify-between text-sm">
-                    <span>{item.name} x{item.qty}</span>
-                    <div className="flex items-center gap-2">
-                      <button type="button" className="px-2 border rounded" onClick={() => updateQty(item.id, -1)}>-</button>
-                      <button type="button" className="px-2 border rounded" onClick={() => updateQty(item.id, 1)}>+</button>
-                      <span className="font-semibold">KSh {(item.price * item.qty).toLocaleString()}</span>
-                    </div>
-                  </div>
-                ))}
-                <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
-                  <span className="font-semibold">Total</span>
-                  <span className="font-semibold">KSh {total.toLocaleString()}</span>
-                </div>
-                <button type="button" onClick={clearCart} className="text-xs underline text-gray-600">Clear Cart</button>
-              </div>
-            )}
           </div>
         </div>
       )}
       {tab === 'pos' && (
         <div id="demo-pos" className="space-y-3">
-          <p className="text-xs text-gray-500">POS checkout uses selected package(s) from the E-commerce demo and follows commitment flow logic.</p>
-          <div className="rounded-xl border border-gray-200 p-3 text-sm">
-            {cart.length === 0 ? <p className="text-gray-500">No items yet</p> : cart.map(i => <p key={i.id}>{i.name} x{i.qty} - KSh {(i.price * i.qty).toLocaleString()}</p>)}
-            <p className="mt-2 font-semibold">Total: KSh {total.toLocaleString()}</p>
-          </div>
+          <p className="text-xs text-gray-500">POS demo is view-only in this mode.</p>
           <div className="rounded-xl border border-gray-200 p-3">
             <label className="block text-xs font-semibold text-gray-600 mb-1">Commitment Received (KSh)</label>
             <input type="number" min={0} value={cashReceived} onChange={e => setCashReceived(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm" />

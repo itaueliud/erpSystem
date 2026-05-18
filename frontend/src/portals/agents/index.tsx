@@ -48,7 +48,8 @@ const SOFTWARE_CATALOGUE: Array<{ category: string; icon: string; items: Catalog
     category: 'A. Schools',
     icon: '🎓',
     items: [
-      { name: 'School Portal / LMS', desc: 'Learning management, student portals & e-learning', priceFrom: 'From KSh 95,000', demoLabel: 'School Demo', demoHref: 'https://demo.techswifttrix.com/schools/portal' },
+      { name: 'School Portal / LMS', desc: 'Learning management, student portals & e-learning', priceFrom: 'From KSh 95,000', demoLabel: 'School Portal Demo', demoHref: 'https://tst-school-portal-demo.vercel.app' },
+      { name: 'School Website', desc: 'Public school website for admissions, news and communication', priceFrom: 'From KSh 55,000', demoLabel: 'School Website Demo', demoHref: 'https://tst-school-website.netlify.app' },
       { name: 'Fee Management System', desc: 'Fee collection, receipts & arrears tracking', priceFrom: 'From KSh 70,000', demoLabel: 'Fees Demo', demoHref: 'https://demo.techswifttrix.com/schools/fees' },
       { name: 'Exam & Results System', desc: 'Online exams, grading & report cards', priceFrom: 'From KSh 60,000', demoLabel: 'Results Demo', demoHref: 'https://demo.techswifttrix.com/schools/results' },
       { name: 'Library Management', desc: 'Book catalogue, borrowing & returns', priceFrom: 'From KSh 45,000', demoLabel: 'Library Demo', demoHref: 'https://demo.techswifttrix.com/schools/library' },

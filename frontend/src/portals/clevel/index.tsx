@@ -236,6 +236,10 @@ const COO_DEPTS = [
   { name: 'Account Management', headCount: 9, kpiScore: 85 },
   { name: 'Marketing', headCount: 6, kpiScore: 71 },
 ];
+const COO_DEMO_LINKS = [
+  { label: 'School Website', url: 'https://tst-school-website.netlify.app' },
+  { label: 'School Portal', url: 'https://tst-school-portal-demo.vercel.app' },
+];
 
 function COODashboard({ data, refetch, user, onLogout }: { data: any; refetch: (keys?: any[]) => void; user: any; onLogout: () => void }) {
   const [section, setSection] = useState('overview');
@@ -301,6 +305,23 @@ function COODashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
               <div key={dept.name} className={cardCls} style={cardStyle}>
                 <p className="font-semibold text-gray-800 mb-1">{dept.name}</p>
                 <p className="text-xs text-gray-500 mb-3">Head count: {dept.headCount}</p>
+                <div className="mb-3">
+                  <p className="text-xs font-semibold text-gray-600 mb-1">Demo Links</p>
+                  <div className="flex flex-wrap gap-2">
+                    {COO_DEMO_LINKS.map((lnk) => (
+                      <a
+                        key={`${dept.name}-${lnk.label}`}
+                        href={lnk.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-medium underline decoration-dotted"
+                        style={{ color: theme.hex }}
+                      >
+                        {lnk.label}
+                      </a>
+                    ))}
+                  </div>
+                </div>
                 <div className="mb-1 flex justify-between text-xs text-gray-600">
                   <span>KPI Score</span><span>{dept.kpiScore}%</span>
                 </div>

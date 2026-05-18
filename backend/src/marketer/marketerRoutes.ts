@@ -62,7 +62,7 @@ router.get('/properties', async (req: Request, res: Response) => {
 
     const result = await db.query(
       `SELECT id, owner_name, owner_phone, owner_phone2, owner_whatsapp,
-              property_name, county, area, map_link, booking_type,
+              property_name, property_id_number, county, area, map_link, booking_type,
               property_types, rooms, package, contact_person,
               description, website_link, number_of_rooms, price_per_room,
               status, payment_status, payment_confirmed_at,
@@ -80,6 +80,7 @@ router.get('/properties', async (req: Request, res: Response) => {
       ownerPhone2:        r.owner_phone2,
       ownerWhatsapp:      r.owner_whatsapp,
       propertyName:       r.property_name,
+      propertyIdNumber:   r.property_id_number,
       county:             r.county,
       area:               r.area,
       mapLink:            r.map_link,
@@ -121,6 +122,7 @@ router.post('/properties', upload.array('images', 8), async (req: Request, res: 
     const ownerPhone2   = body.ownerPhone2?.trim() || null;
     const ownerWhatsapp = body.ownerWhatsapp?.trim() || null;
     const propertyName  = body.propertyName?.trim();
+    const propertyIdNumber = body.propertyIdNumber?.trim().toUpperCase() || null;
     const county        = body.county?.trim();
     const area          = body.area?.trim();
     const mapLink       = body.mapLink?.trim() || null;
@@ -144,6 +146,7 @@ router.post('/properties', upload.array('images', 8), async (req: Request, res: 
     if (!ownerName)              return res.status(400).json({ error: 'Owner name is required' });
     if (!ownerPhone)             return res.status(400).json({ error: 'Phone number is required' });
     if (!propertyName)           return res.status(400).json({ error: 'Property name is required' });
+    if (!propertyIdNumber)       return res.status(400).json({ error: 'Property ID number is required' });
     if (!county)                 return res.status(400).json({ error: 'County is required' });
     if (!area)                   return res.status(400).json({ error: 'Area is required' });
     if (!propertyTypes.length)   return res.status(400).json({ error: 'At least one property type is required' });
@@ -151,17 +154,17 @@ router.post('/properties', upload.array('images', 8), async (req: Request, res: 
     const result = await db.query(
       `INSERT INTO marketer_properties
          (owner_name, owner_phone, owner_phone2, owner_whatsapp,
-          property_name, county, area, map_link, booking_type,
+          property_name, property_id_number, county, area, map_link, booking_type,
           property_types, rooms, package,
           contact_person, description, website_link,
           number_of_rooms, price_per_room,
           status, payment_status, submitted_by, created_at, updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,
-               'PENDING','UNPAID',$18,NOW(),NOW())
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,
+               'PENDING','UNPAID',$19,NOW(),NOW())
        RETURNING id, created_at`,
       [
         ownerName, ownerPhone, ownerPhone2, ownerWhatsapp,
-        propertyName, county, area, mapLink, bookingType,
+        propertyName, propertyIdNumber, county, area, mapLink, bookingType,
         JSON.stringify(propertyTypes), JSON.stringify(rooms), pkg,
         contactPerson, description, websiteLink,
         numberOfRooms, pricePerRoom,
@@ -201,6 +204,9 @@ router.post('/properties', upload.array('images', 8), async (req: Request, res: 
     return res.status(201).json({ id: propId, createdAt: result.rows[0].created_at });
   } catch (err: any) {
     logger.error('marketer: create property', { err });
+    if (err?.code === '23505') {
+      return res.status(409).json({ error: 'Property ID number is already in use' });
+    }
     return res.status(500).json({ error: 'Failed to submit property' });
   }
 });

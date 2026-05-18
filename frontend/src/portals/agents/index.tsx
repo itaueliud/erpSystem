@@ -40,6 +40,8 @@ type CatalogueItem = {
   priceFrom?: string;
   demoLabel?: string;
   demoHref?: string;
+  linkLabel?: string;
+  linkHref?: string;
   retailDemoKey?: RetailDemoKey;
 };
 
@@ -49,7 +51,7 @@ const SOFTWARE_CATALOGUE: Array<{ category: string; icon: string; items: Catalog
     icon: '🎓',
     items: [
       { name: 'School Website', desc: 'Public school website', demoLabel: 'School Website Demo', demoHref: 'https://tst-school-website.netlify.app' },
-      { name: 'School Portal Level 1', desc: 'Core portal', demoLabel: 'School Portal Demo', demoHref: 'https://tst-school-portal-demo.vercel.app' },
+      { name: 'School Portal Level 1', desc: 'Core portal', demoLabel: 'School Portal Demo', demoHref: 'https://tst-school-portal-demo.vercel.app', linkLabel: 'Portal Link', linkHref: 'https://tst-school-portal-demo.vercel.app' },
       { name: 'School Portal Level 2 (Level 1 + Fee Management System)', desc: 'Portal + fees management' },
       { name: 'School Portal Level 3 (Level 2 + LMS)', desc: 'Portal + fees + LMS' },
       { name: 'Fee Management System', desc: 'Fee collection and tracking' },
@@ -202,10 +204,16 @@ function SoftwareCategoryAccordion({ category, icon, items, selected, themeHex, 
                   <p className="text-xs text-gray-400">{item.desc}</p>
                   <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
                     <span className="font-semibold text-gray-600">Pricing: EA managed</span>
-                    <a href="#demo-ecommerce" className="font-semibold underline decoration-dotted" style={{ color: themeHex }} onClick={e => e.stopPropagation()}>E-commerce Demo</a>
-                    <a href="#demo-pos" className="font-semibold underline decoration-dotted" style={{ color: themeHex }} onClick={e => e.stopPropagation()}>POS Demo</a>
-                    <a href="#demo-inventory" className="font-semibold underline decoration-dotted" style={{ color: themeHex }} onClick={e => e.stopPropagation()}>Inventory Demo</a>
-                    <a href="#demo-loyalty" className="font-semibold underline decoration-dotted" style={{ color: themeHex }} onClick={e => e.stopPropagation()}>Loyalty Demo</a>
+                    {item.demoHref ? (
+                      <a href={item.demoHref} target="_blank" rel="noreferrer" className="font-semibold underline decoration-dotted" style={{ color: themeHex }} onClick={e => e.stopPropagation()}>
+                        {item.demoLabel || 'Demo'}
+                      </a>
+                    ) : null}
+                    {item.linkHref ? (
+                      <a href={item.linkHref} target="_blank" rel="noreferrer" className="font-semibold underline decoration-dotted" style={{ color: themeHex }} onClick={e => e.stopPropagation()}>
+                        {item.linkLabel || 'Link'}
+                      </a>
+                    ) : null}
                   </div>
                 </div>
               </button>
@@ -580,6 +588,7 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
       setIsClientSaved(true);
       setCaptureSuccess(true);
       setCaptureMsg('✓ Client saved successfully.');
+      setCaptureStep(2);
       onClientSaved?.();
     } catch (err: any) {
       setCaptureSuccess(false);
@@ -798,6 +807,7 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
               </PortalButton>
             </div>
           </div>
+          {clientIdValidated && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
             <div>
               <label className={labelCls}>Client Name *</label>
@@ -854,10 +864,13 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
               <textarea rows={3} value={captureInfo.notes} onChange={e => setCaptureInfo(f => ({ ...f, notes: e.target.value }))} className={`${inputCls} resize-none`} />
             </div>
           </div>
+          )}
           <div className="pt-3 mt-2 space-y-2">
+            {clientIdValidated && (
             <PortalButton color={themeHex} type="submit" fullWidth disabled={captureSubmitting}>
               {captureSubmitting ? 'Saving Client…' : 'Save Client'}
             </PortalButton>
+            )}
             {isClientSaved && (
               <PortalButton color={themeHex} type="button" fullWidth onClick={() => {
                 setCaptureInfo({ clientName: '', organizationName: '', phone: '+254', email: '', location: '', notes: '' });
@@ -1266,9 +1279,17 @@ function ClientsSection({ clients, themeHex, refetch, setSection }: {
   // NEGOTIATION is set by the Trainer
   // CLOSED_WON is set by Trainer/Operations
   const canAgentAdvance = (status: string) => status === 'NEW_LEAD';
+  const hasSelectedProduct = (client: any) => Boolean(
+    (Array.isArray(client.selected_services) && client.selected_services.length > 0)
+    || (typeof client.serviceDescription === 'string' && client.serviceDescription.trim() && client.serviceDescription !== 'Pending service selection')
+  );
 
   const advanceStatus = async (client: any) => {
     if (!canAgentAdvance(client.status)) return;
+    if (!hasSelectedProduct(client)) {
+      setStatusMsg('Select a product/service first before converting this client.');
+      return;
+    }
     setStatusBusy(true); setStatusMsg('');
     try {
       const { apiClient } = await import('../../shared/api/apiClient');

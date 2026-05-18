@@ -14,6 +14,7 @@ ALTER TABLE marketer_properties
   ADD COLUMN IF NOT EXISTS owner_phone2 VARCHAR(50),
   ADD COLUMN IF NOT EXISTS owner_whatsapp VARCHAR(50),
   ADD COLUMN IF NOT EXISTS property_name VARCHAR(255),
+  ADD COLUMN IF NOT EXISTS property_id_number VARCHAR(50),
   ADD COLUMN IF NOT EXISTS county VARCHAR(100),
   ADD COLUMN IF NOT EXISTS area VARCHAR(255),
   ADD COLUMN IF NOT EXISTS map_link TEXT,
@@ -66,6 +67,10 @@ CREATE INDEX IF NOT EXISTS idx_marketer_properties_submitted_by
 
 CREATE INDEX IF NOT EXISTS idx_marketer_properties_status
   ON marketer_properties(status);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_marketer_properties_property_id_number
+  ON marketer_properties(upper(property_id_number))
+  WHERE property_id_number IS NOT NULL AND btrim(property_id_number) <> '';
 
 CREATE INDEX IF NOT EXISTS idx_marketer_properties_payment
   ON marketer_properties(payment_status);

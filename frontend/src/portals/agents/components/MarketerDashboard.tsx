@@ -14,6 +14,7 @@ import { PortalButton, StatusBadge, SectionHeader } from '../../../shared/compon
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface MarketerProperty {
   id: string;
+  propertyIdNumber?: string;
   ownerName: string;
   ownerPhone: string;
   ownerPhone2?: string;
@@ -202,6 +203,7 @@ function AddPropertyForm({ themeHex, onSuccess }: { themeHex: string; onSuccess:
   const [ownerPhone2, setOwnerPhone2] = useState('');
   const [ownerWa,     setOwnerWa]     = useState('');
   const [propName,    setPropName]    = useState('');
+  const [propertyIdNumber, setPropertyIdNumber] = useState('');
   // Section B — Location
   const [county,      setCounty]      = useState('');
   const [area,        setArea]        = useState('');
@@ -266,6 +268,7 @@ function AddPropertyForm({ themeHex, onSuccess }: { themeHex: string; onSuccess:
   const clearForm = () => {
     setOwnerName(''); setOwnerPhone(''); setOwnerPhone2(''); setOwnerWa('');
     setPropName(''); setCounty(''); setArea(''); setMapLink('');
+    setPropertyIdNumber('');
     setBookingType('MONTHLY'); setImages([]); setPropTypes([]); setRooms([]);
     setContactPerson(''); setDescription(''); setWebsiteLink('');
     setNumberOfRooms(''); setPricePerRoom('');
@@ -279,6 +282,7 @@ function AddPropertyForm({ themeHex, onSuccess }: { themeHex: string; onSuccess:
     if (!ownerName.trim())      errs.ownerName  = 'Owner name is required.';
     if (!ownerPhone.trim())     errs.ownerPhone = 'Phone number is required.';
     if (!propName.trim())       errs.propName   = 'Property name is required.';
+    if (!propertyIdNumber.trim()) errs.propertyIdNumber = 'Property ID number is required.';
     if (!county)                errs.county     = 'County is required.';
     if (!area.trim())           errs.area       = 'Area is required.';
     if (propTypes.length === 0) errs.propTypes  = 'Select at least one property type.';
@@ -304,6 +308,7 @@ function AddPropertyForm({ themeHex, onSuccess }: { themeHex: string; onSuccess:
       formData.append('ownerPhone2',   ownerPhone2.trim());
       formData.append('ownerWhatsapp', ownerWa.trim());
       formData.append('propertyName',  propName.trim());
+      formData.append('propertyIdNumber', propertyIdNumber.trim().toUpperCase());
       formData.append('county',        county);
       formData.append('area',          area.trim());
       formData.append('mapLink',       mapLink.trim());
@@ -388,6 +393,13 @@ function AddPropertyForm({ themeHex, onSuccess }: { themeHex: string; onSuccess:
               onBlur={e => !e.target.value.trim() && setErrors(p => ({ ...p, propName: 'Required.' }))}
               placeholder="e.g. Sunrise Apartments" />
             {fieldErr(errors.propName)}
+          </div>
+          <div className="sm:col-span-2">
+            <label className={lbl}>Property ID Number <span className="text-red-500">*</span></label>
+            <input className={`${inp} ${errCls(errors.propertyIdNumber)}`} value={propertyIdNumber}
+              onChange={e => setPropertyIdNumber(e.target.value.toUpperCase())}
+              placeholder="Unique Property ID (different from Client ID)" />
+            {fieldErr(errors.propertyIdNumber)}
           </div>
         </div>
       </div>
@@ -826,6 +838,7 @@ function MyPropertiesSection({ properties, themeHex, onRefetch, onAddNew }: {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-slate-800 truncate">{prop.propertyName}</p>
+              {prop.propertyIdNumber && <p className="text-xs text-slate-500 mt-0.5">Property ID: {prop.propertyIdNumber}</p>}
               {/* Doc Tab 3: location, approval status, payment state, package, dates */}
               <p className="text-xs text-slate-500 mt-0.5">{prop.area}, {prop.county}</p>
               <p className="text-xs text-slate-400 mt-0.5">

@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS marketer_properties (
   owner_phone2         VARCHAR(50),
   owner_whatsapp       VARCHAR(50),
   property_name        VARCHAR(255) NOT NULL,
+  property_id_number   VARCHAR(50),
   -- Section B — Location
   county               VARCHAR(100) NOT NULL,
   area                 VARCHAR(255) NOT NULL,
@@ -46,6 +47,9 @@ ALTER TABLE marketer_properties
 CREATE INDEX IF NOT EXISTS idx_marketer_properties_submitted_by ON marketer_properties(submitted_by);
 CREATE INDEX IF NOT EXISTS idx_marketer_properties_status       ON marketer_properties(status);
 CREATE INDEX IF NOT EXISTS idx_marketer_properties_payment      ON marketer_properties(payment_status);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_marketer_properties_property_id_number
+  ON marketer_properties(upper(property_id_number))
+  WHERE property_id_number IS NOT NULL AND btrim(property_id_number) <> '';
 
 -- Property images (up to 8 per property — Section B)
 CREATE TABLE IF NOT EXISTS marketer_property_images (

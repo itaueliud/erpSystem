@@ -38,6 +38,7 @@ function mapProperty(r: any) {
     ownerPhone2:        r.owner_phone2,
     ownerWhatsapp:      r.owner_whatsapp,
     propertyName:       r.property_name,
+    propertyIdNumber:   r.property_id_number,
     county:             r.county,
     area:               r.area,
     mapLink:            r.map_link,

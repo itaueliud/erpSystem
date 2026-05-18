@@ -15,6 +15,7 @@ import { PortalButton, StatusBadge, DataTable, SectionHeader } from '../layout/P
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface PlotProperty {
   id: string;
+  propertyIdNumber?: string;
   propertyName: string;
   ownerName: string;
   ownerPhone: string;
@@ -110,6 +111,17 @@ function PropertyModal({ prop, themeHex, canApprove, canPublish, canSetTier, can
     contactPerson: prop.contactPerson || '',
     mapLink:       prop.mapLink       || '',
   });
+
+  const downloadDetailFile = () => {
+    const payload = JSON.stringify(prop, null, 2);
+    const blob = new Blob([payload], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${(prop.propertyIdNumber || prop.id)}-property-details.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   // Load property images
   useEffect(() => {
@@ -225,6 +237,7 @@ function PropertyModal({ prop, themeHex, canApprove, canPublish, canSetTier, can
           <div className="grid grid-cols-2 gap-3 text-sm">
             {[
               ['Location',     `${prop.area}, ${prop.county}`],
+              ['Property ID',  prop.propertyIdNumber || '—'],
               ['Booking',      BOOKING_LABELS[prop.bookingType] || prop.bookingType],
               ['Owner',        prop.ownerName],
               ['Phone',        prop.ownerPhone],
@@ -387,6 +400,9 @@ function PropertyModal({ prop, themeHex, canApprove, canPublish, canSetTier, can
               )}
             </div>
           )}
+          <div className="pt-3 border-t border-slate-100">
+            <PortalButton variant="secondary" onClick={downloadDetailFile}>Download Details File</PortalButton>
+          </div>
         </div>
       </div>
     </div>

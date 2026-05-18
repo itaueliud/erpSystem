@@ -12,6 +12,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_clients_client_id_number
   WHERE client_id_number IS NOT NULL;
 
 INSERT INTO service_amounts (service_name, current_amount, status, updated_at, created_at)
+SELECT v.service_name, v.current_amount, v.status, NOW(), NOW()
+FROM (
 VALUES
   -- A. Schools
   ('School Website', 0, 'ACTIVE', NOW(), NOW()),
@@ -60,8 +62,51 @@ VALUES
   ('Point of Sale (POS) System', 0, 'ACTIVE', NOW(), NOW()),
   ('Inventory Tracking System', 0, 'ACTIVE', NOW(), NOW()),
   ('Customer Loyalty System', 0, 'ACTIVE', NOW(), NOW())
-ON CONFLICT (service_name) DO UPDATE
-SET status = EXCLUDED.status,
-    updated_at = NOW();
+) AS v(service_name, current_amount, status, _updated_at, _created_at)
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM service_amounts s
+  WHERE s.service_name = v.service_name
+);
+
+UPDATE service_amounts s
+SET status = 'ACTIVE',
+    updated_at = NOW()
+WHERE s.service_name IN (
+  'School Website',
+  'School Portal Level 1',
+  'School Portal Level 2 (Level 1 + Fee Management System)',
+  'School Portal Level 3 (Level 2 + LMS)',
+  'Fee Management System',
+  'LMS',
+  'Church Website',
+  'Church Management System - Online Giving System',
+  'Church Management System - Event and Service Scheduling System',
+  'Church Management System - Communication System',
+  'Hotel Website',
+  'Hotel Management - Online Booking Website',
+  'Hotel Management - Room Management System',
+  'Hotel Management - Customer Management System',
+  'Hotel Management - Billing and Payment System',
+  'Hospital Website',
+  'Patient Management System',
+  'Appointment Booking System',
+  'Medical Billing System',
+  'Pharmacy Inventory System',
+  'Company Website',
+  'CRM System',
+  'Inventory Management System',
+  'Project Management System',
+  'HR and Payroll System',
+  'Real Estate Website',
+  'Rent Payment Tracking System',
+  'Property Maintenance System',
+  'Tenant and Rent Management System',
+  'Property Listing Platform',
+  'E-Commerce Website',
+  'Point of Sale (POS) System',
+  'Inventory Tracking System',
+  'Customer Loyalty System'
+);
 
 COMMIT;

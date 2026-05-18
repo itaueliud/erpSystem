@@ -404,7 +404,12 @@ router.post('/:agentId/reassign', requireRole(Role.HEAD_OF_TRAINERS), async (req
     if (!trainerId) return res.status(400).json({ success: false, error: 'trainerId is required' });
 
     const { db } = await import('../database/connection');
-    await db.query(`UPDATE users SET updated_at = NOW() WHERE id = $1`, [agentId]);
+    await db.query(
+      `UPDATE users
+       SET trainer_id = $1, updated_at = NOW()
+       WHERE id = $2`,
+      [trainerId, agentId]
+    );
     // Store trainer assignment in clients table for all this agent's active leads
     await db.query(
       `UPDATE clients SET trainer_id = $1, updated_at = NOW()

@@ -361,6 +361,7 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
   const [assignClientBusy, setAssignClientBusy] = useState(false);
 
   const agents = data.myAgents || [];
+  const unassignedAgents = agents.filter((a: any) => !a.trainerId);
   const trainers = data.trainers || [];
   const achievements = data.achievements || [];
   const notifs = data.notifications || [];
@@ -595,8 +596,8 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
                   ),
               },
             ]}
-            rows={agents}
-            emptyMessage="No agents found"
+            rows={unassignedAgents}
+            emptyMessage="No unassigned agents found"
           />
         </div>
       )}

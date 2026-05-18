@@ -97,6 +97,7 @@ const NAV_GROUPS = [
       { id: 'finance',    label: 'Finance',         icon: Ic.finance },
       { id: 'sales',      label: 'Sales & Leads',   icon: Ic.sales },
       { id: 'operations', label: 'Operations',      icon: Ic.ops },
+      { id: 'properties', label: 'Properties Summary', icon: Ic.ops },
     ],
   },
   {
@@ -558,8 +559,10 @@ function FinanceSection({ data }: { data: any }) {
 // ─── Section: Sales ───────────────────────────────────────────────────────────
 function SalesSection({ data }: { data: any }) {
   const clients     = data.clients  || [];
+  const [activeStatus, setActiveStatus] = useState<string | null>(null);
 
   const byStatus = (s: string) => clients.filter((c: any) => c.status === s).length;
+  const filteredClients = activeStatus ? clients.filter((c: any) => c.status === activeStatus) : clients;
 
   return (
     <div className="space-y-5">
@@ -574,20 +577,31 @@ function SalesSection({ data }: { data: any }) {
             { label: 'Qualified',      status: 'LEAD_QUALIFIED', color: C.amber  },
             { label: 'Negotiation',    status: 'NEGOTIATION',    color: '#ea580c' },
             { label: 'Closed Won',     status: 'CLOSED_WON',     color: C.green  },
-          ].map(s => (
-            <div key={s.status} className="rounded-xl p-3 text-center border border-slate-100"
-              style={{ background: s.color + '10' }}>
+          ].map(s => {
+            const isActive = activeStatus === s.status;
+            return (
+            <button type="button" key={s.status}
+              onClick={() => setActiveStatus(prev => prev === s.status ? null : s.status)}
+              className={`rounded-xl p-3 text-center border transition-all w-full ${isActive ? 'shadow-sm border-current' : 'border-slate-100 hover:border-slate-300'}`}
+              style={{ background: s.color + '10', borderColor: isActive ? s.color : undefined }}>
               <p className="text-2xl font-bold" style={{ color: s.color }}>{byStatus(s.status)}</p>
               <p className="text-xs text-slate-500 mt-1 font-medium">{s.label}</p>
-            </div>
-          ))}
+            </button>
+          )})}
         </div>
+        {activeStatus && (
+          <div className="mt-3">
+            <button type="button" onClick={() => setActiveStatus(null)} className="text-xs font-semibold text-slate-600 underline">
+              Clear filter
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Clients table */}
       <div className={card}>
         <div className="p-5 border-b border-slate-100">
-          <SectionTitle title="All Clients" sub={`${clients.length} total`} />
+          <SectionTitle title="All Clients" sub={`${filteredClients.length} ${activeStatus ? `(${activeStatus})` : 'total'}`} />
         </div>
         <Table
           cols={[
@@ -598,7 +612,7 @@ function SalesSection({ data }: { data: any }) {
             { key: 'status',           label: 'Status',   render: v => <Badge status={v || 'NEW_LEAD'} /> },
             { key: 'createdAt',        label: 'Added',    render: v => v ? new Date(v).toLocaleDateString() : '—' },
           ]}
-          rows={clients}
+          rows={filteredClients}
           empty="No clients yet"
         />
       </div>
@@ -3057,6 +3071,9 @@ export default function CEOPortal() {
           {section === 'finance'        && <FinanceSection       {...sectionProps} />}
           {section === 'sales'          && <SalesSection         {...sectionProps} />}
           {section === 'operations'     && <OperationsSection    {...sectionProps} />}
+          {section === 'properties'     && (
+            <PlotConnectProperties themeHex={C.blue2} showAgent showRevenue summaryOnly />
+          )}
           {section === 'people'         && <PeopleSection        {...sectionProps} />}
           {section === 'contracts'      && <ContractsSection     {...sectionProps} />}
           {section === 'approvals'      && <ApprovalsSection     {...sectionProps} />}

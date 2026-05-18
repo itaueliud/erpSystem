@@ -12,6 +12,25 @@ import logger from '../utils/logger';
 
 const router = Router();
 
+router.post('/clients/validate-id', requireRole(Role.AGENT), async (req: Request, res: Response) => {
+  try {
+    const raw = String(req.body?.clientIdNumber || '').trim().toUpperCase();
+    if (!raw) return res.status(400).json({ success: false, error: 'clientIdNumber is required' });
+    if (!/^[A-Z0-9-]{5,20}$/.test(raw)) {
+      return res.status(400).json({ success: false, error: 'Client ID must be 5-20 characters (letters, numbers, hyphen only)' });
+    }
+    const { db } = await import('../database/connection');
+    const existing = await db.query(`SELECT id, name FROM clients WHERE upper(client_id_number) = $1 LIMIT 1`, [raw]);
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ success: false, error: `Client ID already exists for ${existing.rows[0].name}` });
+    }
+    return res.json({ success: true, data: { valid: true, clientIdNumber: raw } });
+  } catch (error: any) {
+    logger.error('Validate client id error', { error });
+    return res.status(500).json({ success: false, error: error.message || 'Failed to validate client ID' });
+  }
+});
+
 // ── Dashboard metrics (personal only) ────────────────────────────────────────
 router.get('/dashboard', requireRole(Role.AGENT), async (req: Request, res: Response) => {
   try {
@@ -45,17 +64,17 @@ router.get('/my-clients', requireRole(Role.AGENT), async (req: Request, res: Res
 router.post('/clients', requireRole(Role.AGENT), async (req: Request, res: Response) => {
   try {
     const agentId = (req as any).user.id;
-    const { clientName, organizationName, phoneNumber, email, location, notes } = req.body;
+    const { clientIdNumber, clientName, organizationName, phoneNumber, email, location, notes } = req.body;
 
-    if (!clientName || !phoneNumber || !email || !location) {
+    if (!clientIdNumber || !clientName || !phoneNumber || !email || !location) {
       return res.status(400).json({
         success: false,
-        error: 'clientName, phoneNumber, email, and location are required',
+        error: 'clientIdNumber, clientName, phoneNumber, email, and location are required',
       });
     }
 
     const client = await agentService.captureClient({
-      clientName, organizationName, phoneNumber, email, location, notes, agentId,
+      clientIdNumber, clientName, organizationName, phoneNumber, email, location, notes, agentId,
     });
     return res.status(201).json({ success: true, data: client });
   } catch (error: any) {

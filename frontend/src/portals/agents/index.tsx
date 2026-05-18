@@ -48,80 +48,76 @@ const SOFTWARE_CATALOGUE: Array<{ category: string; icon: string; items: Catalog
     category: 'A. Schools',
     icon: '🎓',
     items: [
-      { name: 'School Portal / LMS', desc: 'Learning management, student portals & e-learning', priceFrom: 'From KSh 95,000', demoLabel: 'School Portal Demo', demoHref: 'https://tst-school-portal-demo.vercel.app' },
-      { name: 'School Website', desc: 'Public school website for admissions, news and communication', priceFrom: 'From KSh 55,000', demoLabel: 'School Website Demo', demoHref: 'https://tst-school-website.netlify.app' },
-      { name: 'Fee Management System', desc: 'Fee collection, receipts & arrears tracking', priceFrom: 'From KSh 70,000', demoLabel: 'Fees Demo', demoHref: 'https://demo.techswifttrix.com/schools/fees' },
-      { name: 'Exam & Results System', desc: 'Online exams, grading & report cards', priceFrom: 'From KSh 60,000', demoLabel: 'Results Demo', demoHref: 'https://demo.techswifttrix.com/schools/results' },
-      { name: 'Library Management', desc: 'Book catalogue, borrowing & returns', priceFrom: 'From KSh 45,000', demoLabel: 'Library Demo', demoHref: 'https://demo.techswifttrix.com/schools/library' },
+      { name: 'School Website', desc: 'Public school website', demoLabel: 'School Website Demo', demoHref: 'https://tst-school-website.netlify.app' },
+      { name: 'School Portal Level 1', desc: 'Core portal', demoLabel: 'School Portal Demo', demoHref: 'https://tst-school-portal-demo.vercel.app' },
+      { name: 'School Portal Level 2 (Level 1 + Fee Management System)', desc: 'Portal + fees management' },
+      { name: 'School Portal Level 3 (Level 2 + LMS)', desc: 'Portal + fees + LMS' },
+      { name: 'Fee Management System', desc: 'Fee collection and tracking' },
+      { name: 'LMS', desc: 'Learning management system' },
     ],
   },
   {
     category: 'B. Churches',
     icon: '⛪',
     items: [
-      { name: 'Member Management System', desc: 'Member records, attendance & groups', priceFrom: 'From KSh 65,000', demoLabel: 'Members Demo', demoHref: 'https://demo.techswifttrix.com/church/members' },
-      { name: 'Online Giving System', desc: 'Digital tithes, offerings & donation tracking', priceFrom: 'From KSh 55,000', demoLabel: 'Giving Demo', demoHref: 'https://demo.techswifttrix.com/church/giving' },
-      { name: 'Event Management', desc: 'Church events, registrations & reminders', priceFrom: 'From KSh 50,000', demoLabel: 'Events Demo', demoHref: 'https://demo.techswifttrix.com/church/events' },
+      { name: 'Church Website', desc: 'Public church website' },
+      { name: 'Church Management System - Online Giving System', desc: 'Offerings and tithes' },
+      { name: 'Church Management System - Event and Service Scheduling System', desc: 'Events and schedules' },
+      { name: 'Church Management System - Communication System', desc: 'Member engagement communication' },
     ],
   },
   {
     category: 'C. Hotels & Lodges',
     icon: '🏨',
     items: [
-      { name: 'Hotel Booking System', desc: 'Online reservations, room availability & check-in', priceFrom: 'From KSh 120,000', demoLabel: 'Booking Demo', demoHref: 'https://demo.techswifttrix.com/hotel/booking' },
-      { name: 'Room Management System', desc: 'Room allocation, housekeeping & occupancy', priceFrom: 'From KSh 85,000', demoLabel: 'Rooms Demo', demoHref: 'https://demo.techswifttrix.com/hotel/rooms' },
-      { name: 'Hotel Billing System', desc: 'Guest invoicing, POS & payment reconciliation', priceFrom: 'From KSh 90,000', demoLabel: 'Billing Demo', demoHref: 'https://demo.techswifttrix.com/hotel/billing' },
-      { name: 'Restaurant POS', desc: 'Table orders, kitchen display & billing', priceFrom: 'From KSh 75,000', demoLabel: 'POS Demo', demoHref: 'https://demo.techswifttrix.com/hotel/restaurant-pos' },
+      { name: 'Hotel Website', desc: 'Public hotel website' },
+      { name: 'Hotel Management - Online Booking Website', desc: 'Online booking websites' },
+      { name: 'Hotel Management - Room Management System', desc: 'Room management systems' },
+      { name: 'Hotel Management - Customer Management System', desc: 'Customer management systems' },
+      { name: 'Hotel Management - Billing and Payment System', desc: 'Billing and payments' },
     ],
   },
   {
     category: 'D. Hospitals & Clinics',
     icon: '🏥',
     items: [
-      { name: 'Patient Management System', desc: 'Patient records, visits & medical history', priceFrom: 'From KSh 140,000', demoLabel: 'Patient Demo', demoHref: 'https://demo.techswifttrix.com/health/patients' },
-      { name: 'Appointment Booking System', desc: 'Doctor scheduling, reminders & queue management', priceFrom: 'From KSh 80,000', demoLabel: 'Appointment Demo', demoHref: 'https://demo.techswifttrix.com/health/appointments' },
-      { name: 'Pharmacy Stock System', desc: 'Drug inventory, dispensing & expiry tracking', priceFrom: 'From KSh 95,000', demoLabel: 'Pharmacy Demo', demoHref: 'https://demo.techswifttrix.com/health/pharmacy' },
-      { name: 'Lab Results System', desc: 'Lab tests, results & patient notifications', priceFrom: 'From KSh 90,000', demoLabel: 'Lab Demo', demoHref: 'https://demo.techswifttrix.com/health/labs' },
+      { name: 'Hospital Website', desc: 'Public hospital website' },
+      { name: 'Patient Management System', desc: 'Patient management systems' },
+      { name: 'Appointment Booking System', desc: 'Appointment booking systems' },
+      { name: 'Medical Billing System', desc: 'Medical billing systems' },
+      { name: 'Pharmacy Inventory System', desc: 'Pharmacy inventory systems' },
     ],
   },
   {
     category: 'E. Companies & Organizations',
     icon: '🏢',
     items: [
-      { name: 'HR & Payroll System', desc: 'Staff records, payroll, leave & payslips', priceFrom: 'From KSh 110,000', demoLabel: 'HR Demo', demoHref: 'https://demo.techswifttrix.com/company/hr' },
-      { name: 'CRM System', desc: 'Customer pipeline, follow-ups & sales tracking', priceFrom: 'From KSh 90,000', demoLabel: 'CRM Demo', demoHref: 'https://demo.techswifttrix.com/company/crm' },
-      { name: 'Inventory Management System', desc: 'Stock control, purchase orders & suppliers', priceFrom: 'From KSh 75,000', demoLabel: 'Inventory Demo', demoHref: 'https://demo.techswifttrix.com/company/inventory' },
-      { name: 'Accounting System', desc: 'Invoicing, expenses, P&L & financial reports', priceFrom: 'From KSh 100,000', demoLabel: 'Accounts Demo', demoHref: 'https://demo.techswifttrix.com/company/accounting' },
-      { name: 'Project Management System', desc: 'Tasks, milestones, teams & progress tracking', priceFrom: 'From KSh 80,000', demoLabel: 'Projects Demo', demoHref: 'https://demo.techswifttrix.com/company/projects' },
+      { name: 'Company Website', desc: 'Public company website' },
+      { name: 'CRM System', desc: 'Customer relationship management' },
+      { name: 'Inventory Management System', desc: 'Inventory management' },
+      { name: 'Project Management System', desc: 'Project management' },
+      { name: 'HR and Payroll System', desc: 'HR and payroll systems' },
     ],
   },
   {
     category: 'F. Real Estate & Property',
     icon: '🏠',
     items: [
-      { name: 'Rent Management System', desc: 'Tenant records, rent collection & lease tracking', priceFrom: 'From KSh 95,000', demoLabel: 'Rent Demo', demoHref: 'https://demo.techswifttrix.com/property/rent' },
-      { name: 'Property Listing Platform', desc: 'Online listings with search & enquiries', priceFrom: 'From KSh 130,000', demoLabel: 'Listings Demo', demoHref: 'https://demo.techswifttrix.com/property/listings' },
-      { name: 'Tenant Management System', desc: 'Onboarding, maintenance requests & payments', priceFrom: 'From KSh 85,000', demoLabel: 'Tenant Demo', demoHref: 'https://demo.techswifttrix.com/property/tenants' },
-      { name: 'Caretaker / Agent Portal', desc: 'Agent dashboards, commissions & reporting', priceFrom: 'From KSh 70,000', demoLabel: 'Agent Demo', demoHref: 'https://demo.techswifttrix.com/property/agents' },
+      { name: 'Real Estate Website', desc: 'Public real estate website' },
+      { name: 'Rent Payment Tracking System', desc: 'Rent tracking' },
+      { name: 'Property Maintenance System', desc: 'Maintenance management' },
+      { name: 'Tenant and Rent Management System', desc: 'Tenant and rent management' },
+      { name: 'Property Listing Platform', desc: 'Property listing platforms' },
     ],
   },
   {
     category: 'G. Shops & Businesses (Retail)',
     icon: '🛒',
     items: [
-      { name: 'POS System', desc: 'Point-of-sale for shops & restaurants', priceFrom: 'From KSh 65,000', demoLabel: 'POS Demo', demoHref: '#retail-demo-pos', retailDemoKey: 'pos' },
-      { name: 'E-commerce Website', desc: 'Online store with cart, payments & orders', priceFrom: 'From KSh 120,000', demoLabel: 'E-commerce Demo', demoHref: '#retail-demo-ecommerce', retailDemoKey: 'ecommerce' },
-      { name: 'Inventory System', desc: 'Stock levels, reorder alerts & supplier orders', priceFrom: 'From KSh 70,000', demoLabel: 'Inventory Demo', demoHref: '#retail-demo-inventory', retailDemoKey: 'inventory' },
-      { name: 'Loyalty & Rewards System', desc: 'Customer points, vouchers & retention', priceFrom: 'From KSh 60,000', demoLabel: 'Loyalty Demo', demoHref: '#retail-demo-loyalty', retailDemoKey: 'loyalty' },
-    ],
-  },
-  {
-    category: 'Web & Digital',
-    icon: '🌐',
-    items: [
-      { name: 'Custom Website', desc: 'Branded website tailored to your business', priceFrom: 'From KSh 55,000', demoLabel: 'Website Demo', demoHref: 'https://demo.techswifttrix.com/web/custom-site' },
-      { name: 'Mobile App', desc: 'Android / iOS app for your business', priceFrom: 'From KSh 160,000', demoLabel: 'App Demo', demoHref: 'https://demo.techswifttrix.com/web/mobile-app' },
-      { name: 'Digital Marketing Dashboard', desc: 'Campaign tracking, leads & analytics', priceFrom: 'From KSh 75,000', demoLabel: 'Marketing Demo', demoHref: 'https://demo.techswifttrix.com/web/marketing' },
+      { name: 'E-Commerce Website', desc: 'E-commerce websites' },
+      { name: 'Point of Sale (POS) System', desc: 'Point of sale systems' },
+      { name: 'Inventory Tracking System', desc: 'Inventory tracking systems' },
+      { name: 'Customer Loyalty System', desc: 'Customer loyalty systems' },
     ],
   },
 ];
@@ -221,7 +217,7 @@ function SoftwareCategoryAccordion({ category, icon, items, selected, themeHex, 
   );
 }
 
-function RetailDemoSuite({ themeHex }: { themeHex: string }) {
+export function RetailDemoSuite({ themeHex }: { themeHex: string }) {
   const [industry, setIndustry] = useState('A. Schools');
   const [tab, setTab] = useState<RetailDemoKey>('ecommerce');
   const [serviceAmounts, setServiceAmounts] = useState<Array<{ serviceName: string; currentAmount: number }>>([]);
@@ -503,6 +499,8 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
   const [savedClientId, setSavedClientId] = useState<string | null>(null);
   const [isClientSaved, setIsClientSaved] = useState(false);
   const [captureInfo, setCaptureInfo] = useState({ clientName: '', organizationName: '', phone: '+254', email: '', location: '', notes: '' });
+  const [clientIdNumber, setClientIdNumber] = useState('');
+  const [clientIdValidated, setClientIdValidated] = useState(false);
   const [captureIndustry, _setCaptureIndustry] = useState(''); // kept for backend compatibility
   const [captureServices, setCaptureServices] = useState<string[]>([]);
   const [capturePlan, setCapturePlan] = useState<'FULL' | '50_50' | 'MILESTONE'>('FULL');
@@ -522,6 +520,8 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
     const continueFromClientList = (event: Event) => {
       const client = (event as CustomEvent).detail;
       if (!client) return;
+      setClientIdNumber(client.client_id_number || client.clientIdNumber || '');
+      setClientIdValidated(true);
       setCaptureInfo({
         clientName: client.name || '',
         organizationName: client.organizationName || '',
@@ -542,6 +542,11 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
 
   const handleStep1Submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!clientIdValidated) {
+      setCaptureMsg('Enter a valid unique client ID and click Continue first.');
+      setCaptureSuccess(false);
+      return;
+    }
     if (!captureInfo.clientName.trim() || !captureInfo.phone.trim() || !captureInfo.email.trim() || !captureInfo.location.trim()) {
       setCaptureMsg('Please fill in Client Name, Phone, Email, and Location before saving.');
       setCaptureSuccess(false);
@@ -553,7 +558,7 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
       return;
     }
     if (isClientSaved && savedClientId) {
-      setCaptureMsg('Client already saved. Continue to product selection.');
+      setCaptureMsg('Client already saved.');
       setCaptureSuccess(true);
       return;
     }
@@ -563,6 +568,7 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
     try {
       const { apiClient } = await import('../../shared/api/apiClient');
       const clientRes = await apiClient.post('/api/v1/agents/clients', {
+        clientIdNumber: clientIdNumber.trim().toUpperCase(),
         clientName: captureInfo.clientName.trim(),
         organizationName: captureInfo.organizationName.trim(),
         phoneNumber: captureInfo.phone.trim(),
@@ -573,7 +579,7 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
       setSavedClientId((clientRes.data as any)?.data?.id || (clientRes.data as any)?.id || null);
       setIsClientSaved(true);
       setCaptureSuccess(true);
-      setCaptureMsg('✓ Client saved successfully. You can now select product.');
+      setCaptureMsg('✓ Client saved successfully.');
       onClientSaved?.();
     } catch (err: any) {
       setCaptureSuccess(false);
@@ -758,6 +764,40 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
       {/* Step 1 — Client Info */}
       {captureStep === 1 && (
         <form onSubmit={handleStep1Submit}>
+          <div className="mb-4">
+            <label className={labelCls}>Client ID Number *</label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <input
+                type="text"
+                required
+                value={clientIdNumber}
+                onChange={e => { setClientIdNumber(e.target.value.toUpperCase()); setClientIdValidated(false); }}
+                className={`${inputCls} sm:col-span-2`}
+                placeholder="National ID / Passport / Registration No."
+              />
+              <PortalButton
+                type="button"
+                color={themeHex}
+                disabled={!clientIdNumber.trim() || captureSubmitting}
+                onClick={async () => {
+                  setCaptureMsg('');
+                  try {
+                    const { apiClient } = await import('../../shared/api/apiClient');
+                    await apiClient.post('/api/v1/agents/clients/validate-id', { clientIdNumber });
+                    setClientIdValidated(true);
+                    setCaptureSuccess(true);
+                    setCaptureMsg('Client ID is valid. Continue with client details.');
+                  } catch (err: any) {
+                    setClientIdValidated(false);
+                    setCaptureSuccess(false);
+                    setCaptureMsg(err?.response?.data?.error || 'Invalid client ID');
+                  }
+                }}
+              >
+                Continue
+              </PortalButton>
+            </div>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
             <div>
               <label className={labelCls}>Client Name *</label>
@@ -814,13 +854,21 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
               <textarea rows={3} value={captureInfo.notes} onChange={e => setCaptureInfo(f => ({ ...f, notes: e.target.value }))} className={`${inputCls} resize-none`} />
             </div>
           </div>
-          <div className="sticky bottom-0 bg-white pt-3 pb-1 -mx-6 px-6 border-t border-gray-100 mt-2 space-y-2">
+          <div className="pt-3 mt-2 space-y-2">
             <PortalButton color={themeHex} type="submit" fullWidth disabled={captureSubmitting}>
               {captureSubmitting ? 'Saving Client…' : 'Save Client'}
             </PortalButton>
             {isClientSaved && (
-              <PortalButton color={themeHex} type="button" fullWidth onClick={() => setCaptureStep(2)}>
-                Next: Select Product →
+              <PortalButton color={themeHex} type="button" fullWidth onClick={() => {
+                setCaptureInfo({ clientName: '', organizationName: '', phone: '+254', email: '', location: '', notes: '' });
+                setClientIdNumber('');
+                setClientIdValidated(false);
+                setCaptureMsg('');
+                setCaptureSuccess(false);
+                setSavedClientId(null);
+                setIsClientSaved(false);
+              }}>
+                Add Another Client
               </PortalButton>
             )}
           </div>
@@ -851,8 +899,6 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
       {captureStep === '3a' && (
         <form onSubmit={handleSystemSubmit}>
           <button type="button" onClick={() => setCaptureStep(1)} className="text-sm mb-4 flex items-center gap-1 font-medium" style={{ color: themeHex }}>← Back</button>
-          <RetailDemoSuite themeHex={themeHex} />
-
           {/* Categorised software picker */}
           <div className="mb-5">
             <label className={labelCls}>Select Software Systems *</label>
@@ -937,7 +983,7 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
               className={inputCls} placeholder="e.g. 0712345678" />
           </div>
 
-          <div className="sticky bottom-0 bg-white pt-3 pb-1 -mx-6 px-6 border-t border-gray-100 mt-2">
+          <div className="pt-3 mt-2">
             <PortalButton color={themeHex} type="submit" fullWidth
               disabled={captureSubmitting || captureServices.length === 0}>
               {captureSubmitting ? 'Registering…' : `Register Client & Send KSh ${parseFloat(captureCommitment || '0').toLocaleString()} STK Push`}
@@ -1047,7 +1093,7 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
             <label className={labelCls}>M-Pesa Number for commitment payment *</label>
             <input type="tel" required value={captureMpesa} onChange={e => setCaptureMpesa(e.target.value)} className={inputCls} placeholder="e.g. 0712345678" />
           </div>
-          <div className="sticky bottom-0 bg-white pt-3 pb-1 -mx-6 px-6 border-t border-gray-100 mt-2">
+          <div className="pt-3 mt-2">
             <PortalButton color={themeHex} type="submit" fullWidth disabled={captureSubmitting}>
               {captureSubmitting ? 'Registering…' : 'Register Client & Initiate Payment'}
             </PortalButton>
@@ -1518,7 +1564,6 @@ const NAV = [
   { id: 'clients',      label: 'My Clients',        icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg> },
   { id: 'lead-status',  label: 'Lead Status',       icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> },
   { id: 'chat',         label: 'Chat with Regional Manager', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg> },
-  { id: 'demos',        label: 'Demos',             icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 007 9.868v4.264a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
   { id: 'daily-report', label: 'Daily Report',      icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg> },
 ];
 
@@ -1560,16 +1605,15 @@ export default function AgentsPortal() {
   const nav = NAV;
   const navById = useMemo(() => Object.fromEntries(nav.map((n: any) => [n.id, n])), [nav]);
 
-  const activeTopTab: 'home' | 'capture' | 'marketer' | 'demos' =
+  const activeTopTab: 'home' | 'capture' | 'marketer' =
     HOME_SUB_NAV_IDS.has(section) ? 'home' :
     section === 'capture' ? 'capture' :
-    section === 'marketer' ? 'marketer' : 'demos';
+    'marketer';
 
-  const topTabs: Array<{ id: 'home' | 'capture' | 'marketer' | 'demos'; label: string; section: string }> = [
+  const topTabs: Array<{ id: 'home' | 'capture' | 'marketer'; label: string; section: string }> = [
     { id: 'home', label: 'Home', section: 'overview' },
     { id: 'capture', label: 'Add Client', section: 'capture' },
     { id: 'marketer', label: 'Add Property', section: 'marketer' },
-    { id: 'demos', label: 'Demos', section: 'demos' },
   ];
 
   const homeSubTabs: Array<{ id: string; label: string }> = [
@@ -1627,7 +1671,6 @@ export default function AgentsPortal() {
                       {tab.id === 'home' && navById.overview?.icon}
                       {tab.id === 'capture' && navById.capture?.icon}
                       {tab.id === 'marketer' && navById.marketer?.icon}
-                      {tab.id === 'demos' && navById.demos?.icon}
                     </div>
                     <span className="block truncate">{tab.label}</span>
                   </button>
@@ -1725,7 +1768,7 @@ export default function AgentsPortal() {
 
       {/* Always mounted — hidden when not active — preserves wizard state across nav */}
       <div style={{ display: section === 'capture' ? 'block' : 'none' }} className="pb-20">
-        <SectionHeader title="Capture New Client" subtitle="Register a new client — 3-step wizard" />
+        <SectionHeader title="Capture New Client" subtitle="Enter client ID first, then save client details" />
         <CaptureWizard themeHex={theme.hex} onClientSaved={() => refetch(['clients'])} />
       </div>
 
@@ -1875,12 +1918,6 @@ export default function AgentsPortal() {
         </div>
       )}
 
-      {section === 'demos' && (
-        <div>
-          <SectionHeader title="Solution Demos" subtitle="Shared demo modules for all A-G industries" />
-          <RetailDemoSuite themeHex={theme.hex} />
-        </div>
-      )}
       {section === 'marketer' && (
         <MarketerDashboard themeHex={theme.hex} />
       )}

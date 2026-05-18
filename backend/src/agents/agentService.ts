@@ -20,6 +20,7 @@ export enum PaymentPlan {
 
 export interface ClientCaptureInput {
   // Step 1 — Client Information Form (doc §7)
+  clientIdNumber: string;
   clientName: string;
   organizationName?: string;
   phoneNumber: string;
@@ -86,6 +87,11 @@ export class AgentService {
     }
     const referenceNumber = `${prefix}${seq.toString().padStart(6, '0')}`;
     const normalizedPhone = this.normalizePhone(input.phoneNumber);
+    const normalizedClientId = String(input.clientIdNumber || '').trim().toUpperCase();
+    if (!normalizedClientId) throw new Error('Client ID is required');
+    if (!/^[A-Z0-9-]{5,20}$/.test(normalizedClientId)) {
+      throw new Error('Client ID must be 5-20 characters (letters, numbers, hyphen only)');
+    }
 
     const existingPhone = await db.query(
       `SELECT id, name FROM clients
@@ -96,15 +102,23 @@ export class AgentService {
     if (existingPhone.rows.length > 0) {
       throw new Error(`Phone number already in use by another client (${existingPhone.rows[0].name}).`);
     }
+    const existingClientId = await db.query(
+      `SELECT id, name FROM clients WHERE upper(client_id_number) = $1 LIMIT 1`,
+      [normalizedClientId]
+    );
+    if (existingClientId.rows.length > 0) {
+      throw new Error(`Client ID already in use by another client (${existingClientId.rows[0].name}).`);
+    }
 
     const result = await db.query(
       `INSERT INTO clients
-         (reference_number, name, organization_name, phone, email, location, country,
+         (reference_number, client_id_number, name, organization_name, phone, email, location, country,
           notes, status, agent_id, industry_category, service_description, payment_plan)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'NEW_LEAD',$9,'SCHOOLS','Pending service selection','FULL_PAYMENT')
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'NEW_LEAD',$10,'SCHOOLS','Pending service selection','FULL_PAYMENT')
        RETURNING *`,
       [
         referenceNumber,
+        normalizedClientId,
         input.clientName,
         input.organizationName || null,
         normalizedPhone,
@@ -316,7 +330,7 @@ export class AgentService {
     values.push(limit, offset);
 
     const rows = await db.query(
-      `SELECT id, reference_number, name, organization_name, phone, email, location,
+      `SELECT id, reference_number, client_id_number, name, organization_name, phone, email, location,
               industry_category, selected_services, service_description, status,
               payment_plan, commitment_amount, discount_applied, created_at, updated_at
        FROM clients ${where}

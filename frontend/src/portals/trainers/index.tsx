@@ -388,8 +388,14 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
   const metrics = data.metrics || {};
   const teamReports = data.teamReports || [];
 
-  const normalizedRole = String(user?.roleName || user?.role || '').trim().toUpperCase();
-  const isSalesManager = normalizedRole === 'SM' || normalizedRole.includes('SALES_MANAGER');
+  const normalizedRole = String(user?.roleName || user?.role || '')
+    .trim()
+    .toUpperCase()
+    .replace(/[\s-]+/g, '_');
+  const isSalesManager =
+    normalizedRole === 'SM' ||
+    normalizedRole.includes('SALES_MANAGER') ||
+    normalizedRole.includes('SALESMANAGER');
   const navBase = isSalesManager ? HOT_NAV : HOT_NAV.filter((n) => n.id !== 'properties');
   const nav = isSalesManager && !navBase.some((n) => n.id === 'properties')
     ? [...navBase, { id: 'properties', label: 'TST Summary', icon: I.leads }]
@@ -1040,4 +1046,5 @@ export default function TrainersPortal() {
   if (isHoT) return <HoTDashboard {...props} onLogout={logoutFn} />;
   return <TrainerDashboard {...props} onLogout={logoutFn} />;
 }
+
 

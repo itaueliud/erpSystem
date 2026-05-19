@@ -342,7 +342,8 @@ const HOT_NAV = [
   { id: 'add-agent',      label: 'Add Agent',             icon: I.addAgent },
   { id: 'assign-client',  label: 'Assign Converted Client', icon: I.leads },
   { id: 'chat',           label: 'Chat',                  icon: I.chat },
-  { id: 'report',         label: 'Report',                icon: I.report },
+  { id: 'daily-report',   label: 'Daily Report',          icon: I.report },
+  { id: 'reports',        label: 'Reports',               icon: I.report },
 ];
 
 function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (keys?: any[]) => void; user: any; onLogout: () => void }) {
@@ -365,6 +366,7 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
   const [assignClientMsg, setAssignClientMsg] = useState('');
   const [assignClientOk, setAssignClientOk] = useState(false);
   const [assignClientBusy, setAssignClientBusy] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<any | null>(null);
   const [selectedManagerId, setSelectedManagerId] = useState<string | null>(null);
   const [selectedManagerName, setSelectedManagerName] = useState('');
   const [opsUsers, setOpsUsers] = useState<any[]>([]);
@@ -381,6 +383,7 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
   const achievements = data.achievements || [];
   const notifs = data.notifications || [];
   const metrics = data.metrics || {};
+  const teamReports = data.teamReports || [];
 
   const nav = HOT_NAV;
 
@@ -821,7 +824,50 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
       )}
 
       {section === 'chat' && <div><SectionHeader title="Chat" /><ChatSection token={user?.token || ''} currentUserId={user?.id || ''} portal="Operations Portal" /></div>}
-      {section === 'report' && <div><SectionHeader title="Daily Report" subtitle="Submit your daily report" /><DailyReportForm /></div>}
+      {section === 'daily-report' && <div><SectionHeader title="Daily Report" subtitle="Submit your daily report" /><DailyReportForm /></div>}
+
+      {section === 'reports' && (
+        <div>
+          <SectionHeader title="Team Reports" subtitle="Daily reports — who submitted, when, and what they did" />
+          <DataTable
+            columns={[
+              { key: 'full_name', label: 'Submitted By', render: (v, r: any) => (
+                <div>
+                  <p className="font-medium text-gray-900 text-sm">{v || r.authorName || r.userName || '—'}</p>
+                  <p className="text-xs text-gray-400">{r.role || r.userRole || '—'}</p>
+                </div>
+              )},
+              { key: 'report_date', label: 'Report Date', render: (v, r: any) => { const d = v || r.reportDate; return d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'; }},
+              { key: 'submitted_at', label: 'Submitted At', render: (v, r: any) => { const t = v || r.submittedAt; return t ? new Date(t).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'; }},
+              { key: 'accomplishments', label: 'Accomplishments', render: (v) => <span className="text-xs text-gray-600 line-clamp-2">{v || '—'}</span> },
+              { key: 'id', label: '', render: (_v, row: any) => <PortalButton size="sm" variant="secondary" onClick={() => setSelectedReport(row)}>View</PortalButton> },
+            ]}
+            rows={Array.isArray(teamReports) ? teamReports : []}
+            emptyMessage="No reports submitted yet"
+          />
+
+          {selectedReport && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.45)' }} onClick={() => setSelectedReport(null)}>
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden" onClick={e => e.stopPropagation()}>
+                <div className="px-6 py-4 border-b border-gray-100 flex items-start justify-between" style={{ background: theme.hex + '10' }}>
+                  <div>
+                    <p className="font-bold text-gray-900 text-base">{selectedReport.full_name || selectedReport.authorName || '—'}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{selectedReport.role || '—'}</p>
+                  </div>
+                </div>
+                <div className="px-6 py-5 space-y-4 max-h-[60vh] overflow-y-auto">
+                  <div><p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: theme.hex }}>Accomplishments</p><p className="text-sm text-gray-700 whitespace-pre-wrap">{selectedReport.accomplishments || '—'}</p></div>
+                  <div><p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: theme.hex }}>Challenges</p><p className="text-sm text-gray-700 whitespace-pre-wrap">{selectedReport.challenges || '—'}</p></div>
+                  <div><p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: theme.hex }}>Plan for Tomorrow</p><p className="text-sm text-gray-700 whitespace-pre-wrap">{selectedReport.tomorrow_plan || selectedReport.tomorrowPlan || '—'}</p></div>
+                </div>
+                <div className="px-6 py-4 border-t border-gray-100 flex justify-end">
+                  <button onClick={() => setSelectedReport(null)} className="px-5 py-2 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all">Close</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Assign Converted Client — doc §4: HoT assigns converted client to trainer for active engagement */}
       {section === 'assign-client' && (
@@ -925,7 +971,7 @@ export default function TrainersPortal() {
 
   const { data, refetch } = useMultiPortalData<{
     myAgents: any[]; clients: any[]; achievements: any[];
-    trainers: any[]; notifications: any[]; metrics: any;
+    trainers: any[]; notifications: any[]; metrics: any; teamReports: any[];
   }>([
     // /api/v1/clients/all handles both roles: HoT gets all clients, TRAINER gets only their assigned clients
     { key: 'clients', endpoint: '/api/v1/clients/all', fallback: [], transform: (r: any) => Array.isArray(r) ? r : (r?.data ?? r?.clients ?? []) },
@@ -935,6 +981,7 @@ export default function TrainersPortal() {
     { key: 'trainers', endpoint: '/api/v1/trainers/performance', fallback: [], transform: (r: any) => Array.isArray(r) ? r : (r?.data ?? r?.trainers ?? []) },
     { key: 'notifications', endpoint: '/api/v1/notifications', fallback: [], transform: (r: any) => Array.isArray(r) ? r : (r?.notifications ?? r?.data ?? []) },
     { key: 'metrics', endpoint: '/api/v1/trainer/dashboard', fallback: {}, transform: (r: any) => r?.data ?? r ?? {} },
+    { key: 'teamReports', endpoint: '/api/v1/daily-reports/team', fallback: [], transform: (r: any) => Array.isArray(r) ? r : (r?.data || r?.reports || []) },
   ], [
     'data:client:created', 'data:client:updated', 'data:client:status_changed',
     'data:lead:converted', 'data:notification:new', 'data:metrics:updated', 'data:report:submitted',

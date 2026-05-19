@@ -81,7 +81,16 @@ router.get('/mine', async (req: Request, res: Response) => {
 });
 
 // ── COO/CEO: View team reports ────────────────────────────────────────────────
-router.get('/team', requireRole(Role.COO, Role.CEO, Role.CoS, Role.CTO, Role.OPERATIONS_USER), async (req: Request, res: Response) => {
+router.get('/team', requireRole(
+  Role.COO,
+  Role.CEO,
+  Role.CoS,
+  Role.CTO,
+  Role.OPERATIONS_USER,
+  Role.HEAD_OF_TRAINERS,
+  'SALES_MANAGER' as Role,
+  'SM' as Role
+), async (req: Request, res: Response) => {
   try {
     const { date, departmentId, limit, offset } = req.query;
 

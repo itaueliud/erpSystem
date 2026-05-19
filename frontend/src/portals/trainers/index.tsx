@@ -8,6 +8,7 @@ import { AFRICAN_COUNTRIES } from '../../shared/utils/africanCountries';
 import ChatPanel from '../../shared/components/chat/ChatPanel';
 import { TRAINERS_FAQS } from '../../shared/data/portalFAQs';
 import TaskManagement from '../operations/components/TaskManagement';
+import PlotConnectProperties from '../../shared/components/plotconnect/PlotConnectProperties';
 
 const theme = PORTAL_THEMES.trainers;
 const cardCls = 'rounded-2xl p-5';
@@ -337,6 +338,7 @@ const HOT_NAV = [
   { id: 'invite-trainer', label: 'Invite Regional Manager',        icon: I.trainers },
   { id: 'agents',         label: 'Agents',                icon: I.agents },
   { id: 'assign-agents',  label: 'Assign Agents',         icon: I.agents },
+  { id: 'properties',     label: 'Properties',            icon: I.leads },
   { id: 'tasks',          label: 'Tasks',                 icon: I.tasks },
   { id: 'achievements',   label: 'Achievements',          icon: I.achieve },
   { id: 'add-agent',      label: 'Add Agent',             icon: I.addAgent },
@@ -348,6 +350,7 @@ const HOT_NAV = [
 
 function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (keys?: any[]) => void; user: any; onLogout: () => void }) {
   const [section, setSection] = useState('overview');
+  const [agentAssignmentFilter, setAgentAssignmentFilter] = useState<'ALL' | 'ASSIGNED' | 'UNASSIGNED'>('ALL');
   const [reassignAgentId, setReassignAgentId] = useState<string | null>(null);
   const [reassignTrainerId, setReassignTrainerId] = useState('');
   const [reassignMsg, setReassignMsg] = useState('');
@@ -385,7 +388,14 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
   const metrics = data.metrics || {};
   const teamReports = data.teamReports || [];
 
-  const nav = HOT_NAV;
+  const isSalesManager = ['SALES_MANAGER', 'SM'].includes((user?.role || '').toUpperCase());
+  const nav = isSalesManager ? HOT_NAV : HOT_NAV.filter((n) => n.id !== 'properties');
+  const filteredAgents = agents.filter((a: any) => {
+    const hasRegionalManager = Boolean(a.trainerId || a.trainer_id || a.trainerName || a.trainer);
+    if (agentAssignmentFilter === 'ASSIGNED') return hasRegionalManager;
+    if (agentAssignmentFilter === 'UNASSIGNED') return !hasRegionalManager;
+    return true;
+  });
 
   const bestTrainer = trainers.reduce((best: any, t: any) =>
     (t.performanceScore || 0) > (best?.performanceScore || 0) ? t : best, null);
@@ -594,7 +604,21 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
 
       {section === 'agents' && (
         <div>
-          <SectionHeader title="Agents" subtitle="Agent performance within your country" />
+          <SectionHeader
+            title="Agents"
+            subtitle="Agent performance within your country"
+            action={
+              <select
+                value={agentAssignmentFilter}
+                onChange={e => setAgentAssignmentFilter(e.target.value as 'ALL' | 'ASSIGNED' | 'UNASSIGNED')}
+                className="px-3 py-2 rounded-xl border border-gray-200 text-sm"
+              >
+                <option value="ALL">All Agents</option>
+                <option value="ASSIGNED">Assigned</option>
+                <option value="UNASSIGNED">Unassigned</option>
+              </select>
+            }
+          />
           {reassignMsg && <div className={`p-3 rounded-xl text-sm mb-4 ${reassignOk ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{reassignMsg}</div>}
           <DataTable
             columns={[
@@ -650,8 +674,20 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
                   ),
               },
             ]}
-            rows={agents}
+            rows={filteredAgents}
             emptyMessage="No agents found"
+          />
+        </div>
+      )}
+
+      {section === 'properties' && isSalesManager && (
+        <div>
+          <SectionHeader title="Properties" subtitle="TST PlotConnect properties summary" />
+          <PlotConnectProperties
+            themeHex={theme.hex}
+            showAgent={true}
+            showRevenue={false}
+            summaryOnly={true}
           />
         </div>
       )}
@@ -710,9 +746,11 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
           <SectionHeader title="Achievements" subtitle="Regional manager achievements within your country" />
           <DataTable
             columns={[
-              { key: 'trainerName', label: 'Regional Manager', render: (v, r: any) => v || r.trainer || 'â€”' },
-              { key: 'achievement', label: 'Achievement' },
-              { key: 'period', label: 'Period' },
+              { key: 'trainer_name', label: 'Regional Manager', render: (v, r: any) => v || r.trainer_name || r.trainerName || r.name || '—' },
+              { key: 'country', label: 'Country', render: (_v, r: any) => r.country || metrics.country || '—' },
+              { key: 'total_clients', label: 'Total Clients', render: (v, r: any) => v ?? r.totalClients ?? r.agentsCount ?? 0 },
+              { key: 'closed_deals', label: 'Closed Deals', render: (v, r: any) => v ?? r.closedDeals ?? r.deals ?? 0 },
+              { key: 'active_leads', label: 'Active Leads', render: (v, r: any) => v ?? r.activeLeads ?? r.leads ?? 0 },
             ]}
             rows={achievements}
             emptyMessage="No achievements recorded"

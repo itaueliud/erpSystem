@@ -92,7 +92,9 @@ function DailyReportForm() {
     try {
       const { apiClient } = await import('../../shared/api/apiClient');
       await apiClient.post('/api/v1/reports', {
-        ...form,
+        accomplishments: form.accomplishments,
+        challenges: form.challenges,
+        tomorrowPlan: form.plan,
         hoursWorked: parseFloat(form.hours) || undefined,
         reportDate: new Date().toISOString().split('T')[0],
       });
@@ -506,7 +508,7 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
   return (
     <PortalLayout
       theme={theme}
-      user={{ name: user?.name || 'Sales Manager', email: user?.email || '', role: user?.role || 'SALES_MANAGER' }}
+      user={{ name: user?.name || 'Sales Manager', email: user?.email || '', role: 'SALES_MANAGER' }}
       navItems={nav}
       activeSection={section}
       onSectionChange={setSection}

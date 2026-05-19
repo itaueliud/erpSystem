@@ -25,6 +25,12 @@ const REPORT_SUBMITTERS = [
   Role.CTO,
   'SALES_MANAGER',
   'SM',
+  'CLIENT_SUCCESS_USER',
+  'ACCOUNT_EXECUTIVE',
+  'SENIOR_ACCOUNT_MANAGER',
+  'MARKETING_USER',
+  'MARKETING_OFFICER',
+  'CUSTOMER_RELATIONS',
 ];
 
 // ── Submit daily report ───────────────────────────────────────────────────────

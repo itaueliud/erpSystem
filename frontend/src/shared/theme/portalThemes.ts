@@ -146,7 +146,7 @@ export const PORTAL_THEMES: Record<string, PortalTheme> = {
   // ── Technology — Indigo/Purple (modern tech portal) ──────────────────────────
   technology: {
     id: 'technology',
-    name: 'Technology Portal',
+    name: 'DevOps Portal',
     primary: 'bg-indigo-700',
     primaryHover: 'hover:bg-indigo-800',
     primaryLight: 'bg-indigo-50',
@@ -198,7 +198,7 @@ export const PORTAL_THEMES: Record<string, PortalTheme> = {
   // ── Trainers — Deep Purple (training/education) ───────────────────────────────
   trainers: {
     id: 'trainers',
-    name: 'Trainers Portal',
+    name: 'Regional Managers Portal',
     primary: 'bg-purple-700',
     primaryHover: 'hover:bg-purple-800',
     primaryLight: 'bg-purple-50',
@@ -221,3 +221,4 @@ export const PORTAL_THEMES: Record<string, PortalTheme> = {
     bgHex: '#f8fafc',
   },
 };
+

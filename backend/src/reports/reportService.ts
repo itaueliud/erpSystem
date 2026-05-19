@@ -64,29 +64,54 @@ export class DailyReportService {
       const reportDate = new Date();
       reportDate.setHours(0, 0, 0, 0);
 
-      const result = await db.query(
-        `INSERT INTO daily_reports (
-          user_id, report_date, accomplishments, challenges, tomorrow_plan, hours_worked, submitted_at
-        )
-        VALUES ($1, $2, $3, $4, $5, $6, NOW())
-        ON CONFLICT (user_id, report_date)
-        DO UPDATE SET
-          accomplishments = EXCLUDED.accomplishments,
-          challenges = EXCLUDED.challenges,
-          tomorrow_plan = EXCLUDED.tomorrow_plan,
-          hours_worked = EXCLUDED.hours_worked,
-          submitted_at = NOW()
-        RETURNING id, user_id, report_date, accomplishments, challenges, tomorrow_plan,
-                  hours_worked, submitted_at, created_at`,
-        [
-          userId,
-          reportDate,
-          data.accomplishments.trim(),
-          data.challenges?.trim() || null,
-          data.tomorrowPlan?.trim() || null,
-          data.hoursWorked ?? null,
-        ]
-      );
+      const baseParams = [
+        userId,
+        reportDate,
+        data.accomplishments.trim(),
+        data.challenges?.trim() || null,
+        data.tomorrowPlan?.trim() || null,
+        data.hoursWorked ?? null,
+      ];
+      let result;
+      try {
+        // Prefer modern schema that includes report_type.
+        result = await db.query(
+          `INSERT INTO daily_reports (
+            user_id, report_date, accomplishments, challenges, tomorrow_plan, hours_worked, report_type, submitted_at
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, 'DAILY', NOW())
+          ON CONFLICT (user_id, report_date)
+          DO UPDATE SET
+            accomplishments = EXCLUDED.accomplishments,
+            challenges = EXCLUDED.challenges,
+            tomorrow_plan = EXCLUDED.tomorrow_plan,
+            hours_worked = EXCLUDED.hours_worked,
+            report_type = EXCLUDED.report_type,
+            submitted_at = NOW()
+          RETURNING id, user_id, report_date, accomplishments, challenges, tomorrow_plan,
+                    hours_worked, submitted_at, created_at`,
+          baseParams
+        );
+      } catch (error: any) {
+        // Legacy schema fallback where report_type column does not exist.
+        if (error?.code !== '42703') throw error;
+        result = await db.query(
+          `INSERT INTO daily_reports (
+            user_id, report_date, accomplishments, challenges, tomorrow_plan, hours_worked, submitted_at
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, NOW())
+          ON CONFLICT (user_id, report_date)
+          DO UPDATE SET
+            accomplishments = EXCLUDED.accomplishments,
+            challenges = EXCLUDED.challenges,
+            tomorrow_plan = EXCLUDED.tomorrow_plan,
+            hours_worked = EXCLUDED.hours_worked,
+            submitted_at = NOW()
+          RETURNING id, user_id, report_date, accomplishments, challenges, tomorrow_plan,
+                    hours_worked, submitted_at, created_at`,
+          baseParams
+        );
+      }
 
       logger.info('Daily report submitted', { userId, reportDate });
 

@@ -39,11 +39,11 @@ const router = Router();
 
 const CHAT_ROLE_ALLOWLIST: Record<string, string[]> = {
   CEO: ['COO', 'CTO', 'EA', 'CoS', 'CFO'],
-  COO: ['CEO'],
-  CTO: ['CEO'],
-  EA: ['CEO'],
-  CoS: ['CEO'],
-  CFO: ['CEO', 'HEAD_OF_TRAINERS'],
+  COO: ['CEO', 'CFO', 'CTO', 'CoS'],
+  CTO: ['CEO', 'CFO', 'COO', 'CoS'],
+  EA: ['CEO', 'CFO', 'CTO', 'COO', 'CoS'],
+  CoS: ['CEO', 'CFO', 'CTO', 'COO', 'EA'],
+  CFO: ['CEO', 'COO', 'CTO', 'CoS', 'EA', 'HEAD_OF_TRAINERS'],
   SALES_MANAGER: ['REGIONAL_MANAGER', 'RM', 'TRAINER', 'HEAD_OF_TRAINERS', 'AGENT', 'OPERATIONS_USER', 'SM'],
   SM: ['REGIONAL_MANAGER', 'RM', 'TRAINER', 'HEAD_OF_TRAINERS', 'AGENT', 'OPERATIONS_USER', 'SALES_MANAGER'],
   OPERATIONS_USER: ['SALES_MANAGER', 'SM', 'REGIONAL_MANAGER', 'RM', 'TRAINER', 'HEAD_OF_TRAINERS', 'AGENT'],

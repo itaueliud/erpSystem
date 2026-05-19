@@ -4,7 +4,7 @@ export default function TechnologyLoginPage() {
   return (
     <LoginTemplate
       allowedRoles={['TECH_STAFF', 'DEVELOPER']}
-      portalName="Technology Portal"
+      portalName="DevOps Portal"
       portalDescription="Software development, infrastructure security, GitHub integration and engineering operations delivery."
       primaryColor="#4338ca"
       sidebarColor="#1e1b4b"
@@ -19,4 +19,5 @@ export default function TechnologyLoginPage() {
     />
   );
 }
+
 

@@ -1,9 +1,9 @@
 /**
- * Portal 5 — Technology Portal (gatewayvertex)
+ * Portal 5 — DevOps Portal (gatewayvertex)
  * Same URL for all 3 CTO departments. RBA loads the correct department view.
  * GitHub integration applies to all.
  *
- * Department 1 — Technology Infrastructure & Security
+ * Department 1 — DevOps Infrastructure & Security
  *   → TECH_STAFF with dept type TECHNOLOGY_INFRASTRUCTURE_SECURITY
  * Department 2 — Software Engineering & Product Development
  *   → TECH_STAFF with dept type SOFTWARE_ENGINEERING_PRODUCT_DEVELOPMENT
@@ -86,7 +86,7 @@ function ChatSection({ user, isTeamLeader, userProfile }: { user: any; isTeamLea
         </div>
       ) : (
         <div style={{ height: 'calc(100vh - 220px)', minHeight: 400 }}>
-          <ChatPanel token={user?.token || ''} currentUserId={user?.id || ''} portal="Technology Portal" inlineMode />
+          <ChatPanel token={user?.token || ''} currentUserId={user?.id || ''} portal="DevOps Portal" inlineMode />
         </div>
       )}
     </div>
@@ -114,7 +114,7 @@ const I = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// DEPARTMENT 1 — Technology Infrastructure & Security
+// DEPARTMENT 1 — DevOps Infrastructure & Security
 // Lead: Security Manager
 // ═══════════════════════════════════════════════════════════════════════════════
 const INFRA_NAV = [
@@ -172,11 +172,11 @@ function InfraSecurityDashboard({ data, refetch, user, onLogout }: { data: any; 
   const portalUser = { name: user?.name || 'Security Manager', email: user?.email || '', role: 'Security Manager' };
 
   return (
-    <PortalLayout theme={theme} user={portalUser} navItems={INFRA_NAV} activeSection={section} onSectionChange={setSection} onLogout={onLogout} notifications={notifs} onNotificationRead={async (id) => { try { const { apiClient } = await import('../../shared/api/apiClient'); await apiClient.patch(`/api/v1/notifications/${id}/read`); refetch(['notifications']); } catch { /* silent */ } }} faqs={TECHNOLOGY_FAQS} portalName="Technology Portal — Infrastructure & Security">
+    <PortalLayout theme={theme} user={portalUser} navItems={INFRA_NAV} activeSection={section} onSectionChange={setSection} onLogout={onLogout} notifications={notifs} onNotificationRead={async (id) => { try { const { apiClient } = await import('../../shared/api/apiClient'); await apiClient.patch(`/api/v1/notifications/${id}/read`); refetch(['notifications']); } catch { /* silent */ } }} faqs={TECHNOLOGY_FAQS} portalName="DevOps Portal — Infrastructure & Security">
 
       {section === 'overview' && (
         <div>
-          <SectionHeader title="Technology Infrastructure & Security" subtitle="Department 1 — System security, infrastructure management, risk and compliance" />
+          <SectionHeader title="DevOps Infrastructure & Security" subtitle="Department 1 — System security, infrastructure management, risk and compliance" />
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <StatCard label="Active Repos" value={repos.length || '—'} icon={I.github} color={theme.hex} />
             <StatCard label="Recent Commits" value={commits.length || '—'} icon={I.code} color={theme.hex} />
@@ -525,7 +525,7 @@ function SoftwareEngineeringDashboard({ data, refetch, user, onLogout }: { data:
   const portalUser = { name: user?.name || 'Lead Software Architect', email: user?.email || '', role: 'Lead Software Architect' };
 
   return (
-    <PortalLayout theme={theme} user={portalUser} navItems={SOFTENG_NAV} activeSection={section} onSectionChange={setSection} onLogout={onLogout} notifications={notifs} onNotificationRead={async (id) => { try { const { apiClient } = await import('../../shared/api/apiClient'); await apiClient.patch(`/api/v1/notifications/${id}/read`); refetch(['notifications']); } catch { /* silent */ } }} faqs={TECHNOLOGY_FAQS} portalName="Technology Portal — Software Engineering">
+    <PortalLayout theme={theme} user={portalUser} navItems={SOFTENG_NAV} activeSection={section} onSectionChange={setSection} onLogout={onLogout} notifications={notifs} onNotificationRead={async (id) => { try { const { apiClient } = await import('../../shared/api/apiClient'); await apiClient.patch(`/api/v1/notifications/${id}/read`); refetch(['notifications']); } catch { /* silent */ } }} faqs={TECHNOLOGY_FAQS} portalName="DevOps Portal — Software Engineering">
 
       {section === 'overview' && (
         <div>
@@ -963,7 +963,7 @@ function EngineeringOperationsDashboard({ data, refetch, user, isTeamLeader, use
   };
 
   return (
-    <PortalLayout theme={theme} user={portalUser} navItems={ENG_NAV} activeSection={section} onSectionChange={setSection} onLogout={onLogout} notifications={notifs} onNotificationRead={async (id) => { try { const { apiClient } = await import('../../shared/api/apiClient'); await apiClient.patch(`/api/v1/notifications/${id}/read`); refetch(['notifications']); } catch { /* silent */ } }} faqs={TECHNOLOGY_FAQS} portalName="Technology Portal — Engineering Operations">
+    <PortalLayout theme={theme} user={portalUser} navItems={ENG_NAV} activeSection={section} onSectionChange={setSection} onLogout={onLogout} notifications={notifs} onNotificationRead={async (id) => { try { const { apiClient } = await import('../../shared/api/apiClient'); await apiClient.patch(`/api/v1/notifications/${id}/read`); refetch(['notifications']); } catch { /* silent */ } }} faqs={TECHNOLOGY_FAQS} portalName="DevOps Portal — Engineering Operations">
 
       {section === 'overview' && (
         <div>
@@ -1289,7 +1289,7 @@ export default function TechnologyPortal() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 rounded-full border-4 border-gray-200 border-t-indigo-600 animate-spin" />
-          <p className="text-sm text-gray-500 font-medium">Loading Technology Portal…</p>
+          <p className="text-sm text-gray-500 font-medium">Loading DevOps Portal…</p>
         </div>
       </div>
     );
@@ -1328,11 +1328,11 @@ export default function TechnologyPortal() {
         <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: theme.hex + '15' }}>
           <svg className="w-7 h-7" style={{ color: theme.hex }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
         </div>
-        <h2 className="text-lg font-bold text-gray-900 mb-2">Technology Portal</h2>
+        <h2 className="text-lg font-bold text-gray-900 mb-2">DevOps Portal</h2>
         <p className="text-sm text-gray-500 mb-6">Your account has not been assigned to a CTO department yet. Please contact your CTO to be assigned to one of the three departments.</p>
         <div className="space-y-3 text-left">
           {[
-            { name: 'Technology Infrastructure & Security', desc: 'System security, infrastructure, risk management' },
+            { name: 'DevOps Infrastructure & Security', desc: 'System security, infrastructure, risk management' },
             { name: 'Software Engineering & Product Development', desc: 'Applications, features, UI/UX, QA, roadmap' },
             { name: 'Engineering Operations & Delivery', desc: 'Developer teams, sprint tracking, project delivery' },
           ].map(dept => (
@@ -1347,3 +1347,4 @@ export default function TechnologyPortal() {
     </div>
   );
 }
+

@@ -19,9 +19,9 @@
             var isLogin = /^\/login(\/|$)/i.test(path);
             var isAsset = /\.[a-zA-Z0-9]{2,6}$/.test(path);
             if (!isLogin && !isAsset) {
-              // Use replace to avoid polluting history
-                // Redirect to the Operations portal gateway
-                location.replace('https://core.techswifttrix.com/gatewaynexus');
+              // Use replace to avoid polluting history.
+              // Core host should always land on shared login.
+              location.replace('https://core.techswifttrix.com/login');
             }
           }
         } catch (e) {

@@ -97,7 +97,6 @@ const NAV_GROUPS = [
       { id: 'finance',    label: 'Finance',         icon: Ic.finance },
       { id: 'sales',      label: 'Sales & Leads',   icon: Ic.sales },
       { id: 'operations', label: 'Operations',      icon: Ic.ops },
-      { id: 'properties', label: 'Properties Summary', icon: Ic.ops },
     ],
   },
   {
@@ -2066,7 +2065,7 @@ const PORTAL_TARGETS = [
   { value: 'executive',  label: 'Executive Portal' },
   { value: 'clevel',     label: 'C-Level Portal' },
   { value: 'operations', label: 'Operations Portal' },
-  { value: 'technology', label: 'Technology Portal' },
+  { value: 'technology', label: 'DevOps Portal' },
   { value: 'agents',     label: 'Agents Portal' },
 ];
 
@@ -2923,7 +2922,6 @@ export default function CEOPortal() {
     { key: 'techRequests',       endpoint: '/api/v1/tech-funding-requests',        fallback: [], transform: (r: any) => Array.isArray(r) ? r : r.data || [] },
     { key: 'complianceReports',  endpoint: '/api/v1/reports/compliance',          fallback: [], transform: (r: any) => Array.isArray(r) ? r : r.data || [] },
     { key: 'clients',            endpoint: '/api/v1/clients/all',                 fallback: [], transform: (r: any) => Array.isArray(r) ? r : r.data || r.clients || [] },
-    { key: 'properties',         endpoint: '/api/v1/plotconnect/properties?limit=200', fallback: [], transform: (r: any) => Array.isArray(r) ? r : r.data || r.properties || [] },
     { key: 'projects',           endpoint: '/api/v1/projects?limit=200',              fallback: [], transform: (r: any) => Array.isArray(r) ? r : r.projects || r.data || [] },
     { key: 'repos',              endpoint: '/api/v1/github/repos',                fallback: [], transform: (r: any) => Array.isArray(r) ? r : r.data || [] },
     { key: 'commissions',        endpoint: '/api/v1/commissions',                 fallback: [], transform: (r: any) => Array.isArray(r) ? r : r.data || [] },
@@ -3071,9 +3069,6 @@ export default function CEOPortal() {
           {section === 'finance'        && <FinanceSection       {...sectionProps} />}
           {section === 'sales'          && <SalesSection         {...sectionProps} />}
           {section === 'operations'     && <OperationsSection    {...sectionProps} />}
-          {section === 'properties'     && (
-            <PlotConnectProperties themeHex={C.blue2} showAgent showRevenue summaryOnly />
-          )}
           {section === 'people'         && <PeopleSection        {...sectionProps} />}
           {section === 'contracts'      && <ContractsSection     {...sectionProps} />}
           {section === 'approvals'      && <ApprovalsSection     {...sectionProps} />}
@@ -3168,3 +3163,4 @@ export default function CEOPortal() {
     </div>
   );
 }
+

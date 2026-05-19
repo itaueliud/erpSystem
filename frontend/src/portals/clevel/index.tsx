@@ -508,7 +508,7 @@ function AllMembersSection({ themeHex }: { themeHex: string }) {
         const { apiClient } = await import('../../shared/api/apiClient');
         const res = await apiClient.get('/api/v1/users?limit=200');
         const all: any[] = res.data?.data || res.data?.users || [];
-        const ctoRoles = ['DEVELOPER', 'TECH_STAFF', 'HEAD_OF_TRAINERS', 'TRAINER'];
+        const ctoRoles = ['DEVELOPER', 'TECH_STAFF'];
         if (!cancelled) setMembers(all.filter((u: any) => ctoRoles.includes(u.roleName || u.role)));
       } catch { /* silent */ }
       finally { if (!cancelled) setLoading(false); }
@@ -570,8 +570,6 @@ function AllMembersSection({ themeHex }: { themeHex: string }) {
           <option value="">All Roles</option>
           <option value="DEVELOPER">Developer</option>
           <option value="TECH_STAFF">Tech Staff</option>
-          <option value="HEAD_OF_TRAINERS">Head of Trainers</option>
-          <option value="TRAINER">Trainer</option>
         </select>
         <span className="px-3.5 py-2.5 text-sm text-gray-500">{filtered.length} member{filtered.length !== 1 ? 's' : ''}</span>
       </div>
@@ -743,16 +741,13 @@ const CTO_NAV = [
 
 function CTODashboard({ data, refetch, user, onLogout }: { data: any; refetch: (keys?: any[]) => void; user: any; onLogout: () => void }) {
   const [section, setSection] = useState('overview');
-  const [addTab, setAddTab] = useState<'trainer' | 'hot' | 'member' | 'leader' | 'team'>('trainer');
-  const [trainerForm, setTrainerForm] = useState({ name: '', email: '', country: '', region: '' });
-  const [hotForm, setHotForm] = useState({ name: '', email: '', country: '' });
+  const [addTab, setAddTab] = useState<'member' | 'leader' | 'team'>('member');
   const [memberForm, setMemberForm] = useState({ name: '', email: '', github: '', role: 'DEVELOPER', payoutMethod: 'MPESA', payoutPhone: '', payoutBankName: '', payoutBankAccount: '' });
   const [leaderForm, setLeaderForm] = useState({ teamId: '', memberId: '' });
   const [teamForm, setTeamForm] = useState({
     teamName: '', githubOrg: '',
     leaderName: '', leaderEmail: '', leaderPaymentType: 'MPESA', leaderPayment: '',
     member2Name: '', member2Email: '', member2PaymentType: 'MPESA', member2Payment: '',
-    member3Name: '', member3Email: '', member3PaymentType: 'MPESA', member3Payment: '',
   });
   const [teamSubmitting, setTeamSubmitting] = useState(false);
   const [fundingForm, setFundingForm] = useState({ project: '', amount: '', justification: '' });
@@ -772,6 +767,10 @@ function CTODashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
   const teams = data.teams || [];
   const achievements = data.achievements || [];
   const contracts = data.contracts || [];
+  const techContracts = (contracts as any[]).filter((c: any) => {
+    const linked = (projects as any[]).find((p: any) => p.id === (c.projectId || c.project_id));
+    return Boolean(c.teamName || c.team_name || linked?.teamName || linked?.team_id || linked?.teamId);
+  });
   const techRequests = data.techRequests || [];
   const notifs = data.notifications || [];
 
@@ -963,41 +962,12 @@ function CTODashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
           <SectionHeader title="Add Members" subtitle="Invite trainers, heads, developers — and create developer teams" />
           {formMsg && <div className={`p-3 rounded-xl text-sm mb-4 ${formOk ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{formMsg}</div>}
           <div className="flex gap-2 mb-6 flex-wrap">
-            {(['trainer', 'hot', 'member', 'leader', 'team'] as const).map(t => (
+            {(['member', 'leader', 'team'] as const).map(t => (
               <button key={t} onClick={() => { setAddTab(t); setFormMsg(''); }} className="px-4 py-2 rounded-xl text-sm font-medium transition-all" style={addTab === t ? { background: theme.hex, color: 'white' } : { background: 'rgba(255,255,255,0.7)', color: '#374151', border: '1px solid rgba(0,0,0,0.08)' }}>
-                {t === 'trainer' ? 'Add Trainer' : t === 'hot' ? 'Add Head of Trainers' : t === 'member' ? 'Add CTO Dept Member' : t === 'leader' ? 'Assign Team Leader' : '+ Create Dev Team'}
+                {t === 'member' ? 'Add CTO Dept Member' : t === 'leader' ? 'Assign Team Leader' : '+ Create Dev Team'}
               </button>
             ))}
           </div>
-
-          {addTab === 'trainer' && (
-            <form onSubmit={async e => { e.preventDefault(); await postInvite({ ...trainerForm, role: 'TRAINER' }); setTrainerForm({ name: '', email: '', country: '', region: '' }); }} className={`${cardCls} max-w-md`} style={cardStyle}>
-              <p className="font-semibold text-gray-800 mb-1">Add Trainer</p>
-              <p className="text-xs text-gray-500 mb-4">An invitation email will be sent. The trainer must complete their profile including M-Pesa or bank account before their profile is marked complete.</p>
-              <div className="mb-3"><label className={labelCls}>Name *</label><input required value={trainerForm.name} onChange={e => setTrainerForm(f => ({ ...f, name: e.target.value.toUpperCase() }))} style={{ textTransform: 'uppercase' }} className={inputCls} /></div>
-              <div className="mb-3"><label className={labelCls}>Email *</label><input type="email" required value={trainerForm.email} onChange={e => setTrainerForm(f => ({ ...f, email: e.target.value.toLowerCase() }))} style={{ textTransform: 'lowercase' }} className={inputCls} /></div>
-              <div className="mb-3"><label className={labelCls}>Country</label><input value={trainerForm.country} onChange={e => setTrainerForm(f => ({ ...f, country: e.target.value.toUpperCase() }))} style={{ textTransform: 'uppercase' }} className={inputCls} /></div>
-              <div className="mb-4"><label className={labelCls}>Region</label><input value={trainerForm.region} onChange={e => setTrainerForm(f => ({ ...f, region: e.target.value.toUpperCase() }))} style={{ textTransform: 'uppercase' }} className={inputCls} /></div>
-              <div className="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-100 text-xs text-amber-700">
-                ⚠ The trainer must enter their M-Pesa or bank account during profile setup — mandatory before first payment.
-              </div>
-              <PortalButton color={theme.hex} fullWidth>Send Invitation</PortalButton>
-            </form>
-          )}
-
-          {addTab === 'hot' && (
-            <form onSubmit={async e => { e.preventDefault(); await postInvite({ ...hotForm, role: 'HEAD_OF_TRAINERS' }); setHotForm({ name: '', email: '', country: '' }); }} className={`${cardCls} max-w-md`} style={cardStyle}>
-              <p className="font-semibold text-gray-800 mb-1">Add Head of Trainers</p>
-              <p className="text-xs text-gray-500 mb-4">An invitation email will be sent. The HoT must complete their profile including M-Pesa or bank account before their profile is marked complete.</p>
-              <div className="mb-3"><label className={labelCls}>Name *</label><input required value={hotForm.name} onChange={e => setHotForm(f => ({ ...f, name: e.target.value.toUpperCase() }))} style={{ textTransform: 'uppercase' }} className={inputCls} /></div>
-              <div className="mb-3"><label className={labelCls}>Email *</label><input type="email" required value={hotForm.email} onChange={e => setHotForm(f => ({ ...f, email: e.target.value.toLowerCase() }))} style={{ textTransform: 'lowercase' }} className={inputCls} /></div>
-              <div className="mb-4"><label className={labelCls}>Country</label><input value={hotForm.country} onChange={e => setHotForm(f => ({ ...f, country: e.target.value.toUpperCase() }))} style={{ textTransform: 'uppercase' }} className={inputCls} /></div>
-              <div className="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-100 text-xs text-amber-700">
-                ⚠ The Head of Trainers must enter their M-Pesa or bank account during profile setup — mandatory before first payment.
-              </div>
-              <PortalButton color={theme.hex} fullWidth>Send Invitation</PortalButton>
-            </form>
-          )}
 
           {addTab === 'member' && (
             <form onSubmit={async e => {
@@ -1077,7 +1047,6 @@ function CTODashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
                   const members = [
                     { name: teamForm.leaderName.trim(), email: teamForm.leaderEmail.trim(), isLeader: true, paymentType: teamForm.leaderPaymentType, paymentAccount: teamForm.leaderPayment.trim() },
                     { name: teamForm.member2Name.trim(), email: teamForm.member2Email.trim(), isLeader: false, paymentType: teamForm.member2PaymentType, paymentAccount: teamForm.member2Payment.trim() },
-                    { name: teamForm.member3Name.trim(), email: teamForm.member3Email.trim(), isLeader: false, paymentType: teamForm.member3PaymentType, paymentAccount: teamForm.member3Payment.trim() },
                   ].filter(m => m.name || m.email);
                   // Validate payout for each member that has a name/email
                   const missingPayout = members.find(m => !m.paymentAccount.trim());
@@ -1088,7 +1057,7 @@ function CTODashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
                     members: members.length > 0 ? members : undefined,
                   });
                   setFormOk(true); setFormMsg('✓ Team created successfully!');
-                  setTeamForm({ teamName: '', githubOrg: '', leaderName: '', leaderEmail: '', leaderPaymentType: 'MPESA', leaderPayment: '', member2Name: '', member2Email: '', member2PaymentType: 'MPESA', member2Payment: '', member3Name: '', member3Email: '', member3PaymentType: 'MPESA', member3Payment: '' });
+                  setTeamForm({ teamName: '', githubOrg: '', leaderName: '', leaderEmail: '', leaderPaymentType: 'MPESA', leaderPayment: '', member2Name: '', member2Email: '', member2PaymentType: 'MPESA', member2Payment: '' });
                   refetch(['teams']);
                 } catch (err: any) { setFormOk(false); setFormMsg(err?.response?.data?.error || 'Failed to create team'); }
                 finally { setTeamSubmitting(false); }
@@ -1104,7 +1073,6 @@ function CTODashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
                 {[
                   { nameKey: 'leaderName', emailKey: 'leaderEmail', payTypeKey: 'leaderPaymentType', payKey: 'leaderPayment', label: 'Team Leader ★' },
                   { nameKey: 'member2Name', emailKey: 'member2Email', payTypeKey: 'member2PaymentType', payKey: 'member2Payment', label: 'Member 2' },
-                  { nameKey: 'member3Name', emailKey: 'member3Email', payTypeKey: 'member3PaymentType', payKey: 'member3Payment', label: 'Member 3' },
                 ].map(f => (
                   <div key={f.label} className="mb-4 p-3 rounded-xl border border-gray-100 bg-gray-50">
                     <p className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">{f.label}</p>
@@ -1204,7 +1172,7 @@ function CTODashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
           </div>
 
           {/* All contracts */}
-          <p className="text-sm font-semibold text-gray-700 mb-3">All Contracts ({contracts.length})</p>
+          <p className="text-sm font-semibold text-gray-700 mb-3">All Contracts ({techContracts.length})</p>
           <DataTable
             columns={[
               { key: 'referenceNumber',  label: 'Contract Ref', render: v => <span className="font-mono text-xs font-semibold">{v || '—'}</span> },
@@ -1224,7 +1192,7 @@ function CTODashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
                 </PortalButton>
               )},
             ]}
-            rows={contracts}
+            rows={techContracts}
             emptyMessage="No contracts found"
           />
         </div>
@@ -1448,3 +1416,6 @@ export default function CLevelPortal() {
     </div>
   );
 }
+
+
+

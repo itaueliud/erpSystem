@@ -894,7 +894,6 @@ function CFODashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
                   <p className="font-medium text-gray-800">{a.name || a.email}</p>
                   <p className="text-xs text-gray-500">{a.email}</p>
                 </div>
-                <PortalButton size="sm" variant="danger" onClick={async () => { try { const { apiClient } = await import('../../shared/api/apiClient'); await apiClient.delete(`/api/v1/users/${a.id}`); refetch(['assistants']); } catch { /* silent */ } }}>Remove</PortalButton>
               </div>
             ))}
             {assistants.length === 0 && <p className="text-sm text-gray-400">No assistants added yet</p>}

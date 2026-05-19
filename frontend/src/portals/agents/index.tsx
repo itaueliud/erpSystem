@@ -1209,7 +1209,7 @@ function DailyReportForm({ themeHex }: { themeHex: string }) {
     setMsg('');
     try {
       const { apiClient } = await import('../../shared/api/apiClient');
-      await apiClient.post('/api/v1/reports', {
+      await apiClient.post('/api/v1/daily-reports', {
         accomplishments, challenges, tomorrowPlan,
         hoursWorked: parseFloat(hoursWorked) || undefined,
         reportDate: new Date().toISOString().split('T')[0],

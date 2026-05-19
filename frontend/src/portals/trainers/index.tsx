@@ -92,7 +92,7 @@ function DailyReportForm() {
     e.preventDefault(); setSubmitting(true); setMsg('');
     try {
       const { apiClient } = await import('../../shared/api/apiClient');
-      await apiClient.post('/api/v1/reports', {
+      await apiClient.post('/api/v1/daily-reports', {
         accomplishments: form.accomplishments,
         challenges: form.challenges,
         tomorrowPlan: form.plan,
@@ -338,7 +338,7 @@ const HOT_NAV = [
   { id: 'invite-trainer', label: 'Invite Regional Manager',        icon: I.trainers },
   { id: 'agents',         label: 'Agents',                icon: I.agents },
   { id: 'assign-agents',  label: 'Assign Agents',         icon: I.agents },
-  { id: 'properties',     label: 'Properties',            icon: I.leads },
+  { id: 'properties',     label: 'TST Summary',           icon: I.leads },
   { id: 'tasks',          label: 'Tasks',                 icon: I.tasks },
   { id: 'achievements',   label: 'Achievements',          icon: I.achieve },
   { id: 'add-agent',      label: 'Add Agent',             icon: I.addAgent },
@@ -388,8 +388,12 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
   const metrics = data.metrics || {};
   const teamReports = data.teamReports || [];
 
-  const isSalesManager = ['SALES_MANAGER', 'SM'].includes((user?.role || '').toUpperCase());
-  const nav = isSalesManager ? HOT_NAV : HOT_NAV.filter((n) => n.id !== 'properties');
+  const normalizedRole = String(user?.roleName || user?.role || '').trim().toUpperCase();
+  const isSalesManager = normalizedRole === 'SM' || normalizedRole.includes('SALES_MANAGER');
+  const navBase = isSalesManager ? HOT_NAV : HOT_NAV.filter((n) => n.id !== 'properties');
+  const nav = isSalesManager && !navBase.some((n) => n.id === 'properties')
+    ? [...navBase, { id: 'properties', label: 'TST Summary', icon: I.leads }]
+    : navBase;
   const filteredAgents = agents.filter((a: any) => {
     const hasRegionalManager = Boolean(a.trainerId || a.trainer_id || a.trainerName || a.trainer);
     if (agentAssignmentFilter === 'ASSIGNED') return hasRegionalManager;

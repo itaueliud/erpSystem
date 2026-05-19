@@ -138,7 +138,7 @@ function DailyReportForm() {
     e.preventDefault(); setSubmitting(true); setMsg('');
     try {
       const { apiClient } = await import('../../shared/api/apiClient');
-      await apiClient.post('/api/v1/reports', { ...form, hoursWorked: parseFloat(form.hoursWorked) || undefined, reportDate: new Date().toISOString().split('T')[0] });
+      await apiClient.post('/api/v1/daily-reports', { ...form, hoursWorked: parseFloat(form.hoursWorked) || undefined, reportDate: new Date().toISOString().split('T')[0] });
       setOk(true); setMsg('Report submitted!'); clear();
     } catch (err: any) { setOk(false); setMsg(err?.response?.data?.error || 'Failed to submit'); }
     finally { setSubmitting(false); }
@@ -2055,3 +2055,4 @@ export default function ExecutivePortal() {
     </div>
   );
 }
+

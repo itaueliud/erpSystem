@@ -66,7 +66,7 @@ export default function ClientSuccessDashboard({ user, onLogout }: { user: any; 
     e.preventDefault();
     try {
       const { apiClient } = await import('../../shared/api/apiClient');
-      await apiClient.post('/api/v1/reports', { accomplishments: reportForm.accomplishments, challenges: reportForm.challenges, tomorrowPlan: reportForm.plan, hoursWorked: parseFloat(reportForm.hours) || undefined, reportDate: new Date().toISOString().split('T')[0] });
+      await apiClient.post('/api/v1/daily-reports', { accomplishments: reportForm.accomplishments, challenges: reportForm.challenges, tomorrowPlan: reportForm.plan, hoursWorked: parseFloat(reportForm.hours) || undefined, reportDate: new Date().toISOString().split('T')[0] });
       setReportMsg('Report submitted!');
       setReportForm({ accomplishments: '', challenges: '', plan: '', hours: '' });
     } catch (err: any) { setReportMsg(err?.response?.data?.error || 'Failed'); }
@@ -196,3 +196,4 @@ export default function ClientSuccessDashboard({ user, onLogout }: { user: any; 
     </PortalLayout>
   );
 }
+

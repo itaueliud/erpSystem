@@ -31,7 +31,7 @@ function DailyReportForm({ themeHex, onSubmitted }: { themeHex: string; onSubmit
     setMsg('');
     try {
       const { apiClient } = await import('../../shared/api/apiClient');
-      await apiClient.post('/api/v1/reports', {
+      await apiClient.post('/api/v1/daily-reports', {
         accomplishments,
         challenges,
         tomorrowPlan,

@@ -51,7 +51,7 @@ export default function MarketingDashboard({ user, onLogout }: { user: any; onLo
     e.preventDefault();
     try {
       const { apiClient } = await import('../../shared/api/apiClient');
-      await apiClient.post('/api/v1/reports', {
+      await apiClient.post('/api/v1/daily-reports', {
         accomplishments: reportForm.campaignResults,
         challenges: reportForm.operationalUpdates,
         tomorrowPlan: reportForm.recommendations,
@@ -163,3 +163,4 @@ export default function MarketingDashboard({ user, onLogout }: { user: any; onLo
     </PortalLayout>
   );
 }
+

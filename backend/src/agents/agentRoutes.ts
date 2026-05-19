@@ -186,7 +186,7 @@ router.get('/commitment-amounts', requireRole(Role.AGENT), async (_req: Request,
 });
 
 // ── HoT: Create agent account (doc §5 Who Creates Who) ───────────────────────
-router.post('/create', requireRole(Role.HEAD_OF_TRAINERS), async (req: Request, res: Response) => {
+router.post('/create', requireRole(Role.HEAD_OF_TRAINERS, 'SALES_MANAGER' as Role, 'SM' as Role), async (req: Request, res: Response) => {
   try {
     const createdBy = (req as any).user.id;
     const {
@@ -352,7 +352,7 @@ router.post('/create', requireRole(Role.HEAD_OF_TRAINERS), async (req: Request, 
 });
 
 // —— HoT: Reset agent password (password management) ——————————————————————————
-router.post('/:agentId/reset-password', requireRole(Role.HEAD_OF_TRAINERS), async (req: Request, res: Response) => {
+router.post('/:agentId/reset-password', requireRole(Role.HEAD_OF_TRAINERS, 'SALES_MANAGER' as Role, 'SM' as Role), async (req: Request, res: Response) => {
   try {
     const { agentId } = req.params;
     const { newPassword } = req.body;
@@ -397,7 +397,7 @@ router.post('/:agentId/reset-password', requireRole(Role.HEAD_OF_TRAINERS), asyn
 });
 
 // ── HoT: Reassign agent to different trainer (doc §18) ───────────────────────
-router.post('/:agentId/reassign', requireRole(Role.HEAD_OF_TRAINERS), async (req: Request, res: Response) => {
+router.post('/:agentId/reassign', requireRole(Role.HEAD_OF_TRAINERS, 'SALES_MANAGER' as Role, 'SM' as Role), async (req: Request, res: Response) => {
   try {
     const { agentId } = req.params;
     const { trainerId } = req.body;
@@ -434,8 +434,42 @@ router.post('/:agentId/reassign', requireRole(Role.HEAD_OF_TRAINERS), async (req
   }
 });
 
+// Assign an agent to an operations/customer-relations manager
+router.post('/:agentId/assign-manager', requireRole(Role.HEAD_OF_TRAINERS, 'SALES_MANAGER' as Role, 'SM' as Role), async (req: Request, res: Response) => {
+  try {
+    const { agentId } = req.params;
+    const { managerId } = req.body;
+    if (!managerId) return res.status(400).json({ success: false, error: 'managerId is required' });
+
+    const { db } = await import('../database/connection');
+    const managerCheck = await db.query(
+      `SELECT u.id
+       FROM users u
+       JOIN roles r ON r.id = u.role_id
+       WHERE u.id = $1 AND u.is_active = TRUE
+         AND r.name IN ('OPERATIONS_USER', 'CUSTOMER_RELATIONS')`,
+      [managerId]
+    );
+    if (!managerCheck.rows.length) {
+      return res.status(400).json({ success: false, error: 'Selected user must be active OPERATIONS_USER or CUSTOMER_RELATIONS' });
+    }
+
+    await db.query(
+      `UPDATE users
+       SET trainer_id = $1, updated_at = NOW()
+       WHERE id = $2`,
+      [managerId, agentId]
+    );
+
+    return res.json({ success: true, message: 'Agent assigned successfully' });
+  } catch (error: any) {
+    logger.error('Assign manager error', { error });
+    return res.status(400).json({ success: false, error: error.message });
+  }
+});
+
 // ── HoT: Assign converted client to Account Executive (doc §18) ──────────────
-router.post('/clients/:clientId/assign-account-exec', requireRole(Role.HEAD_OF_TRAINERS), async (req: Request, res: Response) => {
+router.post('/clients/:clientId/assign-account-exec', requireRole(Role.HEAD_OF_TRAINERS, 'SALES_MANAGER' as Role, 'SM' as Role), async (req: Request, res: Response) => {
   try {
     const { clientId } = req.params;
     // Accept both field names for compatibility

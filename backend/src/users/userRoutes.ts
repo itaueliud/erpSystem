@@ -343,7 +343,7 @@ router.get('/departments', async (_req: Request, res: Response) => {
  * GET /api/v1/users
  * Restricted to admin/management roles.
  */
-router.get('/', requireRole(Role.CEO, Role.CoS, Role.CFO, Role.COO, Role.CTO, Role.EA, Role.HEAD_OF_TRAINERS, Role.TRAINER), async (req: Request, res: Response) => {
+router.get('/', requireRole(Role.CEO, Role.CoS, Role.CFO, Role.COO, Role.CTO, Role.EA, Role.HEAD_OF_TRAINERS, Role.TRAINER, 'SALES_MANAGER' as Role, 'SM' as Role), async (req: Request, res: Response) => {
   try {
     const { roleId, departmentId, search, limit, offset } = req.query;
     const requester = (req as any).user;

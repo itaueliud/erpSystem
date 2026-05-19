@@ -304,7 +304,8 @@ router.put('/finance/tot-rate', async (req: Request, res: Response) => {
 });
 
 // ─── Trainers Performance ─────────────────────────────────────────────────────
-router.get('/trainers/performance', async (_req, res) => {
+router.get('/trainers/performance', async (req, res) => {
+  const requesterId = (req as any).user?.id;
   const r = await safeQuery(
     `SELECT u.id, u.full_name AS name, u.email, u.country, ro.name as "roleName",
             COUNT(DISTINCT ag.id)  AS "agentsCount",
@@ -314,10 +315,12 @@ router.get('/trainers/performance', async (_req, res) => {
      LEFT JOIN users ag ON ag.trainer_id = u.id
      LEFT JOIN clients cl ON cl.trainer_id = u.id
        AND cl.status IN ('NEGOTIATION', 'CONVERTED', 'LEAD_ACTIVATED', 'LEAD_QUALIFIED')
-     WHERE ro.name IN ('TRAINER', 'HEAD_OF_TRAINERS')
+     WHERE ro.name IN ('TRAINER', 'REGIONAL_MANAGER', 'RM')
        AND u.is_active = TRUE
+       AND ($1::uuid IS NULL OR u.id <> $1)
      GROUP BY u.id, u.full_name, u.email, u.country, ro.name
-     ORDER BY u.full_name ASC`
+     ORDER BY u.full_name ASC`,
+    [requesterId || null]
   );
   res.json({ success: true, data: r.rows });
 });
@@ -595,7 +598,7 @@ router.get('/training/agent-records', async (req: Request, res: Response) => {
   let query: string;
   let params: any[];
 
-  if (userRole === 'HEAD_OF_TRAINERS') {
+  if (['HEAD_OF_TRAINERS', 'SALES_MANAGER', 'SM'].includes(String(userRole || ''))) {
     query = `
       SELECT au.id,
              au.full_name as name,

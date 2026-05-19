@@ -7,6 +7,7 @@ import { useMultiPortalData } from '../../shared/utils/usePortalData';
 import { AFRICAN_COUNTRIES } from '../../shared/utils/africanCountries';
 import ChatPanel from '../../shared/components/chat/ChatPanel';
 import { TRAINERS_FAQS } from '../../shared/data/portalFAQs';
+import TaskManagement from '../operations/components/TaskManagement';
 
 const theme = PORTAL_THEMES.trainers;
 const cardCls = 'rounded-2xl p-5';
@@ -26,6 +27,7 @@ const I = {
   trainers: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>,
   addAgent: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>,
   country: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+  tasks: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2m-6 9l2 2 4-4" /></svg>,
 };
 
 // ─── Country combobox ─────────────────────────────────────────────────────────
@@ -332,6 +334,8 @@ const HOT_NAV = [
   { id: 'trainers',       label: 'Regional Managers',              icon: I.trainers },
   { id: 'invite-trainer', label: 'Invite Regional Manager',        icon: I.trainers },
   { id: 'agents',         label: 'Agents',                icon: I.agents },
+  { id: 'assign-agents',  label: 'Assign Agents',         icon: I.agents },
+  { id: 'tasks',          label: 'Tasks',                 icon: I.tasks },
   { id: 'achievements',   label: 'Achievements',          icon: I.achieve },
   { id: 'add-agent',      label: 'Add Agent',             icon: I.addAgent },
   { id: 'assign-client',  label: 'Assign Converted Client', icon: I.leads },
@@ -359,11 +363,19 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
   const [assignClientMsg, setAssignClientMsg] = useState('');
   const [assignClientOk, setAssignClientOk] = useState(false);
   const [assignClientBusy, setAssignClientBusy] = useState(false);
+  const [selectedManagerId, setSelectedManagerId] = useState<string | null>(null);
+  const [selectedManagerName, setSelectedManagerName] = useState('');
+  const [opsUsers, setOpsUsers] = useState<any[]>([]);
+  const [assignOpsAgentId, setAssignOpsAgentId] = useState('');
+  const [assignOpsUserId, setAssignOpsUserId] = useState('');
+  const [assignOpsMsg, setAssignOpsMsg] = useState('');
+  const [assignOpsOk, setAssignOpsOk] = useState(false);
+  const [assignOpsBusy, setAssignOpsBusy] = useState(false);
 
   const agents = data.myAgents || [];
-  const unassignedAgents = agents.filter((a: any) => !a.trainerId);
   const trainers = data.trainers || [];
-  const selectableTrainers = trainers.filter((t: any) => (t.roleName || '').toUpperCase() === 'TRAINER');
+  const selectableTrainers = trainers.filter((t: any) => ['TRAINER', 'REGIONAL_MANAGER', 'RM'].includes((t.roleName || '').toUpperCase()));
+  const visibleTrainers = trainers.filter((t: any) => (t.id || t._id) !== user?.id);
   const achievements = data.achievements || [];
   const notifs = data.notifications || [];
   const metrics = data.metrics || {};
@@ -470,10 +482,31 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
     }
   };
 
+  React.useEffect(() => {
+    const loadAssignees = async () => {
+      try {
+        const { apiClient } = await import('../../shared/api/apiClient');
+        const res = await apiClient.get('/api/v1/users');
+        const all = (res.data as any)?.data || [];
+        const allowed = all.filter((u: any) => ['OPERATIONS_USER', 'CUSTOMER_RELATIONS'].includes((u.roleName || u.role || '').toUpperCase()));
+        setOpsUsers(allowed);
+      } catch {
+        setOpsUsers([]);
+      }
+    };
+    loadAssignees();
+  }, []);
+
+  React.useEffect(() => {
+    if (!addMsg) return;
+    const timer = setTimeout(() => setAddMsg(''), 4000);
+    return () => clearTimeout(timer);
+  }, [addMsg]);
+
   return (
     <PortalLayout
       theme={theme}
-      user={{ name: user?.name || 'Sales Manager', email: user?.email || '', role: 'HEAD_OF_TRAINERS' }}
+      user={{ name: user?.name || 'Sales Manager', email: user?.email || '', role: user?.role || 'SALES_MANAGER' }}
       navItems={nav}
       activeSection={section}
       onSectionChange={setSection}
@@ -481,13 +514,13 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
       notifications={notifs}
       onNotificationRead={async (id) => { try { const { apiClient } = await import('../../shared/api/apiClient'); await apiClient.patch(`/api/v1/notifications/${id}/read`); refetch(['notifications']); } catch { /* silent */ } }}
       faqs={TRAINERS_FAQS}
-      portalName="Regional Managers Portal"
+      portalName="Sales Manager Dashboard"
     >
       {section === 'overview' && (
         <div>
           <SectionHeader title="Sales Manager Overview" subtitle="Country-wide performance" />
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard label="Total Regional Managers" value={trainers.length || metrics.totalTrainers || 0} icon={I.trainers} color={theme.hex} />
+            <StatCard label="Total Regional Managers" value={visibleTrainers.length || metrics.totalTrainers || 0} icon={I.trainers} color={theme.hex} />
             <StatCard label="Total Agents" value={agents.length || metrics.totalAgents || 0} icon={I.agents} color={theme.hex} />
             <StatCard label="Best Regional Manager This Month" value={bestTrainer?.name || metrics.bestTrainer || '—'} icon={I.achieve} color={theme.hex} />
             <StatCard label="Active Leads (Country)" value={activeLeads || metrics.activeLeads || 0} icon={I.leads} color={theme.hex} />
@@ -505,12 +538,27 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
               { key: 'agentsCount', label: 'Agents', render: v => v ?? '—' },
               { key: 'performanceScore', label: 'Score', render: v => v ?? '—' },
               { key: 'id', label: 'Actions', render: (_v, row: any) => (
-                <PortalButton size="sm" variant="secondary" onClick={() => alert(`Trainer: ${row.name}\nCountry: ${row.country || '—'}\nAgents: ${row.agentsCount ?? '—'}\nScore: ${row.performanceScore ?? '—'}`)}>View</PortalButton>
+                <PortalButton size="sm" variant="secondary" onClick={() => { setSelectedManagerId(row.id || row._id); setSelectedManagerName(row.name || 'Regional Manager'); }}>View</PortalButton>
               )},
             ]}
-            rows={trainers}
+            rows={visibleTrainers}
             emptyMessage="No regional managers found"
           />
+          {selectedManagerId && (
+            <div className="mt-6">
+              <SectionHeader title={`Agents under ${selectedManagerName}`} subtitle="Direct reports for selected regional manager" />
+              <DataTable
+                columns={[
+                  { key: 'name', label: 'Name' },
+                  { key: 'phone', label: 'Phone' },
+                  { key: 'region', label: 'Region', render: v => v || '—' },
+                  { key: 'trainerName', label: 'Regional Manager', render: (v, r: any) => v || r.trainer || '—' },
+                ]}
+                rows={agents.filter((a: any) => (a.trainerId || a.trainer_id) === selectedManagerId)}
+                emptyMessage="No agents assigned to this regional manager"
+              />
+            </div>
+          )}
         </div>
       )}
 
@@ -597,9 +645,58 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
                   ),
               },
             ]}
-            rows={unassignedAgents}
-            emptyMessage="No unassigned agents found"
+            rows={agents}
+            emptyMessage="No agents found"
           />
+        </div>
+      )}
+
+      {section === 'assign-agents' && (
+        <div>
+          <SectionHeader title="Assign Agents" subtitle="Assign agents to Customer Relations or Operations User" />
+          {assignOpsMsg && <div className={`p-3 rounded-xl text-sm mb-4 ${assignOpsOk ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{assignOpsMsg}</div>}
+          <form
+            className={`${cardCls} max-w-lg mb-6`}
+            style={cardStyle}
+            onSubmit={async (e) => {
+              e.preventDefault();
+              if (!assignOpsAgentId || !assignOpsUserId) return;
+              setAssignOpsBusy(true);
+              setAssignOpsMsg('');
+              try {
+                const { apiClient } = await import('../../shared/api/apiClient');
+                await apiClient.post(`/api/v1/agents/${assignOpsAgentId}/assign-manager`, { managerId: assignOpsUserId });
+                setAssignOpsOk(true);
+                setAssignOpsMsg('Agent assigned successfully.');
+                setAssignOpsAgentId('');
+                setAssignOpsUserId('');
+                refetch(['myAgents']);
+              } catch (err: any) {
+                setAssignOpsOk(false);
+                setAssignOpsMsg(err?.response?.data?.error || 'Failed to assign agent');
+              } finally {
+                setAssignOpsBusy(false);
+              }
+            }}
+          >
+            <div className="mb-4">
+              <label className={labelCls}>Agent *</label>
+              <select className={inputCls} value={assignOpsAgentId} onChange={e => setAssignOpsAgentId(e.target.value)} required>
+                <option value="">Select agent…</option>
+                {agents.map((a: any) => <option key={a.id || a._id} value={a.id || a._id}>{a.name}</option>)}
+              </select>
+            </div>
+            <div className="mb-6">
+              <label className={labelCls}>Assign To *</label>
+              <select className={inputCls} value={assignOpsUserId} onChange={e => setAssignOpsUserId(e.target.value)} required>
+                <option value="">Select user…</option>
+                {opsUsers.map((u: any) => <option key={u.id} value={u.id}>{u.fullName || u.full_name || u.name || u.email} ({u.roleName || u.role})</option>)}
+              </select>
+            </div>
+            <PortalButton type="submit" color={theme.hex} fullWidth disabled={assignOpsBusy || !assignOpsAgentId || !assignOpsUserId}>
+              {assignOpsBusy ? 'Assigning…' : 'Assign Agent'}
+            </PortalButton>
+          </form>
         </div>
       )}
 
@@ -617,6 +714,8 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
           />
         </div>
       )}
+
+      {section === 'tasks' && <TaskManagement themeHex={theme.hex} />}
 
       {section === 'add-agent' && (
         <div>
@@ -820,7 +919,7 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
 export default function TrainersPortal() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const isHoT = user?.role === 'HEAD_OF_TRAINERS';
+  const isHoT = ['HEAD_OF_TRAINERS', 'SALES_MANAGER', 'SM'].includes(user?.role || '');
 
   const { data, refetch } = useMultiPortalData<{
     myAgents: any[]; clients: any[]; achievements: any[];
@@ -847,7 +946,7 @@ export default function TrainersPortal() {
   const props = { data: data || {}, refetch, user };
 
   const logoutFn = () => { logout(); navigate('/login', { state: { from: { pathname: '/gatewaynexus' } } }); };
-  if (user.role === 'HEAD_OF_TRAINERS') return <HoTDashboard {...props} onLogout={logoutFn} />;
+  if (isHoT) return <HoTDashboard {...props} onLogout={logoutFn} />;
   return <TrainerDashboard {...props} onLogout={logoutFn} />;
 }
 

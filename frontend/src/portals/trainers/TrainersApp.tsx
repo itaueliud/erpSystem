@@ -5,7 +5,7 @@ import { RealtimeProvider } from '../../shared/utils/RealtimeContext';
 import TrainersPortal from './index';
 import TrainersLoginPage from './TrainersLoginPage';
 
-const ALLOWED_ROLES = ['HEAD_OF_TRAINERS', 'TRAINER'];
+const ALLOWED_ROLES = ['HEAD_OF_TRAINERS', 'TRAINER', 'SALES_MANAGER', 'SM', 'REGIONAL_MANAGER', 'RM'];
 
 export default function TrainersApp() {
   return (
@@ -15,7 +15,7 @@ export default function TrainersApp() {
           <Routes>
             <Route path="/login" element={<TrainersLoginPage />} />
             <Route path="/*" element={
-              <PortalGuard allowedRoles={ALLOWED_ROLES} portalName="Trainers Portal">
+              <PortalGuard allowedRoles={ALLOWED_ROLES} portalName="Sales Manager Dashboard">
                 <TrainersPortal />
               </PortalGuard>
             } />

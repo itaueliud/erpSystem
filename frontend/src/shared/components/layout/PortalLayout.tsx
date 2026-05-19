@@ -304,6 +304,7 @@ export function PortalLayout({
         <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
           {navItems.map(item => {
             const active = item.id === activeSection;
+            const displayLabel = user.role === 'SALES_MANAGER' && item.id === 'properties' ? 'TST Summary' : item.label;
             return (
               <button key={item.id} onClick={() => { onSectionChange(item.id); setMobileOpen(false); }}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all"
@@ -313,11 +314,11 @@ export function PortalLayout({
                 }
                 onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255,255,255,0.08)'; (e.currentTarget as HTMLElement).style.color = '#fff'; }}
                 onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.65)'; } }}
-                title={!showLabels ? item.label : undefined}
+                title={!showLabels ? displayLabel : undefined}
                 aria-current={active ? 'page' : undefined}
               >
                 <span className="flex-shrink-0 w-5 h-5">{item.icon}</span>
-                {showLabels && <span className="flex-1 text-left truncate">{item.label}</span>}
+                {showLabels && <span className="flex-1 text-left truncate">{displayLabel}</span>}
                 {showLabels && item.badge !== undefined && item.badge > 0 && (
                   <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center bg-red-500 text-white">
                     {item.badge}

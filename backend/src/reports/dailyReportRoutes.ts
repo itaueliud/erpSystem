@@ -15,8 +15,16 @@ import logger from '../utils/logger';
 const router = Router();
 
 const REPORT_SUBMITTERS = [
-  Role.TRAINER, Role.HEAD_OF_TRAINERS, 'OPERATIONS_USER', 'TECH_STAFF', 'DEVELOPER',
-  Role.COO, Role.CTO,
+  Role.TRAINER,
+  Role.HEAD_OF_TRAINERS,
+  Role.AGENT,
+  Role.OPERATIONS_USER,
+  Role.TECH_STAFF,
+  Role.DEVELOPER,
+  Role.COO,
+  Role.CTO,
+  'SALES_MANAGER',
+  'SM',
 ];
 
 // ── Submit daily report ───────────────────────────────────────────────────────

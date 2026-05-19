@@ -1588,7 +1588,7 @@ const NAV = [
   { id: 'daily-report', label: 'Daily Report',      icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg> },
 ];
 
-const HOME_SECTIONS = ['overview', 'clients', 'lead-status', 'chat', 'daily-report'];
+const HOME_SECTIONS = ['overview', 'clients', 'lead-status', 'chat', 'daily-report', 'demo'];
 const HOME_SUB_NAV_IDS = new Set(HOME_SECTIONS);
 
 // ─── Main Portal ──────────────────────────────────────────────────────────────
@@ -1626,15 +1626,17 @@ export default function AgentsPortal() {
   const nav = NAV;
   const navById = useMemo(() => Object.fromEntries(nav.map((n: any) => [n.id, n])), [nav]);
 
-  const activeTopTab: 'home' | 'capture' | 'marketer' =
+  const activeTopTab: 'home' | 'capture' | 'marketer' | 'demo' =
     HOME_SUB_NAV_IDS.has(section) ? 'home' :
     section === 'capture' ? 'capture' :
-    'marketer';
+    section === 'marketer' ? 'marketer' :
+    'demo';
 
-  const topTabs: Array<{ id: 'home' | 'capture' | 'marketer'; label: string; section: string }> = [
+  const topTabs: Array<{ id: 'home' | 'capture' | 'marketer' | 'demo'; label: string; section: string }> = [
     { id: 'home', label: 'Home', section: 'overview' },
     { id: 'capture', label: 'Add Client', section: 'capture' },
     { id: 'marketer', label: 'Add Property', section: 'marketer' },
+    { id: 'demo', label: 'Demo', section: 'demo' },
   ];
 
   const homeSubTabs: Array<{ id: string; label: string }> = [
@@ -1692,6 +1694,7 @@ export default function AgentsPortal() {
                       {tab.id === 'home' && navById.overview?.icon}
                       {tab.id === 'capture' && navById.capture?.icon}
                       {tab.id === 'marketer' && navById.marketer?.icon}
+                      {tab.id === 'demo' && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14m-6 4h4a2 2 0 002-2V8a2 2 0 00-2-2H9a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>}
                     </div>
                     <span className="block truncate">{tab.label}</span>
                   </button>
@@ -1941,6 +1944,13 @@ export default function AgentsPortal() {
 
       {section === 'marketer' && (
         <MarketerDashboard themeHex={theme.hex} />
+      )}
+
+      {section === 'demo' && (
+        <div>
+          <SectionHeader title="Demo Suite" subtitle="Interactive demos and quick access links for live showcases" />
+          <RetailDemoSuite themeHex={theme.hex} />
+        </div>
       )}
     </PortalLayout>
   );

@@ -98,9 +98,7 @@ const NAV = [
   { id: 'leads',       label: 'Leads',          icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg> },
   { id: 'pipeline',    label: 'Pipeline',       icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> },
   { id: 'properties',  label: 'Properties',     icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg> },
-  { id: 'tasks',       label: 'Tasks',          icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg> },
   { id: 'communications', label: 'Communications', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg> },
-  { id: 'reports',     label: 'Reports',        icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg> },
   { id: 'daily-report',label: 'Daily Report',   icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg> },
   { id: 'chat', label: 'Chat', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg> },
 ];
@@ -130,6 +128,7 @@ function exportToCSV(rows: any[], filename: string) {
 // Sales & Client Acquisition Department Dashboard (Portal 4 — OPERATIONS_USER / Sales Manager)
 export function SalesClientAcquisitionDashboard() {
   const [section, setSection] = useState('overview');
+  const [pipelineAgentFilter, setPipelineAgentFilter] = useState('');
 
 
 
@@ -145,12 +144,6 @@ export function SalesClientAcquisitionDashboard() {
   const [actionSubmitting, setActionSubmitting] = useState(false);
   const [actionMsg, setActionMsg] = useState('');
   const [actionSuccess, setActionSuccess] = useState(false);
-  const [showTaskForm, setShowTaskForm] = useState(false);
-  const [taskForm, setTaskForm] = useState({ title: '', description: '', dueDate: '', priority: 'MEDIUM', assignedTo: '' });
-  const [taskSubmitting, setTaskSubmitting] = useState(false);
-  const [taskMsg, setTaskMsg] = useState('');
-  const [taskSuccess, setTaskSuccess] = useState(false);
-  const [selectedReport, setSelectedReport] = useState<any | null>(null);
   // Client filter state
   const [clientFilter, setClientFilter] = useState({ status: '', country: '', agent: '', search: '' });
   // Bulk lead state
@@ -170,19 +163,15 @@ export function SalesClientAcquisitionDashboard() {
       transform: (r: any) => Array.isArray(r) ? r : (r.data || r.clients || []) },
     { key: 'properties',     endpoint: '/api/v1/properties',           fallback: [],
       transform: (r: any) => Array.isArray(r) ? r : (r.data || r.listings || r.properties || []) },
-    { key: 'tasks',          endpoint: '/api/v1/tasks',                fallback: [],
-      transform: (r: any) => Array.isArray(r) ? r : (r.data || r.tasks || []) },
     { key: 'users',          endpoint: '/api/v1/users',                fallback: [],
       transform: (r: any) => Array.isArray(r) ? r : (r.data || r.users || []) },
     { key: 'communications', endpoint: '/api/v1/clients/communications/all',       fallback: [],
       transform: (r: any) => Array.isArray(r) ? r : (r.data || []) },
-    { key: 'teamReports',    endpoint: '/api/v1/daily-reports/team',   fallback: [],
-      transform: (r: any) => Array.isArray(r) ? r : (r.data || r.reports || []) },
     { key: 'notifications',  endpoint: '/api/v1/notifications',        fallback: [],
       transform: (r: any) => Array.isArray(r) ? r : (r?.notifications || r?.data || []) },
   ] as any, [
     'data:client:created', 'data:client:updated', 'data:client:status_changed',
-    'data:lead:converted', 'data:task:assigned', 'data:task:updated',
+    'data:lead:converted',
     'data:notification:new', 'data:metrics:updated', 'data:report:submitted',
   ]);
 
@@ -190,27 +179,32 @@ export function SalesClientAcquisitionDashboard() {
   const clients    = (data as any).clients?.data    || (data as any).clients?.clients || (data as any).clients    || [];
   const leads      = (data as any).leads?.data      || (data as any).leads?.clients   || (data as any).leads      || [];
   const properties = (data as any).properties?.data || (data as any).properties || [];
-  const tasks      = (data as any).tasks?.data      || (data as any).tasks      || [];
   const users      = (data as any).users?.data      || (data as any).users?.users || (data as any).users || [];
   const comms      = (data as any).communications?.data || (data as any).communications || [];
-  const teamReports = (data as any).teamReports?.data || (data as any).teamReports || [];
   const notifs     = (data as any).notifications?.data || (data as any).notifications || [];
 
   const nav = NAV;
 
   const handleLogout = () => { logout(); navigate('/login', { state: { from: { pathname: '/gatewaynexus' } } }); };
-  const portalUser = { name: user?.name || 'Operations', email: user?.email || 'ops@tst.com', role: 'Operations Manager' };
+  const portalUser = { name: user?.name || 'Client Success', email: user?.email || 'ops@tst.com', role: 'Client Success & Account Management' };
+  const agents = (Array.isArray(users) ? users : []).filter((u: any) => ((u.roleName || u.role || '').toUpperCase() === 'AGENT'));
+  const assignedAgents = agents.filter((u: any) => (u.trainerId || u.trainer_id || u.managerId || u.manager_id) === user?.id);
+  const getAgentId = (c: any) => c.agentId || c.agent_id || c.assignedAgentId || c.assigned_agent_id || '';
+  const getAgentName = (c: any) => c.agentName || c.agent_name || '';
+  const filteredPipelineClients = (Array.isArray(clients) ? clients : []).filter((c: any) =>
+    !pipelineAgentFilter || getAgentId(c) === pipelineAgentFilter
+  );
 
   return (
-    <PortalLayout theme={theme} user={portalUser} navItems={nav} activeSection={section} onSectionChange={setSection} onLogout={handleLogout} notifications={notifs} onNotificationRead={async (id) => { try { const { apiClient } = await import('../../shared/api/apiClient'); await apiClient.patch(`/api/v1/notifications/${id}/read`); refetch(['notifications']); } catch { /* silent */ } }} faqs={OPERATIONS_FAQS} portalName="Operations Portal">
+    <PortalLayout theme={theme} user={portalUser} navItems={nav} activeSection={section} onSectionChange={setSection} onLogout={handleLogout} notifications={notifs} onNotificationRead={async (id) => { try { const { apiClient } = await import('../../shared/api/apiClient'); await apiClient.patch(`/api/v1/notifications/${id}/read`); refetch(['notifications']); } catch { /* silent */ } }} faqs={OPERATIONS_FAQS} portalName="Client Success & Account Management">
 
       {section === 'overview' && (
         <div>
-          <SectionHeader title="Operations Overview" subtitle="Client pipeline and sales performance" />
+          <SectionHeader title="Client Success & Account Management Overview" subtitle="Client pipeline and account performance" />
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <StatCard label="Total Clients"     value={(m as any).clients?.total ?? (Array.isArray(clients) ? clients.length : 0)} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>} color={theme.hex} />
             <StatCard label="Active Leads"      value={(m as any).clients?.leads ?? (Array.isArray(leads) ? leads.filter((c: any) => ['NEW_LEAD','CONVERTED','LEAD_ACTIVATED','LEAD_QUALIFIED','NEGOTIATION'].includes(c.status)).length : 0)} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>} color={theme.hex} />
-            <StatCard label="Pipeline Value"    value={(m as any).revenue?.total ? `KSh ${(((m as any).revenue.total) / 1000000).toFixed(1)}M` : '—'} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>} color={theme.hex} />
+            <StatCard label="Assigned Agents"   value={assignedAgents.length} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>} color={theme.hex} />
             <StatCard label="Properties Listed" value={Array.isArray(properties) ? properties.length : 0} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>} color={theme.hex} />
           </div>
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6">
@@ -607,10 +601,25 @@ export function SalesClientAcquisitionDashboard() {
       )}
       {section === 'pipeline' && (
         <div>
-          <SectionHeader title="Sales Pipeline" subtitle="Visual pipeline across all stages" />
+          <SectionHeader
+            title="Sales Pipeline"
+            subtitle="Visual pipeline across all stages"
+            action={
+              <select
+                value={pipelineAgentFilter}
+                onChange={(e) => setPipelineAgentFilter(e.target.value)}
+                className="px-3 py-2 rounded-xl border border-gray-200 text-sm"
+              >
+                <option value="">All Agents</option>
+                {agents.map((a: any) => (
+                  <option key={a.id} value={a.id}>{a.fullName || a.full_name || a.name || a.email}</option>
+                ))}
+              </select>
+            }
+          />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {['NEW_LEAD', 'CONVERTED', 'LEAD_ACTIVATED', 'LEAD_QUALIFIED', 'NEGOTIATION', 'CLOSED_WON'].map((status) => {
-              const items = (Array.isArray(clients) ? clients : []).filter((c: any) => c.status === status);
+              const items = filteredPipelineClients.filter((c: any) => c.status === status);
               return (
                 <div key={status} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
                   <div className="flex items-center justify-between mb-3">
@@ -621,7 +630,7 @@ export function SalesClientAcquisitionDashboard() {
                     {items.slice(0, 4).map((c: any, i: number) => (
                       <div key={c.id || i} className="p-2 bg-gray-50 rounded-lg">
                         <p className="text-xs font-medium text-gray-800 truncate">{c.name}</p>
-                        <p className="text-xs text-gray-400">{c.country}</p>
+                        <p className="text-xs text-gray-400">{getAgentName(c) || c.country || '—'}</p>
                       </div>
                     ))}
                     {items.length > 4 && <p className="text-xs text-gray-400 text-center">+{items.length - 4} more</p>}
@@ -634,165 +643,67 @@ export function SalesClientAcquisitionDashboard() {
       )}
 
       {section === 'properties' && (
-        <PlotConnectProperties
-          themeHex={theme.hex}
-          showAgent={true}
-          showRevenue={false}
-          summaryOnly={true}
-        />
-      )}
-      {section === 'tasks' && (
         <div>
-          <SectionHeader title="Tasks" subtitle="Manage and track team tasks"
-            action={<PortalButton color={theme.hex} onClick={() => setShowTaskForm(f => !f)}>{showTaskForm ? 'Hide Form' : 'Create Task'}</PortalButton>} />
-          {showTaskForm && (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
-              {taskMsg && (
-                <div className={`p-3 rounded-xl text-sm mb-4 ${taskSuccess ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                  {taskMsg}
-                </div>
-              )}
-              <form onSubmit={async (e) => {
-                e.preventDefault();
-                setTaskSubmitting(true);
-                setTaskMsg('');
-                try {
-                  const { apiClient } = await import('../../shared/api/apiClient');
-                  await apiClient.post('/api/v1/tasks', {
-                    title: taskForm.title,
-                    description: taskForm.description || undefined,
-                    dueDate: taskForm.dueDate || undefined,
-                    priority: taskForm.priority,
-                    assignedTo: taskForm.assignedTo || undefined,
-                  });
-                  // Send in-portal notification to the assigned user
-                  if (taskForm.assignedTo) {
-                    try {
-                      await apiClient.post('/api/v1/notifications', {
-                        userId: taskForm.assignedTo,
-                        title: 'New Task Assigned',
-                        body: `You have been assigned: "${taskForm.title}"${taskForm.dueDate ? ` — due ${new Date(taskForm.dueDate).toLocaleDateString()}` : ''}`,
-                        type: 'TASK_ASSIGNED',
-                      });
-                    } catch { /* non-blocking */ }
-                  }
-                  setTaskSuccess(true);
-                  setTaskMsg('Task created successfully!');
-                  setTaskForm({ title: '', description: '', dueDate: '', priority: 'MEDIUM', assignedTo: '' });
-                  setShowTaskForm(false);
-                  refetch(['tasks']);
-                } catch (err: any) {
-                  setTaskSuccess(false);
-                  setTaskMsg(err?.response?.data?.error || 'Failed to create task');
-                } finally {
-                  setTaskSubmitting(false);
-                }
-              }}>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                  <div className="sm:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Title *</label>
-                    <input type="text" required value={taskForm.title} onChange={e => setTaskForm(f => ({ ...f, title: e.target.value }))}
-                      className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 transition-all" />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
-                    <textarea rows={2} value={taskForm.description} onChange={e => setTaskForm(f => ({ ...f, description: e.target.value }))}
-                      className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 transition-all resize-none" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Due Date</label>
-                    <input type="date" value={taskForm.dueDate} onChange={e => setTaskForm(f => ({ ...f, dueDate: e.target.value }))}
-                      className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 transition-all" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Priority</label>
-                    <select value={taskForm.priority} onChange={e => setTaskForm(f => ({ ...f, priority: e.target.value }))}
-                      className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 transition-all">
-                      {['LOW', 'MEDIUM', 'HIGH', 'URGENT'].map(p => <option key={p} value={p}>{p}</option>)}
-                    </select>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Assign to</label>
-                    <select value={taskForm.assignedTo} onChange={e => setTaskForm(f => ({ ...f, assignedTo: e.target.value }))}
-                      className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 transition-all">
-                      <option value="">— Unassigned —</option>
-                      {(() => {
-                        const EXCLUDED = ['CEO', 'EA', 'CFO', 'COO', 'COS'];
-                        const ROLE_LABELS: Record<string, string> = {
-                          CTO: 'Technology', TECH_STAFF: 'Tech Staff', DEVELOPER: 'Developers',
-                          TRAINER: 'Regional Managers', HEAD_OF_TRAINERS: 'Regional Managers',
-                          OPERATIONS_USER: 'Operations', AGENT: 'Sales Agents',
-                          SECURITY_MANAGER: 'Security',
-                        };
-                        const assignable = (Array.isArray(users) ? users : []).filter((u: any) => {
-                          const r = (u.roleName || u.role || '').toUpperCase();
-                          return !EXCLUDED.includes(r);
-                        });
-                        const grouped: Record<string, any[]> = {};
-                        assignable.forEach((u: any) => {
-                          const r = u.roleName || u.role || 'Other';
-                          const label = ROLE_LABELS[r] || r.replace(/_/g, ' ');
-                          if (!grouped[label]) grouped[label] = [];
-                          grouped[label].push(u);
-                        });
-                        return Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b)).map(([group, members]) => (
-                          <optgroup key={group} label={group}>
-                            {members.map((u: any) => (
-                              <option key={u.id} value={u.id}>{u.fullName || u.full_name || u.email}</option>
-                            ))}
-                          </optgroup>
-                        ));
-                      })()}
-                    </select>
-                  </div>
-                </div>
-                <PortalButton color={theme.hex} fullWidth disabled={taskSubmitting}>
-                  {taskSubmitting ? 'Creating…' : 'Create Task'}
+          <SectionHeader
+            title="Properties"
+            subtitle="Manage property listings and export to Google Sheets"
+            action={
+              <div className="flex gap-2">
+                <PortalButton
+                  variant="secondary"
+                  onClick={() => {
+                    const rows = (Array.isArray(properties) ? properties : []).map((p: any) => ({
+                      property_name: p.propertyName || p.property_name || '',
+                      owner_name: p.ownerName || p.owner_name || '',
+                      owner_phone: p.ownerPhone || p.owner_phone || '',
+                      county: p.county || '',
+                      area: p.area || '',
+                      status: p.status || '',
+                      payment_status: p.paymentStatus || p.payment_status || '',
+                      agent_name: p.agentName || p.agent_name || '',
+                      created_at: p.createdAt || p.created_at || '',
+                    }));
+                    exportToCSV(rows, 'properties-google-sheets.csv');
+                  }}>
+                  Export CSV
                 </PortalButton>
-              </form>
-            </div>
-          )}
-          <DataTable
-            columns={[
-              { key: 'title',      label: 'Title' },
-              { key: 'priority',   label: 'Priority',    render: (v) => <StatusBadge status={v || 'MEDIUM'} /> },
-              { key: 'status',     label: 'Status',      render: (v) => <StatusBadge status={v || 'PENDING'} /> },
-              { key: 'dueDate',    label: 'Due Date',    render: (v) => v ? new Date(v).toLocaleDateString() : '—' },
-              { key: 'assignedTo', label: 'Assigned To', render: (v) => {
-                const u = (Array.isArray(users) ? users : []).find((u: any) => u.id === v);
-                return u ? (u.fullName || u.full_name || u.email) : (v ? v : '—');
-              }},
-              { key: 'id', label: 'Actions', render: (id, row: any) => (
-                <div className="flex gap-1.5">
-                  <PortalButton size="sm" color={theme.hex} onClick={async () => {
-                    try {
-                      const { apiClient } = await import('../../shared/api/apiClient');
-                      await apiClient.patch(`/api/v1/tasks/${id}/status`, { status: 'COMPLETED' });
-                      refetch(['tasks']);
-                    } catch { /* ignore */ }
-                  }} disabled={row.status === 'COMPLETED'}>
-                    {row.status === 'COMPLETED' ? 'Done' : 'Complete'}
-                  </PortalButton>
-                  <PortalButton size="sm" variant="danger" onClick={async () => {
-                    if (!window.confirm('Delete this task?')) return;
-                    try {
-                      const { apiClient } = await import('../../shared/api/apiClient');
-                      await apiClient.delete(`/api/v1/tasks/${id}`);
-                      refetch(['tasks']);
-                    } catch { /* ignore */ }
-                  }}>Delete</PortalButton>
-                </div>
-              )},
-            ]}
-            rows={Array.isArray(tasks) ? tasks : []}
+                <PortalButton
+                  color={theme.hex}
+                  onClick={async () => {
+                    const rows = (Array.isArray(properties) ? properties : []).map((p: any) => [
+                      p.propertyName || p.property_name || '',
+                      p.ownerName || p.owner_name || '',
+                      p.ownerPhone || p.owner_phone || '',
+                      p.county || '',
+                      p.area || '',
+                      p.status || '',
+                      p.paymentStatus || p.payment_status || '',
+                      p.agentName || p.agent_name || '',
+                      p.createdAt || p.created_at || '',
+                    ]);
+                    const header = ['Property Name','Owner Name','Owner Phone','County','Area','Status','Payment Status','Agent','Created At'];
+                    const tsv = [header.join('`t'), ...rows.map(r => r.map(v => String(v).replace(/`t/g, ' ')).join('`t'))].join('`n');
+                    await navigator.clipboard.writeText(tsv);
+                    window.open('https://docs.google.com/spreadsheets/create', '_blank');
+                    alert('Copied property rows. Paste into Google Sheets with Ctrl+V.');
+                  }}>
+                  Open Google Sheets
+                </PortalButton>
+              </div>
+            }
+          />
+          <PlotConnectProperties
+            themeHex={theme.hex}
+            showAgent={true}
+            showRevenue={false}
+            summaryOnly={true}
           />
         </div>
       )}
-
       {section === 'daily-report' && (
         <div>
           <SectionHeader title="Daily Report" subtitle="Submit your end-of-day report" />
-          <DailyReportForm themeHex={theme.hex} onSubmitted={() => refetch(['teamReports'])} />
+          <DailyReportForm themeHex={theme.hex} />
         </div>
       )}
 
@@ -818,83 +729,11 @@ export function SalesClientAcquisitionDashboard() {
         </div>
       )}
 
-      {section === 'reports' && (
-        <div>
-          <SectionHeader title="Team Reports" subtitle="Daily reports — who submitted, when, and what they did" />
-          <DataTable
-            columns={[
-              { key: 'full_name',       label: 'Submitted By', render: (v, r: any) => (
-                <div>
-                  <p className="font-medium text-gray-900 text-sm">{v || r.authorName || r.userName || '—'}</p>
-                  <p className="text-xs text-gray-400">{r.role || r.userRole || '—'}</p>
-                </div>
-              )},
-              { key: 'report_date',    label: 'Report Date',  render: (v, r: any) => { const d = v || r.reportDate; return d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'; }},
-              { key: 'submitted_at',   label: 'Submitted At', render: (v, r: any) => { const t = v || r.submittedAt; return t ? new Date(t).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'; }},
-
-              { key: 'accomplishments', label: 'Accomplishments', render: (v) => <span className="text-xs text-gray-600 line-clamp-2">{v || '—'}</span> },
-              { key: 'id', label: '', render: (_v, row: any) => (
-                <PortalButton size="sm" variant="secondary" onClick={() => setSelectedReport(row)}>View</PortalButton>
-              )},
-            ]}
-            rows={Array.isArray(teamReports) ? teamReports : []}
-            emptyMessage="No reports submitted yet"
-          />
-
-          {/* Report detail modal */}
-          {selectedReport && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.45)' }}
-              onClick={() => setSelectedReport(null)}>
-              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden" onClick={e => e.stopPropagation()}>
-                {/* Header */}
-                <div className="px-6 py-4 border-b border-gray-100 flex items-start justify-between" style={{ background: theme.hex + '10' }}>
-                  <div>
-                    <p className="font-bold text-gray-900 text-base">{selectedReport.full_name || selectedReport.authorName || '—'}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{selectedReport.role || '—'}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-semibold text-gray-700">
-                      {selectedReport.report_date ? new Date(selectedReport.report_date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '—'}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      Submitted {selectedReport.submitted_at ? new Date(selectedReport.submitted_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}
-                    </p>
-                  </div>
-                </div>
-                {/* Body */}
-                <div className="px-6 py-5 space-y-4 max-h-[60vh] overflow-y-auto">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: theme.hex }}>Accomplishments</p>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{selectedReport.accomplishments || '—'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: theme.hex }}>Challenges</p>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{selectedReport.challenges || '—'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: theme.hex }}>Plan for Tomorrow</p>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{selectedReport.tomorrow_plan || selectedReport.tomorrowPlan || '—'}</p>
-                  </div>
-                </div>
-                {/* Footer */}
-                <div className="px-6 py-4 border-t border-gray-100 flex justify-end">
-                  <button onClick={() => setSelectedReport(null)}
-                    className="px-5 py-2 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all">
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Chat — COO dept: higher-ups and own team (doc §9 Portal 3 COO) */}
       {section === 'chat' && (
         <div>
-          <SectionHeader title="Chat" subtitle="Chat with CoS, CEO, CFO, EA, CTO and your team" />
+          <SectionHeader title="Chat" subtitle="Chat with Sales Manager, Regional Managers, and Agents only" />
           <div style={{ height: 'calc(100vh - 220px)', minHeight: 400 }}>
-            <ChatPanel token={user?.token || ''} currentUserId={user?.id || ''} portal="Operations Portal" inlineMode />
+            <ChatPanel token={user?.token || ''} currentUserId={user?.id || ''} portal="Client Success & Account Management" inlineMode />
           </div>
         </div>
       )}
@@ -927,3 +766,4 @@ export default function OperationsPortal() {
   // Default: Sales & Client Acquisition (OPERATIONS_USER, SALES_MANAGER)
   return <SalesClientAcquisitionDashboard />;
 }
+

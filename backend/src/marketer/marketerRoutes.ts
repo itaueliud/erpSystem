@@ -146,7 +146,6 @@ router.post('/properties', upload.array('images', 8), async (req: Request, res: 
     if (!ownerName)              return res.status(400).json({ error: 'Owner name is required' });
     if (!ownerPhone)             return res.status(400).json({ error: 'Phone number is required' });
     if (!propertyName)           return res.status(400).json({ error: 'Property name is required' });
-    if (!propertyIdNumber)       return res.status(400).json({ error: 'Property ID number is required' });
     if (!county)                 return res.status(400).json({ error: 'County is required' });
     if (!area)                   return res.status(400).json({ error: 'Area is required' });
     if (!propertyTypes.length)   return res.status(400).json({ error: 'At least one property type is required' });

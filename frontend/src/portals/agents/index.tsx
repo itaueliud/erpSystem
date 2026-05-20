@@ -520,6 +520,11 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
   const [captureSubmitting, setCaptureSubmitting] = useState(false);
   const [captureMsg, setCaptureMsg] = useState('');
   const [captureSuccess, setCaptureSuccess] = useState(false);
+  const normalizeClientIdForSubmit = (value: string) => {
+    const normalized = String(value || '').trim().toUpperCase();
+    if (normalized === 'NA' || normalized === 'N/A') return 'N/A';
+    return normalized;
+  };
 
   const inputCls = 'w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 transition-all';
   const labelCls = 'block text-sm font-medium text-gray-700 mb-1.5';
@@ -576,7 +581,7 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
     try {
       const { apiClient } = await import('../../shared/api/apiClient');
       const clientRes = await apiClient.post('/api/v1/agents/clients', {
-        clientIdNumber: clientIdNumber.trim().toUpperCase(),
+        clientIdNumber: normalizeClientIdForSubmit(clientIdNumber),
         clientName: captureInfo.clientName.trim(),
         organizationName: captureInfo.organizationName.trim(),
         phoneNumber: captureInfo.phone.trim(),
@@ -791,8 +796,16 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
                 onClick={async () => {
                   setCaptureMsg('');
                   try {
+                    const normalizedClientId = normalizeClientIdForSubmit(clientIdNumber);
+                    if (normalizedClientId === 'N/A') {
+                      setClientIdNumber('N/A');
+                      setClientIdValidated(true);
+                      setCaptureSuccess(true);
+                      setCaptureMsg('No client ID selected (N/A). Continue with client details.');
+                      return;
+                    }
                     const { apiClient } = await import('../../shared/api/apiClient');
-                    await apiClient.post('/api/v1/agents/clients/validate-id', { clientIdNumber });
+                    await apiClient.post('/api/v1/agents/clients/validate-id', { clientIdNumber: normalizedClientId });
                     setClientIdValidated(true);
                     setCaptureSuccess(true);
                     setCaptureMsg('Client ID is valid. Continue with client details.');

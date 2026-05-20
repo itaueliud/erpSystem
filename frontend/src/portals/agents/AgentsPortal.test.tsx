@@ -95,7 +95,7 @@ describe('AgentsPortal', () => {
     const nameInput = screen.getByPlaceholderText('Client full name');
     const emailInput = screen.getByPlaceholderText('client@example.com');
     expect(nameInput).toHaveAttribute('required');
-    expect(emailInput).toHaveAttribute('required');
+    expect(emailInput).not.toHaveAttribute('required');
   });
 
   it('navigates to my clients section', () => {

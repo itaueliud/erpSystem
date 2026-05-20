@@ -560,8 +560,13 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
       setCaptureSuccess(false);
       return;
     }
-    if (!captureInfo.clientName.trim() || !captureInfo.phone.trim() || !captureInfo.email.trim() || !captureInfo.location.trim()) {
-      setCaptureMsg('Please fill in Client Name, Phone, Email, and Location before saving.');
+    if (!captureInfo.clientName.trim() || !captureInfo.phone.trim() || !captureInfo.location.trim()) {
+      setCaptureMsg('Please fill in Client Name, Phone, and Location before saving.');
+      setCaptureSuccess(false);
+      return;
+    }
+    if (captureInfo.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(captureInfo.email.trim())) {
+      setCaptureMsg('Please enter a valid email address.');
       setCaptureSuccess(false);
       return;
     }
@@ -614,7 +619,7 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
     e.preventDefault();
     if (!captureInfo.clientName.trim()) { setCaptureMsg('Client name is required.'); setCaptureSuccess(false); return; }
     if (!captureInfo.phone.trim())      { setCaptureMsg('Phone number is required.'); setCaptureSuccess(false); return; }
-    if (!captureInfo.email.trim())      { setCaptureMsg('Email is required.'); setCaptureSuccess(false); return; }
+    if (captureInfo.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(captureInfo.email.trim())) { setCaptureMsg('Please enter a valid email address.'); setCaptureSuccess(false); return; }
     if (captureServices.length === 0)   { setCaptureMsg('Please select at least one system.'); setCaptureSuccess(false); return; }
     if (!captureMpesa.trim())           { setCaptureMsg('M-Pesa number is required.'); setCaptureSuccess(false); return; }
 
@@ -706,7 +711,7 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
     // Pre-submit validation
     if (!captureInfo.clientName.trim()) { setCaptureMsg('Client name is required.'); setCaptureSuccess(false); return; }
     if (!captureInfo.phone.trim())      { setCaptureMsg('Phone number is required.'); setCaptureSuccess(false); return; }
-    if (!captureInfo.email.trim())      { setCaptureMsg('Email is required.'); setCaptureSuccess(false); return; }
+    if (captureInfo.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(captureInfo.email.trim())) { setCaptureMsg('Please enter a valid email address.'); setCaptureSuccess(false); return; }
     if (!capturePropForm.propertyName.trim()) { setCaptureMsg('Property name is required.'); setCaptureSuccess(false); return; }
     if (!captureMpesa.trim())           { setCaptureMsg('M-Pesa number is required.'); setCaptureSuccess(false); return; }
     setCaptureSubmitting(true);
@@ -865,8 +870,8 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
               />
             </div>
             <div>
-              <label className={labelCls}>Email *</label>
-              <input type="email" required placeholder="client@example.com" value={captureInfo.email} onChange={e => setCaptureInfo(f => ({ ...f, email: e.target.value }))} className={inputCls} />
+              <label className={labelCls}>Email (Optional)</label>
+              <input type="email" placeholder="client@example.com" value={captureInfo.email} onChange={e => setCaptureInfo(f => ({ ...f, email: e.target.value }))} className={inputCls} />
             </div>
             <div className="sm:col-span-2">
               <label className={labelCls}>Location (Town / County) <span className="text-xs text-gray-400 font-normal">— No country needed — scoped to your trainer's region</span></label>

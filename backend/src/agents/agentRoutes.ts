@@ -69,15 +69,26 @@ router.post('/clients', requireRole(Role.AGENT), async (req: Request, res: Respo
     const agentId = (req as any).user.id;
     const { clientIdNumber, clientName, organizationName, phoneNumber, email, location, notes } = req.body;
 
-    if (!clientIdNumber || !clientName || !phoneNumber || !email || !location) {
+    if (!clientIdNumber || !clientName || !phoneNumber || !location) {
       return res.status(400).json({
         success: false,
-        error: 'clientIdNumber (use N/A if none), clientName, phoneNumber, email, and location are required',
+        error: 'clientIdNumber (use N/A if none), clientName, phoneNumber, and location are required',
       });
+    }
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+    if (normalizedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      return res.status(400).json({ success: false, error: 'Invalid email format' });
     }
 
     const client = await agentService.captureClient({
-      clientIdNumber, clientName, organizationName, phoneNumber, email, location, notes, agentId,
+      clientIdNumber,
+      clientName,
+      organizationName,
+      phoneNumber,
+      email: normalizedEmail,
+      location,
+      notes,
+      agentId,
     });
     return res.status(201).json({ success: true, data: client });
   } catch (error: any) {

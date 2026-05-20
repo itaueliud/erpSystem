@@ -24,7 +24,7 @@ export interface ClientCaptureInput {
   clientName: string;
   organizationName?: string;
   phoneNumber: string;
-  email: string;
+  email?: string;
   location: string;          // Town / Area (country inherited from Trainer)
   notes?: string;
   agentId: string;
@@ -129,7 +129,7 @@ export class AgentService {
         input.clientName,
         input.organizationName || null,
         normalizedPhone,
-        input.email,
+        input.email || null,
         input.location,
         agentCountry,   // inherited from agent's country
         input.notes || null,

@@ -16,6 +16,9 @@ router.post('/clients/validate-id', requireRole(Role.AGENT), async (req: Request
   try {
     const raw = String(req.body?.clientIdNumber || '').trim().toUpperCase();
     if (!raw) return res.status(400).json({ success: false, error: 'clientIdNumber is required' });
+    if (raw === 'N/A' || raw === 'NA') {
+      return res.json({ success: true, data: { valid: true, clientIdNumber: 'N/A' } });
+    }
     if (!/^[A-Z0-9-]{5,20}$/.test(raw)) {
       return res.status(400).json({ success: false, error: 'Client ID must be 5-20 characters (letters, numbers, hyphen only)' });
     }
@@ -69,7 +72,7 @@ router.post('/clients', requireRole(Role.AGENT), async (req: Request, res: Respo
     if (!clientIdNumber || !clientName || !phoneNumber || !email || !location) {
       return res.status(400).json({
         success: false,
-        error: 'clientIdNumber, clientName, phoneNumber, email, and location are required',
+        error: 'clientIdNumber (use N/A if none), clientName, phoneNumber, email, and location are required',
       });
     }
 

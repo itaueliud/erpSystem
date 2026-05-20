@@ -54,6 +54,11 @@ export interface AgentDashboardMetrics {
 }
 
 export class AgentService {
+  private isNoClientId(value: string): boolean {
+    const normalized = String(value || '').trim().toUpperCase();
+    return normalized === 'N/A' || normalized === 'NA';
+  }
+
   private normalizePhone(input: string): string {
     const digits = String(input || '').replace(/\D/g, '');
     if (!digits) return '';
@@ -87,9 +92,9 @@ export class AgentService {
     }
     const referenceNumber = `${prefix}${seq.toString().padStart(6, '0')}`;
     const normalizedPhone = this.normalizePhone(input.phoneNumber);
-    const normalizedClientId = String(input.clientIdNumber || '').trim().toUpperCase();
-    if (!normalizedClientId) throw new Error('Client ID is required');
-    if (!/^[A-Z0-9-]{5,20}$/.test(normalizedClientId)) {
+    const rawClientId = String(input.clientIdNumber || '').trim().toUpperCase();
+    const normalizedClientId = this.isNoClientId(rawClientId) ? null : rawClientId;
+    if (normalizedClientId && !/^[A-Z0-9-]{5,20}$/.test(normalizedClientId)) {
       throw new Error('Client ID must be 5-20 characters (letters, numbers, hyphen only)');
     }
 
@@ -102,12 +107,14 @@ export class AgentService {
     if (existingPhone.rows.length > 0) {
       throw new Error(`Phone number already in use by another client (${existingPhone.rows[0].name}).`);
     }
-    const existingClientId = await db.query(
-      `SELECT id, name FROM clients WHERE upper(client_id_number) = $1 LIMIT 1`,
-      [normalizedClientId]
-    );
-    if (existingClientId.rows.length > 0) {
-      throw new Error(`Client ID already in use by another client (${existingClientId.rows[0].name}).`);
+    if (normalizedClientId) {
+      const existingClientId = await db.query(
+        `SELECT id, name FROM clients WHERE upper(client_id_number) = $1 LIMIT 1`,
+        [normalizedClientId]
+      );
+      if (existingClientId.rows.length > 0) {
+        throw new Error(`Client ID already in use by another client (${existingClientId.rows[0].name}).`);
+      }
     }
 
     const result = await db.query(

@@ -5,18 +5,21 @@
 --   Phone: 0758429969
 --   Role: REGIONAL_MANAGER
 
-BEGIN;
-
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 DO $$
 DECLARE
   v_regional_manager_role UUID;
 BEGIN
-  SELECT id INTO v_regional_manager_role FROM roles WHERE name = 'REGIONAL_MANAGER' LIMIT 1;
+  SELECT id
+    INTO v_regional_manager_role
+    FROM roles
+   WHERE name IN ('REGIONAL_MANAGER', 'TRAINER')
+   ORDER BY CASE WHEN name = 'REGIONAL_MANAGER' THEN 0 ELSE 1 END
+   LIMIT 1;
 
   IF v_regional_manager_role IS NULL THEN
-    RAISE EXCEPTION 'Missing required role: REGIONAL_MANAGER';
+    RAISE EXCEPTION 'Missing required role: REGIONAL_MANAGER or TRAINER';
   END IF;
 
   INSERT INTO users (
@@ -59,5 +62,3 @@ BEGIN
          updated_at = NOW()
    WHERE lower(email) = 'kevolmwanginjoroge@gmail.com';
 END $$;
-
-COMMIT;

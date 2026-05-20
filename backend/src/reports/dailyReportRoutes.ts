@@ -17,6 +17,8 @@ const router = Router();
 const REPORT_SUBMITTERS = [
   Role.TRAINER,
   Role.HEAD_OF_TRAINERS,
+  'REGIONAL_MANAGER',
+  'RM',
   Role.AGENT,
   Role.OPERATIONS_USER,
   Role.TECH_STAFF,

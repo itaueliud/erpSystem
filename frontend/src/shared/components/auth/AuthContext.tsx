@@ -20,6 +20,9 @@ export const ROLE_PORTAL_MAP: Record<string, string> = {
   SALES_MANAGER:          '/gatewaynexus',
   HEAD_OF_TRAINERS:       '/gatewaynexus',  // Portal 4 — same as COO depts (spec §3 NB)
   TRAINER:                '/gatewaynexus',  // Portal 4 — same as COO depts (spec §3 NB)
+  REGIONAL_MANAGER:       '/gatewaynexus',
+  RM:                     '/gatewaynexus',
+  SM:                     '/gatewaynexus',
   CLIENT_SUCCESS_USER:    '/gatewaynexus',
   ACCOUNT_EXECUTIVE:      '/gatewaynexus',
   SENIOR_ACCOUNT_MANAGER: '/gatewaynexus',

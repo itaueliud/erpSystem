@@ -754,7 +754,14 @@ export default function OperationsPortal() {
   const role = user?.role;
 
   // RBA routing — same URL, different dashboard per role (doc §3 Portal 4)
-  if (role === 'HEAD_OF_TRAINERS' || role === 'TRAINER') {
+  if (
+    role === 'HEAD_OF_TRAINERS' ||
+    role === 'TRAINER' ||
+    role === 'REGIONAL_MANAGER' ||
+    role === 'RM' ||
+    role === 'SALES_MANAGER' ||
+    role === 'SM'
+  ) {
     return <TrainersPortal />;
   }
   if (role === 'CLIENT_SUCCESS_USER' || role === 'ACCOUNT_EXECUTIVE' || role === 'SENIOR_ACCOUNT_MANAGER') {

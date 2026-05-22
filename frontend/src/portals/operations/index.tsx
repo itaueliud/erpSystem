@@ -81,7 +81,7 @@ function DailyReportForm({ themeHex, onSubmitted }: { themeHex: string; onSubmit
           <input type="number" min={0} max={24} value={hoursWorked} onChange={e => setHoursWorked(e.target.value)}
             className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 transition-all" />
         </div>
-        <PortalButton color={themeHex} fullWidth disabled={submitting}>
+        <PortalButton type="submit" color={themeHex} fullWidth disabled={submitting}>
           {submitting ? 'Submitting…' : 'Submit Report'}
         </PortalButton>
         <div className="mt-2">

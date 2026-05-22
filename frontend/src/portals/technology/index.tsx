@@ -58,7 +58,7 @@ function DailyReportForm({ themeHex, onSubmitted }: { themeHex: string; onSubmit
         <div className="mb-4"><label className="block text-sm font-medium text-gray-700 mb-1.5">Plan for tomorrow</label><textarea rows={3} value={form.tomorrowPlan} onChange={set('tomorrowPlan')} className={`${inp} resize-none`} /></div>
         <div className="mb-6"><label className="block text-sm font-medium text-gray-700 mb-1.5">Hours worked</label><input type="number" min={0} max={24} value={form.hoursWorked} onChange={set('hoursWorked')} className={inp} /></div>
         <div className="flex gap-2">
-          <PortalButton color={themeHex} fullWidth disabled={submitting}>{submitting ? 'Submitting…' : 'Submit Report'}</PortalButton>
+          <PortalButton type="submit" color={themeHex} fullWidth disabled={submitting}>{submitting ? 'Submitting…' : 'Submit Report'}</PortalButton>
           <PortalButton variant="secondary" onClick={clear} disabled={submitting}>Clear</PortalButton>
         </div>
       </form>

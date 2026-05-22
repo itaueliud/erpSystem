@@ -112,7 +112,7 @@ function DailyReportForm() {
         <div className="mb-4"><label className={labelCls}>Plan for tomorrow</label><textarea rows={3} value={form.plan} onChange={set('plan')} className={`${inputCls} resize-none`} /></div>
         <div className="mb-6"><label className={labelCls}>Hours worked</label><input type="number" min={0} max={24} value={form.hours} onChange={set('hours')} className={inputCls} /></div>
         <div className="flex gap-2">
-          <PortalButton color={theme.hex} fullWidth disabled={submitting}>{submitting ? 'Submittingâ€¦' : 'Submit Report'}</PortalButton>
+          <PortalButton type="submit" color={theme.hex} fullWidth disabled={submitting}>{submitting ? 'Submittingâ€¦' : 'Submit Report'}</PortalButton>
           <PortalButton variant="secondary" onClick={clear} disabled={submitting}>Clear</PortalButton>
         </div>
       </form>
@@ -756,8 +756,8 @@ function HoTDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
           <SectionHeader title="Achievements" subtitle="Regional manager achievements within your country" />
           <DataTable
             columns={[
-              { key: 'trainer_name', label: 'Regional Manager', render: (v, r: any) => v || r.trainer_name || r.trainerName || r.name || '—' },
-              { key: 'country', label: 'Country', render: (_v, r: any) => r.country || metrics.country || '—' },
+              { key: 'trainer_name', label: 'Regional Manager', render: (v, r: any) => v || r.trainer_name || r.trainerName || r.name || 'ï¿½' },
+              { key: 'country', label: 'Country', render: (_v, r: any) => r.country || metrics.country || 'ï¿½' },
               { key: 'total_clients', label: 'Total Clients', render: (v, r: any) => v ?? r.totalClients ?? r.agentsCount ?? 0 },
               { key: 'closed_deals', label: 'Closed Deals', render: (v, r: any) => v ?? r.closedDeals ?? r.deals ?? 0 },
               { key: 'active_leads', label: 'Active Leads', render: (v, r: any) => v ?? r.activeLeads ?? r.leads ?? 0 },

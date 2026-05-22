@@ -148,9 +148,16 @@ export class TrainerService {
            SELECT
              c.id,
              c.status,
-             COALESCE(c.trainer_id, a.trainer_id) AS trainer_id
+             COALESCE(
+               c.trainer_id,
+               CASE
+                 WHEN ar.name = 'TRAINER' THEN a.id
+                 ELSE a.trainer_id
+               END
+             ) AS trainer_id
            FROM clients c
            LEFT JOIN users a ON a.id = c.agent_id
+           LEFT JOIN roles ar ON ar.id = a.role_id
          )
          SELECT
            u.full_name AS trainer_name,

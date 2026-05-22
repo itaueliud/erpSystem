@@ -1268,7 +1268,7 @@ function DailyReportForm({ themeHex }: { themeHex: string }) {
             className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 transition-all" />
         </div>
         <div className="flex gap-2">
-          <PortalButton color={themeHex} fullWidth disabled={submitting}>
+          <PortalButton type="submit" color={themeHex} fullWidth disabled={submitting}>
             {submitting ? 'Submitting…' : 'Submit Report'}
           </PortalButton>
           <PortalButton variant="secondary" onClick={() => { setAccomplishments(''); setChallenges(''); setTomorrowPlan(''); setHoursWorked(''); setMsg(''); }} disabled={submitting}>Clear</PortalButton>

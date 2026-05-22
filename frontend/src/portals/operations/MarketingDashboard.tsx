@@ -153,7 +153,7 @@ export default function MarketingDashboard({ user, onLogout }: { user: any; onLo
             <div className="mb-4"><label className={labelCls}>Recommendations</label><textarea rows={3} value={reportForm.recommendations} onChange={e => setReportForm(f => ({ ...f, recommendations: e.target.value }))} className={`${inputCls} resize-none`} /></div>
             <div className="mb-6"><label className={labelCls}>Hours worked</label><input type="number" min={0} max={24} value={reportForm.hours} onChange={e => setReportForm(f => ({ ...f, hours: e.target.value }))} className={inputCls} /></div>
             <div className="flex gap-2">
-              <PortalButton color={theme.hex} fullWidth>Submit Evening Report</PortalButton>
+              <PortalButton type="submit" color={theme.hex} fullWidth>Submit Evening Report</PortalButton>
               <PortalButton variant="secondary" onClick={() => setReportForm({ campaignResults: '', operationalUpdates: '', recommendations: '', hours: '' })}>Clear</PortalButton>
             </div>
           </form>

@@ -186,7 +186,7 @@ export default function ClientSuccessDashboard({ user, onLogout }: { user: any; 
             <div className="mb-4"><label className={labelCls}>Plan for tomorrow</label><textarea rows={3} value={reportForm.plan} onChange={e => setReportForm(f => ({ ...f, plan: e.target.value }))} className={`${inputCls} resize-none`} /></div>
             <div className="mb-6"><label className={labelCls}>Hours worked</label><input type="number" min={0} max={24} value={reportForm.hours} onChange={e => setReportForm(f => ({ ...f, hours: e.target.value }))} className={inputCls} /></div>
             <div className="flex gap-2">
-              <PortalButton color={theme.hex} fullWidth>Submit Report</PortalButton>
+              <PortalButton type="submit" color={theme.hex} fullWidth>Submit Report</PortalButton>
               <PortalButton variant="secondary" onClick={() => setReportForm({ accomplishments: '', challenges: '', plan: '', hours: '' })}>Clear</PortalButton>
             </div>
           </form>

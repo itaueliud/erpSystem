@@ -225,277 +225,130 @@ function SoftwareCategoryAccordion({ category, icon, items, selected, themeHex, 
   );
 }
 
+type DemoLinkEntry = { label: string; url: string };
+
+function DemoCategoryAccordion({ category, icon, items, themeHex, demoLinks, onUpdate }: {
+  category: string;
+  icon: string;
+  items: CatalogueItem[];
+  themeHex: string;
+  demoLinks: Record<string, DemoLinkEntry>;
+  onUpdate: (name: string, next: DemoLinkEntry) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="rounded-xl border-2 overflow-hidden transition-all border-gray-200">
+      <button type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 transition-colors">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">{icon}</span>
+          <span className="text-sm font-semibold text-gray-800">{category}</span>
+        </div>
+        <svg className={`w-4 h-4 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`}
+          fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && (
+        <div className="border-t border-gray-100 divide-y divide-gray-50">
+          {items.map(item => {
+            const entry = demoLinks[item.name] || { label: '', url: '' };
+            return (
+              <div key={item.name} className="w-full px-4 py-3">
+                <div className="mb-2">
+                  <p className="text-sm font-medium text-gray-800">{item.name}</p>
+                  <p className="text-xs text-gray-400">{item.desc}</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">Demo label (optional)</label>
+                    <input
+                      type="text"
+                      value={entry.label}
+                      onChange={e => onUpdate(item.name, { ...entry, label: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm"
+                      placeholder="e.g. School Website Demo"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">Demo link</label>
+                    <input
+                      type="url"
+                      value={entry.url}
+                      onChange={e => onUpdate(item.name, { ...entry, url: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm"
+                      placeholder="https://"
+                    />
+                  </div>
+                </div>
+                {entry.url && (
+                  <div className="mt-2 text-xs">
+                    <a href={entry.url} target="_blank" rel="noreferrer" className="font-semibold underline decoration-dotted" style={{ color: themeHex }}>
+                      {entry.label || 'Open demo'}
+                    </a>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function RetailDemoSuite({ themeHex }: { themeHex: string }) {
-  const [industry, setIndustry] = useState('A. Schools');
-  const [tab, setTab] = useState<RetailDemoKey>('ecommerce');
-  const [serviceAmounts, setServiceAmounts] = useState<Array<{ serviceName: string; currentAmount: number }>>([]);
-  const [pricingMsg, setPricingMsg] = useState('');
-  const [inventory, setInventory] = useState([
-    { sku: 'DEMO-POS-001', name: 'POS License Seats', stock: 12, reorderAt: 5 },
-    { sku: 'DEMO-INV-001', name: 'Inventory Setup Slots', stock: 9, reorderAt: 4 },
-    { sku: 'DEMO-LOY-001', name: 'Loyalty Campaign Bundles', stock: 15, reorderAt: 6 },
-  ]);
-  const [loyalty, setLoyalty] = useState([
-    { name: 'Nairobi Pilot Client', points: 820 },
-    { name: 'Kampala Rollout Client', points: 190 },
-    { name: 'Dar Program Client', points: 1230 },
-  ]);
-  const [cashReceived, setCashReceived] = useState('0');
-  const [lastSale, setLastSale] = useState<{ total: number; paid: number; change: number } | null>(null);
-  const [inventoryLog, setInventoryLog] = useState<string[]>([]);
-  const INDUSTRY_PRODUCTS: Record<string, Array<{ id: number; name: string; price: number }>> = {
-    'A. Schools': [
-      { id: 1, name: 'School Portal Setup', price: 95000 },
-      { id: 2, name: 'LMS Module Bundle', price: 70000 },
-      { id: 3, name: 'Fee Tracking Add-on', price: 60000 },
-    ],
-    'B. Churches': [
-      { id: 1, name: 'Member Records Module', price: 65000 },
-      { id: 2, name: 'Online Giving Integration', price: 55000 },
-      { id: 3, name: 'Events & Service Scheduler', price: 50000 },
-    ],
-    'C. Hotels & Lodges': [
-      { id: 1, name: 'Booking Engine Package', price: 120000 },
-      { id: 2, name: 'Room Management Suite', price: 85000 },
-      { id: 3, name: 'Hotel Billing + POS', price: 90000 },
-    ],
-    'D. Hospitals & Clinics': [
-      { id: 1, name: 'Patient Records Core', price: 140000 },
-      { id: 2, name: 'Appointment Workflow', price: 80000 },
-      { id: 3, name: 'Pharmacy Stock Module', price: 95000 },
-    ],
-    'E. Companies & Organizations': [
-      { id: 1, name: 'HR & Payroll Suite', price: 110000 },
-      { id: 2, name: 'CRM Rollout Package', price: 90000 },
-      { id: 3, name: 'Business Inventory Module', price: 75000 },
-    ],
-    'F. Real Estate & Property': [
-      { id: 1, name: 'Property Listing Platform', price: 130000 },
-      { id: 2, name: 'Tenant & Rent Manager', price: 95000 },
-      { id: 3, name: 'Agent Operations Portal', price: 70000 },
-    ],
-    'G. Shops & Businesses (Retail)': [
-      { id: 1, name: 'E-commerce Website Package', price: 120000 },
-      { id: 2, name: 'POS System Package', price: 65000 },
-      { id: 3, name: 'Inventory + Loyalty Bundle', price: 70000 },
-    ],
-  };
-  const products = INDUSTRY_PRODUCTS[industry] || INDUSTRY_PRODUCTS['G. Shops & Businesses (Retail)'];
-  const total = 0;
-  const checkout = () => {
-    const paid = Number(cashReceived || 0);
-    if (paid < total || total <= 0) return;
-    setLastSale({ total, paid, change: paid - total });
-  };
-  const recordInventoryAction = (sku: string, name: string, action: 'IN' | 'OUT') => {
-    setInventoryLog(prev => [`${new Date().toLocaleTimeString()} - ${action} - ${name} (${sku})`, ...prev].slice(0, 6));
-  };
-  const tierForPoints = (pts: number) => pts >= 1000 ? 'Gold' : pts >= 500 ? 'Silver' : 'Bronze';
-  const canRedeem = (pts: number, reward: number) => pts >= reward;
-  const INDUSTRY_OPTIONS = SOFTWARE_CATALOGUE
-    .filter(c => /^[A-G]\.\s/.test(c.category))
-    .map(c => c.category);
-  const MODULE_OPTIONS: Array<{ key: RetailDemoKey; label: string }> = [
-    { key: 'ecommerce', label: '1. E-commerce Website' },
-    { key: 'pos', label: '2. POS' },
-    { key: 'inventory', label: '3. Inventory System' },
-    { key: 'loyalty', label: '4. Customer Loyalty System' },
-  ];
-  const MODULE_PRICE_KEYS: Record<RetailDemoKey, string[]> = {
-    ecommerce: ['e-commerce website', 'ecommerce website', 'e-commerce', 'ecommerce'],
-    pos: ['pos system', 'point-of-sale', 'point of sale', 'pos'],
-    inventory: ['inventory system', 'inventory management', 'inventory'],
-    loyalty: ['customer loyalty system', 'loyalty rewards', 'loyalty system', 'loyalty'],
-  };
-  const MODULE_LINKS: Record<RetailDemoKey, string> = {
-    ecommerce: '#demo-ecommerce',
-    pos: '#demo-pos',
-    inventory: '#demo-inventory',
-    loyalty: '#demo-loyalty',
-  };
-  const resolvedModulePrices = useMemo(() => {
-    const byName = new Map<string, number>(
-      serviceAmounts.map(s => [String(s.serviceName || '').toLowerCase(), Number(s.currentAmount || 0)])
-    );
-    const resolve = (k: RetailDemoKey) => {
-      for (const alias of MODULE_PRICE_KEYS[k]) {
-        if (byName.has(alias)) return byName.get(alias) || 0;
-      }
-      return 0;
-    };
-    return {
-      ecommerce: resolve('ecommerce'),
-      pos: resolve('pos'),
-      inventory: resolve('inventory'),
-      loyalty: resolve('loyalty'),
-    };
-  }, [serviceAmounts]);
+  const storageKey = 'agents_demo_links_v1';
+  const defaultLinks = useMemo(() => {
+    const base: Record<string, DemoLinkEntry> = {};
+    SOFTWARE_CATALOGUE.forEach(cat => {
+      cat.items.forEach(item => {
+        base[item.name] = {
+          label: item.demoLabel || '',
+          url: item.demoHref || '',
+        };
+      });
+    });
+    return base;
+  }, []);
+  const [demoLinks, setDemoLinks] = useState<Record<string, DemoLinkEntry>>(defaultLinks);
 
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const { apiClient } = await import('../../shared/api/apiClient');
-        const r = await apiClient.get('/api/v1/service-amounts');
-        const rows = (r.data as any)?.data || [];
-        if (!mounted) return;
-        setServiceAmounts(Array.isArray(rows) ? rows : []);
-        setPricingMsg(Array.isArray(rows) && rows.length > 0 ? 'EA pricing loaded from Service Amounts.' : 'No EA pricing rows found, using demo fallback prices.');
-      } catch {
-        if (!mounted) return;
-        setPricingMsg('Could not load EA pricing in this session, using demo fallback prices.');
-      }
-    })();
-    return () => { mounted = false; };
-  }, []);
+    try {
+      const stored = localStorage.getItem(storageKey);
+      if (!stored) return;
+      const parsed = JSON.parse(stored) as Record<string, DemoLinkEntry>;
+      setDemoLinks(prev => ({ ...prev, ...parsed }));
+    } catch { /* ignore storage errors */ }
+  }, [storageKey]);
+
+  const updateLink = (name: string, next: DemoLinkEntry) => {
+    setDemoLinks(prev => {
+      const updated = { ...prev, [name]: next };
+      try { localStorage.setItem(storageKey, JSON.stringify(updated)); } catch { /* ignore */ }
+      return updated;
+    });
+  };
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-4 mb-6">
-      <p className="text-sm font-semibold text-gray-800 mb-1">Demo Suite For A-G (Fully Interactive)</p>
-      <p className="text-xs text-gray-500 mb-3">Step 1: choose industry A-G. Step 2: choose option 1-4. Pricing is managed by EA.</p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-        <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1">Industry (A-G)</label>
-          <select
-            value={industry}
-            onChange={e => setIndustry(e.target.value)}
-            className="w-full px-3 py-2 rounded-xl border border-gray-300 text-sm"
-          >
-            {INDUSTRY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1">Demo Option</label>
-          <select
-            value={tab}
-            onChange={e => setTab(e.target.value as RetailDemoKey)}
-            className="w-full px-3 py-2 rounded-xl border border-gray-300 text-sm"
-          >
-            {MODULE_OPTIONS.map(opt => <option key={opt.key} value={opt.key}>{opt.label}</option>)}
-          </select>
-        </div>
+      <p className="text-sm font-semibold text-gray-800 mb-1">Demo Suite (Editable Links)</p>
+      <p className="text-xs text-gray-500 mb-4">Expand each category, then add or update the demo link for each item.</p>
+      <div className="space-y-2">
+        {SOFTWARE_CATALOGUE.map(cat => (
+          <DemoCategoryAccordion
+            key={cat.category}
+            category={cat.category}
+            icon={cat.icon}
+            items={cat.items}
+            themeHex={themeHex}
+            demoLinks={demoLinks}
+            onUpdate={updateLink}
+          />
+        ))}
       </div>
-      <p className="text-xs text-gray-500 mb-3">
-        Selected: <span className="font-semibold text-gray-700">{industry}</span>
-        {' -> '}
-        <span className="font-semibold text-gray-700">{MODULE_OPTIONS.find(m => m.key === tab)?.label}</span>
-      </p>
-      <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 mb-3 text-sm">
-        <p className="text-xs font-semibold text-gray-600 mb-2">Demo Links</p>
-        <div className="flex flex-wrap gap-3">
-          {MODULE_OPTIONS.map(opt => (
-            <a
-              key={opt.key}
-              href={MODULE_LINKS[opt.key]}
-              onClick={() => setTab(opt.key)}
-              className="underline decoration-dotted font-medium"
-              style={{ color: tab === opt.key ? themeHex : '#374151' }}
-            >
-              {opt.label}
-            </a>
-          ))}
-        </div>
-        {industry === 'A. Schools' && (
-          <div className="mt-3 pt-3 border-t border-gray-200">
-            <p className="text-xs font-semibold text-gray-600 mb-2">School Demo Links (External)</p>
-            <div className="flex flex-wrap gap-3">
-              <a href="https://tst-school-website.netlify.app" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted font-medium" style={{ color: '#374151' }}>
-                School Website Demo
-              </a>
-              <a href="https://tst-school-portal-demo.vercel.app" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted font-medium" style={{ color: '#374151' }}>
-                School Portal Demo
-              </a>
-            </div>
-          </div>
-        )}
-      </div>
-      <div className="rounded-xl border border-gray-200 bg-white p-3 mb-3">
-        <p className="text-xs font-semibold text-gray-700 mb-1">Pricing Connection (EA Managed)</p>
-        <p className="text-xs text-gray-500 mb-2">{pricingMsg}</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-          <p>1. E-commerce Website: <span className="font-semibold">KSh {(resolvedModulePrices.ecommerce || 120000).toLocaleString()}</span></p>
-          <p>2. POS: <span className="font-semibold">KSh {(resolvedModulePrices.pos || 65000).toLocaleString()}</span></p>
-          <p>3. Inventory System: <span className="font-semibold">KSh {(resolvedModulePrices.inventory || 70000).toLocaleString()}</span></p>
-          <p>4. Customer Loyalty System: <span className="font-semibold">KSh {(resolvedModulePrices.loyalty || 60000).toLocaleString()}</span></p>
-        </div>
-      </div>
-
-      {tab === 'ecommerce' && (
-        <div id="demo-ecommerce" className="space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {products.map(p => (
-              <div key={p.id} className="border border-gray-200 rounded-xl p-3">
-                <p className="text-sm font-medium text-gray-800">{p.name}</p>
-                <p className="text-xs text-gray-500 mb-2">KSh {p.price.toLocaleString()}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      {tab === 'pos' && (
-        <div id="demo-pos" className="space-y-3">
-          <p className="text-xs text-gray-500">POS demo is view-only in this mode.</p>
-          <div className="rounded-xl border border-gray-200 p-3">
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Commitment Received (KSh)</label>
-            <input type="number" min={0} value={cashReceived} onChange={e => setCashReceived(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm" />
-            <button type="button" onClick={checkout} disabled={Number(cashReceived || 0) < total || total <= 0}
-              className="mt-2 px-3 py-2 rounded-lg text-white text-xs font-semibold disabled:opacity-40"
-              style={{ backgroundColor: themeHex }}>
-              Confirm Demo Payment
-            </button>
-            {lastSale && (
-              <p className="mt-2 text-xs text-green-700">
-                Payment recorded. Received: KSh {lastSale.paid.toLocaleString()} | Balance/Change: KSh {lastSale.change.toLocaleString()}
-              </p>
-            )}
-          </div>
-        </div>
-      )}
-      {tab === 'inventory' && (
-        <div id="demo-inventory" className="space-y-3">
-          {inventory.map((it, idx) => (
-            <div key={it.sku} className="rounded-xl border border-gray-200 p-2 text-sm flex items-center justify-between gap-2">
-              <span>{it.name} ({it.sku}) - Stock: {it.stock}</span>
-              <div className="flex items-center gap-2">
-                <button type="button" className="px-2 py-0.5 border rounded" onClick={() => {
-                  setInventory(prev => prev.map((x, i) => i === idx ? { ...x, stock: x.stock + 1 } : x));
-                  recordInventoryAction(it.sku, it.name, 'IN');
-                }}>+1</button>
-                <button type="button" className="px-2 py-0.5 border rounded" onClick={() => {
-                  setInventory(prev => prev.map((x, i) => i === idx ? { ...x, stock: Math.max(0, x.stock - 1) } : x));
-                  recordInventoryAction(it.sku, it.name, 'OUT');
-                }}>-1</button>
-                {it.stock <= it.reorderAt && <span className="text-red-600 text-xs font-semibold">Reorder</span>}
-              </div>
-            </div>
-          ))}
-          <div className="rounded-xl border border-gray-200 p-3">
-            <p className="text-xs font-semibold text-gray-600 mb-2">Recent Demo Capacity Movements</p>
-            {inventoryLog.length === 0 ? <p className="text-xs text-gray-500">No movements recorded.</p> : (
-              <ul className="text-xs text-gray-600 space-y-1">
-                {inventoryLog.map((entry, i) => <li key={`${entry}-${i}`}>{entry}</li>)}
-              </ul>
-            )}
-          </div>
-        </div>
-      )}
-      {tab === 'loyalty' && (
-        <div id="demo-loyalty" className="space-y-2">
-          {loyalty.map((c, idx) => (
-            <div key={c.name} className="rounded-xl border border-gray-200 p-2 text-sm flex items-center justify-between">
-              <div>
-                <span>{c.name}</span>
-                <p className="text-xs text-gray-500">{tierForPoints(c.points)} Tier - Client retention status</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="font-semibold">{c.points} pts</span>
-                <button type="button" className="px-2 py-0.5 border rounded" onClick={() => setLoyalty(prev => prev.map((x, i) => i === idx ? { ...x, points: x.points + 20 } : x))}>+20</button>
-                <button type="button" className="px-2 py-0.5 border rounded disabled:opacity-40" disabled={!canRedeem(c.points, 50)} onClick={() => setLoyalty(prev => prev.map((x, i) => i === idx ? { ...x, points: Math.max(0, x.points - 50) } : x))}>Redeem 50</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

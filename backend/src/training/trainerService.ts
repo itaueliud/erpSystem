@@ -144,14 +144,22 @@ export class TrainerService {
     let result;
     try {
       result = await db.query(
-        `SELECT
+        `WITH client_scope AS (
+           SELECT
+             c.id,
+             c.status,
+             COALESCE(c.trainer_id, a.trainer_id) AS trainer_id
+           FROM clients c
+           LEFT JOIN users a ON a.id = c.agent_id
+         )
+         SELECT
            u.full_name AS trainer_name,
-           COUNT(c.id) AS total_clients,
-           COUNT(c.id) FILTER (WHERE c.status = 'CLOSED_WON') AS closed_deals,
-           COUNT(c.id) FILTER (WHERE c.status NOT IN ('CLOSED_WON','NEW_LEAD')) AS active_leads
+           COUNT(cs.id) AS total_clients,
+           COUNT(cs.id) FILTER (WHERE cs.status = 'CLOSED_WON') AS closed_deals,
+           COUNT(cs.id) FILTER (WHERE cs.status NOT IN ('CLOSED_WON','NEW_LEAD')) AS active_leads
          FROM users u
          JOIN roles r ON r.id = u.role_id AND r.name = 'TRAINER'
-         LEFT JOIN clients c ON c.trainer_id = u.id
+         LEFT JOIN client_scope cs ON cs.trainer_id = u.id
          WHERE u.country = $1
          GROUP BY u.id, u.full_name
          ORDER BY closed_deals DESC`,

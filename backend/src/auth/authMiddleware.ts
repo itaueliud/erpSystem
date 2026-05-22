@@ -14,10 +14,12 @@ export async function authenticate(
   next: NextFunction
 ): Promise<void> {
   try {
-    // Allow token-based email verification link without an existing login session.
+    // Allow public verification/registration endpoints without an existing session.
     if (
-      req.method === 'GET' &&
-      (req.path === '/verify-email' || req.originalUrl.startsWith('/api/v1/users/verify-email'))
+      (req.method === 'GET' &&
+        (req.path === '/verify-email' || req.originalUrl.startsWith('/api/v1/users/verify-email')))
+      || (req.method === 'GET' && req.originalUrl.startsWith('/api/v1/users/invite/validate/'))
+      || (req.method === 'POST' && req.originalUrl === '/api/v1/users/register')
     ) {
       next();
       return;

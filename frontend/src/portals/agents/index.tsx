@@ -366,7 +366,6 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
   const [captureServices, setCaptureServices] = useState<string[]>([]);
   const [capturePlan, setCapturePlan] = useState<'FULL' | '50_50' | 'MILESTONE'>('FULL');
   const [captureMpesa, setCaptureMpesa] = useState('');
-  const [captureCommitment, setCaptureCommitment] = useState('500'); // editable commitment amount
   const [capturePropType, setCapturePropType] = useState<'STUDENT' | 'OTHERS'>('STUDENT');
   const [capturePropForm, setCapturePropForm] = useState({ propertyName: '', location: '', numberOfRooms: '', pricePerRoom: '', contactPerson: '', numberOfUnits: '', stayType: 'Monthly', description: '', websiteLink: '' });
   const [capturePlacementTier, setCapturePlacementTier] = useState<'TOP' | 'MEDIUM' | 'BASIC'>('BASIC');

@@ -407,6 +407,29 @@ function CaptureWizard({ themeHex, onClientSaved, onExitProductFlow }: { themeHe
     return () => window.removeEventListener('agents:continue-product', continueFromClientList as EventListener);
   }, []);
 
+  useEffect(() => {
+    const startNewClientFlow = () => {
+      setCaptureStep(1);
+      setCaptureProduct(null);
+      setSavedClientId(null);
+      setIsClientSaved(false);
+      setCaptureInfo({ clientName: '', organizationName: '', phone: '+254', email: '', location: '', notes: '' });
+      setClientIdNumber('');
+      setClientIdValidated(false);
+      setCaptureServices([]);
+      setCapturePlan('FULL');
+      setCaptureMpesa('');
+      setCapturePropType('STUDENT');
+      setCapturePropForm({ propertyName: '', location: '', numberOfRooms: '', pricePerRoom: '', contactPerson: '', numberOfUnits: '', stayType: 'Monthly', description: '', websiteLink: '' });
+      setCapturePlacementTier('BASIC');
+      setCaptureMsg('');
+      setCaptureSuccess(false);
+      setProductOnlyFlow(false);
+    };
+    window.addEventListener('agents:new-client', startNewClientFlow as EventListener);
+    return () => window.removeEventListener('agents:new-client', startNewClientFlow as EventListener);
+  }, []);
+
   const handleStep1Submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!clientIdValidated) {
@@ -473,7 +496,6 @@ function CaptureWizard({ themeHex, onClientSaved, onExitProductFlow }: { themeHe
     e.preventDefault();
     if (!captureInfo.clientName.trim()) { setCaptureMsg('Client name is required.'); setCaptureSuccess(false); return; }
     if (!captureInfo.phone.trim())      { setCaptureMsg('Phone number is required.'); setCaptureSuccess(false); return; }
-    if (captureInfo.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(captureInfo.email.trim())) { setCaptureMsg('Please enter a valid email address.'); setCaptureSuccess(false); return; }
     if (captureServices.length === 0)   { setCaptureMsg('Please select at least one system.'); setCaptureSuccess(false); return; }
 
     setCaptureSubmitting(true);
@@ -544,7 +566,6 @@ function CaptureWizard({ themeHex, onClientSaved, onExitProductFlow }: { themeHe
     // Pre-submit validation
     if (!captureInfo.clientName.trim()) { setCaptureMsg('Client name is required.'); setCaptureSuccess(false); return; }
     if (!captureInfo.phone.trim())      { setCaptureMsg('Phone number is required.'); setCaptureSuccess(false); return; }
-    if (captureInfo.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(captureInfo.email.trim())) { setCaptureMsg('Please enter a valid email address.'); setCaptureSuccess(false); return; }
     if (!capturePropForm.propertyName.trim()) { setCaptureMsg('Property name is required.'); setCaptureSuccess(false); return; }
     if (!captureMpesa.trim())           { setCaptureMsg('M-Pesa number is required.'); setCaptureSuccess(false); return; }
     setCaptureSubmitting(true);
@@ -1170,7 +1191,7 @@ function ClientsSection({ clients, themeHex, refetch, setSection }: {
             </svg>
           </div>
           <p className="text-gray-500 text-sm mb-4">No clients yet. Add your first client to get started.</p>
-          <PortalButton color={themeHex} onClick={() => setSection('capture')}>Add New Client</PortalButton>
+          <PortalButton color={themeHex} onClick={() => { setSection('capture'); window.dispatchEvent(new CustomEvent('agents:new-client')); }}>Add New Client</PortalButton>
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
@@ -1551,6 +1572,17 @@ export default function AgentsPortal() {
   }, [section]);
 
   const handleLogout = () => { logout(); navigate('/login', { state: { from: { pathname: '/gatewaypulse' } } }); };
+  const openCaptureForNewClient = () => {
+    setSection('capture');
+    window.dispatchEvent(new CustomEvent('agents:new-client'));
+  };
+  const handleSectionChange = (nextSection: string) => {
+    if (nextSection === 'capture') {
+      openCaptureForNewClient();
+      return;
+    }
+    setSection(nextSection);
+  };
   const portalUser = { name: user?.name || 'Agent', email: user?.email || 'agent@tst.com', role: 'Sales Agent' };
 
   return (
@@ -1559,7 +1591,7 @@ export default function AgentsPortal() {
       user={portalUser}
       navItems={nav}
       activeSection={section}
-      onSectionChange={setSection}
+      onSectionChange={handleSectionChange}
       onLogout={handleLogout}
       notifications={notifs}
       onNotificationRead={async (id) => { try { const { apiClient } = await import('../../shared/api/apiClient'); await apiClient.patch(`/api/v1/notifications/${id}/read`); refetch(['notifications']); } catch { /* silent */ } }}
@@ -1582,7 +1614,8 @@ export default function AgentsPortal() {
                         setSection((prev) => (HOME_SUB_NAV_IDS.has(prev) ? prev : tab.section));
                       } else {
                         setHomeMenuOpen(false);
-                        setSection(tab.section);
+                        if (tab.id === 'capture') openCaptureForNewClient();
+                        else setSection(tab.section);
                       }
                     }}
                     className={`rounded-xl px-1.5 py-2 text-[11px] font-semibold transition-all ${active ? 'bg-white shadow-md' : 'text-white/90 hover:bg-white/10'}`}

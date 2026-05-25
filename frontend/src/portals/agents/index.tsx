@@ -1157,78 +1157,158 @@ function ClientsSection({ clients, themeHex, refetch, setSection }: {
           <PortalButton color={themeHex} onClick={() => setSection('capture')}>Add New Client</PortalButton>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-100">
-              <tr>
-                {['Client', 'Phone', 'Location', 'Service', 'Status', 'Actions'].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {clients.map((c: any, i: number) => (
-                <tr key={c.id || i} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3">
-                    <p className="font-semibold text-gray-900">{c.name}</p>
-                    {c.email && <p className="text-xs text-gray-400">{c.email}</p>}
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">{c.phone || '—'}</td>
-                  <td className="px-4 py-3 text-gray-600">{c.location || c.country || '—'}</td>
-                  <td className="px-4 py-3 text-gray-600 max-w-[160px]">
-                    <span className="truncate block text-xs">{c.serviceDescription ? c.serviceDescription.slice(0, 40) + (c.serviceDescription.length > 40 ? '…' : '') : '—'}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
-                      style={{
-                        background: c.status === 'CLOSED_WON' ? '#f0fdf4' : c.status === 'NEW_LEAD' ? '#faf5ff' : '#eff6ff',
-                        color: c.status === 'CLOSED_WON' ? '#15803d' : c.status === 'NEW_LEAD' ? '#7c3aed' : '#1d4ed8',
-                      }}>
-                      <span className="w-1.5 h-1.5 rounded-full" style={{
-                        background: c.status === 'CLOSED_WON' ? '#16a34a' : c.status === 'NEW_LEAD' ? '#7c3aed' : '#2563eb'
-                      }} />
-                      {clientStatusLabel(c.status || 'NEW_LEAD')}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-2">
-                      <button onClick={() => { setSelected(c); setStatusMsg(''); }}
-                        className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all hover:opacity-90 active:scale-[0.97]"
-                        style={{ backgroundColor: themeHex }}>
-                        View
-                      </button>
-                      {c.status === 'NEW_LEAD' && (
-                        <button
-                          onClick={() => {
-                            setSection('capture');
-                            window.dispatchEvent(new CustomEvent('agents:continue-product', { detail: c }));
-                          }}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:bg-gray-50 active:scale-[0.97]"
-                          style={{ borderColor: themeHex, color: themeHex }}
-                        >
-                          Add Product
-                        </button>
-                      )}
-                      {canAgentAdvance(c.status) && (
-                        <button onClick={() => advanceStatus(c)} disabled={statusBusy}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:bg-gray-50 active:scale-[0.97] disabled:opacity-40"
-                          style={{ borderColor: themeHex, color: themeHex }}>
-                          {statusBusy ? '…' : '→ Convert'}
-                        </button>
-                      )}
-                      {(c.status === 'NEW_LEAD' || c.status === 'CONVERTED') && (
-                        <button onClick={() => { setPayClient(c); setMpesa(c.phone || ''); setPayMsg(''); setPayOk(false); }}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:bg-gray-50 active:scale-[0.97]"
-                          style={{ borderColor: '#16a34a', color: '#16a34a' }}>
-                          Pay
-                        </button>
-                      )}
-                    </div>
-                  </td>
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+          <div className="hidden md:block overflow-x-auto">
+            <table className="min-w-[920px] w-full text-sm">
+              <thead className="bg-gray-50 border-b border-gray-100">
+                <tr>
+                  {['Client', 'Phone', 'Location', 'Service', 'Status', 'Actions'].map(h => (
+                    <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {clients.map((c: any, i: number) => (
+                  <tr key={c.id || i} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3">
+                      <p className="font-semibold text-gray-900">{c.name}</p>
+                      {c.email && <p className="text-xs text-gray-400">{c.email}</p>}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">{c.phone || '—'}</td>
+                    <td className="px-4 py-3 text-gray-600">{c.location || c.country || '—'}</td>
+                    <td className="px-4 py-3 text-gray-600 max-w-[160px]">
+                      <span className="truncate block text-xs">{c.serviceDescription ? c.serviceDescription.slice(0, 40) + (c.serviceDescription.length > 40 ? '…' : '') : '—'}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
+                        style={{
+                          background: c.status === 'CLOSED_WON' ? '#f0fdf4' : c.status === 'NEW_LEAD' ? '#faf5ff' : '#eff6ff',
+                          color: c.status === 'CLOSED_WON' ? '#15803d' : c.status === 'NEW_LEAD' ? '#7c3aed' : '#1d4ed8',
+                        }}>
+                        <span className="w-1.5 h-1.5 rounded-full" style={{
+                          background: c.status === 'CLOSED_WON' ? '#16a34a' : c.status === 'NEW_LEAD' ? '#7c3aed' : '#2563eb'
+                        }} />
+                        {clientStatusLabel(c.status || 'NEW_LEAD')}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-2">
+                        <button onClick={() => { setSelected(c); setStatusMsg(''); }}
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all hover:opacity-90 active:scale-[0.97]"
+                          style={{ backgroundColor: themeHex }}>
+                          View
+                        </button>
+                        {c.status === 'NEW_LEAD' && (
+                          <button
+                            onClick={() => {
+                              setSection('capture');
+                              window.dispatchEvent(new CustomEvent('agents:continue-product', { detail: c }));
+                            }}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:bg-gray-50 active:scale-[0.97]"
+                            style={{ borderColor: themeHex, color: themeHex }}
+                          >
+                            Add Product
+                          </button>
+                        )}
+                        {canAgentAdvance(c.status) && (
+                          <button onClick={() => advanceStatus(c)} disabled={statusBusy}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:bg-gray-50 active:scale-[0.97] disabled:opacity-40"
+                            style={{ borderColor: themeHex, color: themeHex }}>
+                            {statusBusy ? '…' : '→ Convert'}
+                          </button>
+                        )}
+                        {(c.status === 'NEW_LEAD' || c.status === 'CONVERTED') && (
+                          <button onClick={() => { setPayClient(c); setMpesa(c.phone || ''); setPayMsg(''); setPayOk(false); }}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:bg-gray-50 active:scale-[0.97]"
+                            style={{ borderColor: '#16a34a', color: '#16a34a' }}>
+                            Pay
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="md:hidden divide-y divide-gray-100">
+            {clients.map((c: any, i: number) => (
+              <div key={c.id || i} className="p-4 space-y-3">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">{c.name}</p>
+                  {c.email && <p className="text-xs text-gray-500">{c.email}</p>}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-sm text-gray-700">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Phone</p>
+                    <p className="mt-1 break-words">{c.phone || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Location</p>
+                    <p className="mt-1 break-words">{c.location || c.country || '—'}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-sm text-gray-700">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Service</p>
+                    <p className="mt-1 break-words">{c.serviceDescription || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Status</p>
+                    <div className="mt-1">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold"
+                        style={{
+                          background: c.status === 'CLOSED_WON' ? '#f0fdf4' : c.status === 'NEW_LEAD' ? '#faf5ff' : '#eff6ff',
+                          color: c.status === 'CLOSED_WON' ? '#15803d' : c.status === 'NEW_LEAD' ? '#7c3aed' : '#1d4ed8',
+                        }}>
+                        <span className="w-1.5 h-1.5 rounded-full" style={{
+                          background: c.status === 'CLOSED_WON' ? '#16a34a' : c.status === 'NEW_LEAD' ? '#7c3aed' : '#2563eb'
+                        }} />
+                        {clientStatusLabel(c.status || 'NEW_LEAD')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <button onClick={() => { setSelected(c); setStatusMsg(''); }}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all hover:opacity-90 active:scale-[0.97]"
+                    style={{ backgroundColor: themeHex }}>
+                    View
+                  </button>
+                  {c.status === 'NEW_LEAD' && (
+                    <button
+                      onClick={() => {
+                        setSection('capture');
+                        window.dispatchEvent(new CustomEvent('agents:continue-product', { detail: c }));
+                      }}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:bg-gray-50 active:scale-[0.97]"
+                      style={{ borderColor: themeHex, color: themeHex }}
+                    >
+                      Add Product
+                    </button>
+                  )}
+                  {canAgentAdvance(c.status) && (
+                    <button onClick={() => advanceStatus(c)} disabled={statusBusy}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:bg-gray-50 active:scale-[0.97] disabled:opacity-40"
+                      style={{ borderColor: themeHex, color: themeHex }}>
+                      {statusBusy ? '…' : '→ Convert'}
+                    </button>
+                  )}
+                  {(c.status === 'NEW_LEAD' || c.status === 'CONVERTED') && (
+                    <button onClick={() => { setPayClient(c); setMpesa(c.phone || ''); setPayMsg(''); setPayOk(false); }}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:bg-gray-50 active:scale-[0.97]"
+                      style={{ borderColor: '#16a34a', color: '#16a34a' }}>
+                      Pay
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

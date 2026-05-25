@@ -1222,35 +1222,58 @@ function MpesaMessagesSection({ messages, themeHex, onRefetch }: {
       {/* Doc Tab 5: sent messages history table */}
       <div>
         <h3 className="font-semibold text-slate-800 mb-3">My Sent MPesa Messages</h3>
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Message</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase w-28">Status</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase w-36">Date Sent</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {messages.length === 0 ? (
+        <div className="bg-white rounded-xl border border-slate-200">
+          <div className="hidden md:block overflow-x-auto">
+            <table className="min-w-[520px] w-full text-sm">
+              <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
-                  <td colSpan={3} className="text-center py-10 text-slate-400 text-sm">
-                    No messages sent yet.
-                  </td>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Message</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase w-28">Status</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase w-36">Date Sent</th>
                 </tr>
-              ) : messages.map((m, i) => (
-                <tr key={m.id || i} className="hover:bg-slate-50">
-                  <td className="px-4 py-3 text-slate-700 text-xs whitespace-pre-wrap break-words max-w-xs">
-                    {m.message}
-                  </td>
-                  <td className="px-4 py-3"><StatusBadge status={m.status || 'PENDING'} /></td>
-                  <td className="px-4 py-3 text-slate-500 whitespace-nowrap text-xs">
-                    {m.createdAt ? new Date(m.createdAt).toLocaleString() : '—'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {messages.length === 0 ? (
+                  <tr>
+                    <td colSpan={3} className="text-center py-10 text-slate-400 text-sm">
+                      No messages sent yet.
+                    </td>
+                  </tr>
+                ) : messages.map((m, i) => (
+                  <tr key={m.id || i} className="hover:bg-slate-50">
+                    <td className="px-4 py-3 text-slate-700 text-xs whitespace-pre-wrap break-words max-w-xs">
+                      {m.message}
+                    </td>
+                    <td className="px-4 py-3"><StatusBadge status={m.status || 'PENDING'} /></td>
+                    <td className="px-4 py-3 text-slate-500 whitespace-nowrap text-xs">
+                      {m.createdAt ? new Date(m.createdAt).toLocaleString() : '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="md:hidden divide-y divide-slate-100">
+            {messages.length === 0 ? (
+              <div className="py-10 text-center text-slate-400 text-sm">No messages sent yet.</div>
+            ) : messages.map((m, i) => (
+              <div key={m.id || i} className="p-4 space-y-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">Message</p>
+                  <p className="text-sm text-slate-700 whitespace-pre-wrap break-words">{m.message}</p>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Status</span>
+                  <span><StatusBadge status={m.status || 'PENDING'} /></span>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Date Sent</span>
+                  <span className="text-sm text-slate-500">{m.createdAt ? new Date(m.createdAt).toLocaleString() : '—'}</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

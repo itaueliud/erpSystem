@@ -373,6 +373,7 @@ function CaptureWizard({ themeHex, onClientSaved, onExitProductFlow }: { themeHe
   const [captureMsg, setCaptureMsg] = useState('');
   const [captureSuccess, setCaptureSuccess] = useState(false);
   const [productOnlyFlow, setProductOnlyFlow] = useState(false);
+  const productSuccessTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const normalizeClientIdForSubmit = (value: string) => {
     const normalized = String(value || '').trim().toUpperCase();
     if (normalized === 'NA' || normalized === 'N/A') return 'N/A';
@@ -405,6 +406,12 @@ function CaptureWizard({ themeHex, onClientSaved, onExitProductFlow }: { themeHe
     };
     window.addEventListener('agents:continue-product', continueFromClientList as EventListener);
     return () => window.removeEventListener('agents:continue-product', continueFromClientList as EventListener);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (productSuccessTimerRef.current) clearTimeout(productSuccessTimerRef.current);
+    };
   }, []);
 
   useEffect(() => {
@@ -552,6 +559,11 @@ function CaptureWizard({ themeHex, onClientSaved, onExitProductFlow }: { themeHe
       setCaptureSuccess(true);
       setCaptureMsg('✓ Product added successfully. Use the Pay action to initiate commitment payment.');
       onClientSaved?.();
+      if (productSuccessTimerRef.current) clearTimeout(productSuccessTimerRef.current);
+      productSuccessTimerRef.current = setTimeout(() => {
+        setCaptureMsg('');
+        window.dispatchEvent(new CustomEvent('agents:open-pay-for-client', { detail: { clientId } }));
+      }, 4000);
     } catch (err: any) {
       setCaptureSuccess(false);
       const errMsg = err?.response?.data?.error || err?.message || 'Failed to register client';
@@ -1101,8 +1113,10 @@ function DailyReportForm({ themeHex }: { themeHex: string }) {
 }
 
 // ─── Clients Section ──────────────────────────────────────────────────────────
-function ClientsSection({ clients, themeHex, refetch, setSection }: {
+function ClientsSection({ clients, themeHex, refetch, setSection, pendingPayClientId, onPendingPayConsumed }: {
   clients: any[]; themeHex: string; refetch: () => void; setSection: (s: string) => void;
+  pendingPayClientId?: string | null;
+  onPendingPayConsumed?: () => void;
 }) {
   const [selected, setSelected] = React.useState<any | null>(null);
   const [payClient, setPayClient] = React.useState<any | null>(null);
@@ -1113,6 +1127,48 @@ function ClientsSection({ clients, themeHex, refetch, setSection }: {
   const [payBusy, setPayBusy] = React.useState(false);
   const [statusBusy, setStatusBusy] = React.useState(false);
   const [statusMsg, setStatusMsg] = React.useState('');
+  const [clientSearch, setClientSearch] = React.useState('');
+
+  const filteredClients = React.useMemo(() => {
+    const q = clientSearch.trim().toLowerCase();
+    if (!q) return clients;
+    const qDigits = q.replace(/\D/g, '');
+    return clients.filter((c: any) => {
+      const name = String(c?.name || '').toLowerCase();
+      const email = String(c?.email || '').toLowerCase();
+      const phone = String(c?.phone || '');
+      const phoneDigits = phone.replace(/\D/g, '');
+      const phoneMatch = qDigits ? phoneDigits.includes(qDigits) : phone.toLowerCase().includes(q);
+      return name.includes(q) || email.includes(q) || phoneMatch;
+    });
+  }, [clients, clientSearch]);
+
+  useEffect(() => {
+    const openPayForClient = (event: Event) => {
+      const detail = (event as CustomEvent).detail || {};
+      const targetId = detail.clientId;
+      if (!targetId) return;
+      const targetClient = clients.find((c: any) => c.id === targetId);
+      if (!targetClient) return;
+      setPayClient(targetClient);
+      setMpesa(targetClient.phone || '');
+      setPayMsg('');
+      setPayOk(false);
+    };
+    window.addEventListener('agents:open-pay-for-client', openPayForClient as EventListener);
+    return () => window.removeEventListener('agents:open-pay-for-client', openPayForClient as EventListener);
+  }, [clients]);
+
+  useEffect(() => {
+    if (!pendingPayClientId) return;
+    const targetClient = clients.find((c: any) => c.id === pendingPayClientId);
+    if (!targetClient) return;
+    setPayClient(targetClient);
+    setMpesa(targetClient.phone || '');
+    setPayMsg('');
+    setPayOk(false);
+    onPendingPayConsumed?.();
+  }, [pendingPayClientId, clients, onPendingPayConsumed]);
 
   // Agent can only advance NEW_LEAD → CONVERTED (selecting product/service)
   // LEAD_ACTIVATED/LEAD_QUALIFIED happen automatically via payment webhook
@@ -1195,6 +1251,15 @@ function ClientsSection({ clients, themeHex, refetch, setSection }: {
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+          <div className="p-4 border-b border-gray-100">
+            <input
+              type="text"
+              value={clientSearch}
+              onChange={e => setClientSearch(e.target.value)}
+              placeholder="Search by client name, email, or phone number"
+              className={`${inputCls} bg-white`}
+            />
+          </div>
           <div className="hidden md:block overflow-x-auto">
             <table className="min-w-[920px] w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-100">
@@ -1205,7 +1270,7 @@ function ClientsSection({ clients, themeHex, refetch, setSection }: {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {clients.map((c: any, i: number) => (
+                {filteredClients.map((c: any, i: number) => (
                   <tr key={c.id || i} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3">
                       <p className="font-semibold text-gray-900">{c.name}</p>
@@ -1270,7 +1335,7 @@ function ClientsSection({ clients, themeHex, refetch, setSection }: {
           </div>
 
           <div className="md:hidden divide-y divide-gray-100">
-            {clients.map((c: any, i: number) => (
+            {filteredClients.map((c: any, i: number) => (
               <div key={c.id || i} className="p-4 space-y-3">
                 <div>
                   <p className="text-sm font-semibold text-gray-900">{c.name}</p>
@@ -1514,6 +1579,7 @@ const HOME_SUB_NAV_IDS = new Set(HOME_SECTIONS);
 // ─── Main Portal ──────────────────────────────────────────────────────────────
 export default function AgentsPortal() {
   const [section, setSection] = useState('overview');
+  const [pendingPayClientId, setPendingPayClientId] = useState<string | null>(null);
   const [homeMenuOpen, setHomeMenuOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -1570,6 +1636,17 @@ export default function AgentsPortal() {
   useEffect(() => {
     if (!HOME_SUB_NAV_IDS.has(section)) setHomeMenuOpen(false);
   }, [section]);
+
+  useEffect(() => {
+    const goToClientsForPay = (event: Event) => {
+      const detail = (event as CustomEvent).detail || {};
+      setPendingPayClientId(detail.clientId || null);
+      setSection('clients');
+      refetch(['clients']);
+    };
+    window.addEventListener('agents:open-pay-for-client', goToClientsForPay as EventListener);
+    return () => window.removeEventListener('agents:open-pay-for-client', goToClientsForPay as EventListener);
+  }, [refetch]);
 
   const handleLogout = () => { logout(); navigate('/login', { state: { from: { pathname: '/gatewaypulse' } } }); };
   const openCaptureForNewClient = () => {
@@ -1738,6 +1815,8 @@ export default function AgentsPortal() {
           themeHex={theme.hex}
           refetch={() => refetch(['clients'])}
           setSection={setSection}
+          pendingPayClientId={pendingPayClientId}
+          onPendingPayConsumed={() => setPendingPayClientId(null)}
         />
       )}
 

@@ -474,13 +474,11 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
     if (!captureInfo.phone.trim())      { setCaptureMsg('Phone number is required.'); setCaptureSuccess(false); return; }
     if (captureInfo.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(captureInfo.email.trim())) { setCaptureMsg('Please enter a valid email address.'); setCaptureSuccess(false); return; }
     if (captureServices.length === 0)   { setCaptureMsg('Please select at least one system.'); setCaptureSuccess(false); return; }
-    if (!captureMpesa.trim())           { setCaptureMsg('M-Pesa number is required.'); setCaptureSuccess(false); return; }
 
     setCaptureSubmitting(true);
     setCaptureMsg('');
     try {
       const { apiClient } = await import('../../shared/api/apiClient');
-      const commitmentAmount = parseFloat(captureCommitment) || PLAN_AMOUNTS[capturePlan];
       // Get agent's country from their profile (spec §7: country inherited from trainer's assignment)
       let agentCountry = 'Kenya'; // default fallback
       try {
@@ -524,31 +522,12 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
           notes: captureInfo.notes.trim(),
           industryCategory: derivedIndustry,
           serviceDescription: captureServices.join(', '),
-          paymentPlan: capturePlan,
-          mpesaNumber: captureMpesa.trim(),
-          commitmentAmount,
         });
         clientId = (clientRes.data as any).id;
       }
 
-      // Step 2 — Attempt M-Pesa STK Push (non-blocking — client is already saved)
-      let paymentMsg = '';
-      try {
-        await apiClient.post('/api/v1/payments/mpesa', {
-          phoneNumber: captureMpesa.trim(),
-          amount: commitmentAmount,
-          currency: 'KES',
-          reference: `CLIENT-${Date.now()}`,
-          description: `Commitment payment - ${capturePlan}`,
-          clientId: clientId!,
-        });
-        paymentMsg = `M-Pesa STK Push sent to ${captureMpesa}. Ask client to approve on their phone.`;
-      } catch {
-        paymentMsg = `Client saved. M-Pesa payment pending — initiate manually when ready.`;
-      }
-
       setCaptureSuccess(true);
-      setCaptureMsg(`✓ Client registered successfully! ${paymentMsg}`);
+      setCaptureMsg('✓ Product added successfully. Use the Pay action to initiate commitment payment.');
       onClientSaved?.();
     } catch (err: any) {
       setCaptureSuccess(false);
@@ -821,56 +800,10 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
             )}
           </div>
 
-          {/* Payment plan */}
-          <div className="mb-5">
-            <label className={labelCls}>Payment Plan *</label>
-            <div className="space-y-2">
-              {(Object.keys(PLAN_LABELS) as Array<'FULL' | '50_50' | 'MILESTONE'>).map(plan => (
-                <label key={plan} className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="plan" value={plan} checked={capturePlan === plan}
-                    onChange={() => {
-                      setCapturePlan(plan);
-                      setCaptureCommitment(String(PLAN_AMOUNTS[plan]));
-                    }} />
-                  <span className="text-sm text-gray-700">{PLAN_LABELS[plan]}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Editable commitment amount */}
-          <div className="mb-5 p-4 rounded-xl bg-amber-50 border border-amber-200">
-            <label className={labelCls}>Commitment Amount (KSh) *</label>
-            <p className="text-xs text-amber-700 mb-2">
-              This is the amount the client pays now as commitment before the contract is generated.
-              You can adjust it based on what was agreed with the client.
-            </p>
-            <input
-              type="number" min="1" required
-              value={captureCommitment}
-              onChange={e => setCaptureCommitment(e.target.value)}
-              className={`${inputCls} font-semibold text-base`}
-              placeholder="e.g. 5000"
-            />
-            {captureCommitment && parseFloat(captureCommitment) > 0 && (
-              <p className="text-xs text-amber-700 mt-1 font-medium">
-                STK Push will be sent for KSh {parseFloat(captureCommitment).toLocaleString()}
-              </p>
-            )}
-          </div>
-
-          <div className="mb-6">
-            <SandboxBanner />
-            <label className={labelCls}>Client M-Pesa Number *</label>
-            <input type="tel" required value={captureMpesa}
-              onChange={e => setCaptureMpesa(e.target.value)}
-              className={inputCls} placeholder="e.g. 0712345678" />
-          </div>
-
           <div className="pt-3 mt-2">
             <PortalButton color={themeHex} type="submit" fullWidth
               disabled={captureSubmitting || captureServices.length === 0}>
-              {captureSubmitting ? 'Registering…' : `Register Client & Send KSh ${parseFloat(captureCommitment || '0').toLocaleString()} STK Push`}
+              {captureSubmitting ? 'Adding Product…' : 'Add Product'}
             </PortalButton>
           </div>
         </form>

@@ -354,7 +354,7 @@ export function RetailDemoSuite({ themeHex }: { themeHex: string }) {
 }
 
 // ─── Capture Wizard ───────────────────────────────────────────────────────────
-function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClientSaved?: () => void }) {
+function CaptureWizard({ themeHex, onClientSaved, onExitProductFlow }: { themeHex: string; onClientSaved?: () => void; onExitProductFlow?: () => void }) {
   const [captureStep, setCaptureStep] = useState<1 | 2 | '3a' | '3b'>(1);
   const [captureProduct, setCaptureProduct] = useState<'SYSTEM' | 'PLOTCONNECT' | null>(null);
   const [savedClientId, setSavedClientId] = useState<string | null>(null);
@@ -372,6 +372,7 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
   const [captureSubmitting, setCaptureSubmitting] = useState(false);
   const [captureMsg, setCaptureMsg] = useState('');
   const [captureSuccess, setCaptureSuccess] = useState(false);
+  const [productOnlyFlow, setProductOnlyFlow] = useState(false);
   const normalizeClientIdForSubmit = (value: string) => {
     const normalized = String(value || '').trim().toUpperCase();
     if (normalized === 'NA' || normalized === 'N/A') return 'N/A';
@@ -397,6 +398,7 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
       });
       setSavedClientId(client.id || null);
       setIsClientSaved(true);
+      setProductOnlyFlow(true);
       setCaptureMsg('Client loaded. Continue with product selection.');
       setCaptureSuccess(true);
       setCaptureStep(2);
@@ -442,7 +444,7 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
         clientName: captureInfo.clientName.trim(),
         organizationName: captureInfo.organizationName.trim(),
         phoneNumber: captureInfo.phone.trim(),
-        email: captureInfo.email.trim(),
+        email: captureInfo.email.trim() || undefined,
         location: captureInfo.location.trim(),
         notes: captureInfo.notes.trim(),
       });
@@ -515,7 +517,7 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
           name: captureInfo.clientName.trim(),
           organizationName: captureInfo.organizationName.trim(),
           phone: captureInfo.phone.trim(),
-          email: captureInfo.email.trim(),
+          email: captureInfo.email.trim() || undefined,
           country: agentCountry,
           location: captureInfo.location.trim(),
           notes: captureInfo.notes.trim(),
@@ -559,7 +561,7 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
         name: captureInfo.clientName.trim(),
         organizationName: captureInfo.organizationName.trim(),
         phone: captureInfo.phone.trim(),
-        email: captureInfo.email.trim(),
+        email: captureInfo.email.trim() || undefined,
         country: agentCountry,
         notes: captureInfo.notes.trim(),
         product: 'TST_PLOTCONNECT',
@@ -605,7 +607,8 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
 
   return (
     <div className="max-w-2xl bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-10">
-      <StepIndicator step={captureStep} />
+      {!productOnlyFlow && <StepIndicator step={captureStep} />}
+      {productOnlyFlow && <p className="text-sm font-semibold text-gray-700 mb-4">Product</p>}
       {captureMsg && (
         <div className={`p-3 rounded-xl text-sm mb-4 ${captureSuccess ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>          {captureMsg}
         </div>
@@ -729,6 +732,7 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
                 setCaptureSuccess(false);
                 setSavedClientId(null);
                 setIsClientSaved(false);
+                setProductOnlyFlow(false);
               }}>
                 Add Another Client
               </PortalButton>
@@ -740,7 +744,19 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
       {/* Step 2 — Product Selection */}
       {captureStep === 2 && (
         <div>
-          <button onClick={() => setCaptureStep(1)} className="text-sm mb-4 flex items-center gap-1 font-medium" style={{ color: themeHex }}>← Back</button>
+          <button
+            onClick={() => {
+              if (productOnlyFlow) {
+                onExitProductFlow?.();
+                return;
+              }
+              setCaptureStep(1);
+            }}
+            className="text-sm mb-4 flex items-center gap-1 font-medium"
+            style={{ color: themeHex }}
+          >
+            ← Back
+          </button>
           <p className="text-sm font-medium text-gray-700 mb-4">Select a product for this client:</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
@@ -760,7 +776,7 @@ function CaptureWizard({ themeHex, onClientSaved }: { themeHex: string; onClient
       {/* Step 3a — SYSTEM */}
       {captureStep === '3a' && (
         <form onSubmit={handleSystemSubmit}>
-          <button type="button" onClick={() => setCaptureStep(1)} className="text-sm mb-4 flex items-center gap-1 font-medium" style={{ color: themeHex }}>← Back</button>
+          <button type="button" onClick={() => setCaptureStep(2)} className="text-sm mb-4 flex items-center gap-1 font-medium" style={{ color: themeHex }}>← Back</button>
           {/* Categorised software picker */}
           <div className="mb-5">
             <label className={labelCls}>Select Software Systems *</label>
@@ -1676,7 +1692,11 @@ export default function AgentsPortal() {
       {/* Always mounted — hidden when not active — preserves wizard state across nav */}
       <div style={{ display: section === 'capture' ? 'block' : 'none' }} className="pb-20">
         <SectionHeader title="Capture New Client" subtitle="Enter client ID first, then save client details" />
-        <CaptureWizard themeHex={theme.hex} onClientSaved={() => refetch(['clients'])} />
+        <CaptureWizard
+          themeHex={theme.hex}
+          onClientSaved={() => refetch(['clients'])}
+          onExitProductFlow={() => setSection('home')}
+        />
       </div>
 
       {section === 'clients' && (

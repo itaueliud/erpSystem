@@ -1695,7 +1695,7 @@ export default function AgentsPortal() {
         <CaptureWizard
           themeHex={theme.hex}
           onClientSaved={() => refetch(['clients'])}
-          onExitProductFlow={() => setSection('home')}
+          onExitProductFlow={() => setSection('clients')}
         />
       </div>
 

@@ -1133,12 +1133,25 @@ function ClientsSection({ clients, themeHex, refetch, setSection, pendingPayClie
     const q = clientSearch.trim().toLowerCase();
     if (!q) return clients;
     const qDigits = q.replace(/\D/g, '');
+    const phoneVariants = (digits: string) => {
+      const clean = digits.replace(/\D/g, '');
+      if (!clean) return [];
+      const variants = new Set<string>([clean]);
+      if (clean.startsWith('0') && clean.length > 1) variants.add(`254${clean.slice(1)}`);
+      if (clean.startsWith('254') && clean.length > 3) variants.add(`0${clean.slice(3)}`);
+      return Array.from(variants);
+    };
+    const qPhoneVariants = phoneVariants(qDigits);
+
     return clients.filter((c: any) => {
       const name = String(c?.name || '').toLowerCase();
       const email = String(c?.email || '').toLowerCase();
       const phone = String(c?.phone || '');
       const phoneDigits = phone.replace(/\D/g, '');
-      const phoneMatch = qDigits ? phoneDigits.includes(qDigits) : phone.toLowerCase().includes(q);
+      const clientPhoneVariants = phoneVariants(phoneDigits);
+      const phoneMatch = qDigits
+        ? qPhoneVariants.some((needle) => clientPhoneVariants.some((candidate) => candidate.includes(needle)))
+        : phone.toLowerCase().includes(q);
       return name.includes(q) || email.includes(q) || phoneMatch;
     });
   }, [clients, clientSearch]);

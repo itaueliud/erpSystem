@@ -36,6 +36,7 @@ export interface Client {
   serviceDescription: string;
   status: ClientStatus;
   agentId: string;
+  organizationName?: string;
   estimatedValue?: number;
   priority?: Priority;
   expectedStartDate?: Date;
@@ -152,7 +153,7 @@ export class ClientService {
             service_description, status, agent_id, payment_plan)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
          RETURNING id, reference_number, name, email, phone, country,
-                   industry_category, service_description, status, agent_id,
+              industry_category, service_description, status, agent_id, organization_name,
                    estimated_value, priority, expected_start_date, created_at, updated_at`,
         [
           referenceNumber, input.name, input.email, input.phone, input.country,
@@ -241,7 +242,7 @@ export class ClientService {
     try {
       const result = await db.query(
         `SELECT id, reference_number, name, email, phone, country,
-                industry_category, service_description, status, agent_id,
+                industry_category, service_description, status, agent_id, organization_name,
                 estimated_value, priority, expected_start_date, created_at, updated_at
          FROM clients WHERE id = $1`,
         [clientId]
@@ -279,7 +280,7 @@ export class ClientService {
 
     const result = await db.query(
       `SELECT c.id, c.reference_number, c.name, c.email, c.phone, c.country,
-              c.industry_category, c.service_description, c.status, c.agent_id,
+              c.industry_category, c.service_description, c.status, c.agent_id, c.organization_name,
               c.estimated_value, c.priority, c.expected_start_date, c.created_at, c.updated_at,
               u.full_name AS agent_name
        FROM clients c
@@ -332,7 +333,7 @@ export class ClientService {
 
       const result = await db.query(
         `SELECT id, reference_number, name, email, phone, country,
-                industry_category, service_description, status, agent_id,
+                industry_category, service_description, status, agent_id, organization_name,
                 estimated_value, priority, expected_start_date, created_at, updated_at
          FROM clients ${where}
          ORDER BY created_at DESC
@@ -527,6 +528,7 @@ export class ClientService {
       serviceDescription: row.service_description,
       status: row.status as ClientStatus,
       agentId: row.agent_id,
+      organizationName: row.organization_name,
       estimatedValue: row.estimated_value ? parseFloat(row.estimated_value) : undefined,
       priority: row.priority as Priority,
       expectedStartDate: row.expected_start_date,

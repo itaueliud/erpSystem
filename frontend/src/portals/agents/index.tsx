@@ -1277,7 +1277,7 @@ function ClientsSection({ clients, themeHex, refetch, setSection, pendingPayClie
             <table className="min-w-[920px] w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-100">
                 <tr>
-                  {['Client', 'Phone', 'Location', 'Service', 'Status', 'Actions'].map(h => (
+                  {['Client', 'Phone', 'Organization', 'Location', 'Service', 'Status', 'Actions'].map(h => (
                     <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
                   ))}
                 </tr>
@@ -1290,6 +1290,7 @@ function ClientsSection({ clients, themeHex, refetch, setSection, pendingPayClie
                       {c.email && <p className="text-xs text-gray-400">{c.email}</p>}
                     </td>
                     <td className="px-4 py-3 text-gray-600">{c.phone || '—'}</td>
+                    <td className="px-4 py-3 text-gray-600">{c.organizationName || '—'}</td>
                     <td className="px-4 py-3 text-gray-600">{c.location || c.country || '—'}</td>
                     <td className="px-4 py-3 text-gray-600 max-w-[160px]">
                       <span className="truncate block text-xs">{c.serviceDescription ? c.serviceDescription.slice(0, 40) + (c.serviceDescription.length > 40 ? '…' : '') : '—'}</span>
@@ -1359,6 +1360,10 @@ function ClientsSection({ clients, themeHex, refetch, setSection, pendingPayClie
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Phone</p>
                     <p className="mt-1 break-words">{c.phone || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Organization</p>
+                    <p className="mt-1 break-words">{c.organizationName || '—'}</p>
                   </div>
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Location</p>

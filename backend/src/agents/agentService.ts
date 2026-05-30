@@ -337,9 +337,23 @@ export class AgentService {
     values.push(limit, offset);
 
     const rows = await db.query(
-      `SELECT id, reference_number, client_id_number, name, organization_name, phone, email, location,
-              industry_category, selected_services, service_description, status,
-              payment_plan, commitment_amount, discount_applied, created_at, updated_at
+      `SELECT id,
+              reference_number AS "referenceNumber",
+              client_id_number AS "clientIdNumber",
+              name,
+              organization_name AS "organizationName",
+              phone,
+              email,
+              location,
+              industry_category AS "industryCategory",
+              selected_services AS "selectedServices",
+              service_description AS "serviceDescription",
+              status,
+              payment_plan AS "paymentPlan",
+              commitment_amount AS "commitmentAmount",
+              discount_applied AS "discountApplied",
+              created_at AS "createdAt",
+              updated_at AS "updatedAt"
        FROM clients ${where}
        ORDER BY created_at DESC LIMIT $${p} OFFSET $${p + 1}`,
       values

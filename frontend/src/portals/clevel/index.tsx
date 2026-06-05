@@ -14,6 +14,20 @@ const cardStyle: React.CSSProperties = { background: 'rgba(255,255,255,0.75)', b
 const inputCls = 'w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 transition-all';
 const labelCls = 'block text-sm font-medium text-gray-700 mb-1.5';
 
+const normalizeReportRow = (row: any) => ({
+  ...row,
+  userName: row?.userName ?? row?.user_name ?? row?.full_name ?? row?.user ?? row?.submitted_by ?? row?.submittedBy,
+  userEmail: row?.userEmail ?? row?.user_email ?? row?.email,
+  userRole: row?.userRole ?? row?.user_role ?? row?.role,
+  userDepartment: row?.userDepartment ?? row?.user_department ?? row?.department,
+  reportDate: row?.reportDate ?? row?.report_date,
+  submittedAt: row?.submittedAt ?? row?.submitted_at,
+  hoursWorked: row?.hoursWorked ?? row?.hours_worked,
+  accomplishments: row?.accomplishments ?? row?.summary ?? row?.report_summary,
+  challenges: row?.challenges ?? row?.issues,
+  tomorrowPlan: row?.tomorrowPlan ?? row?.tomorrow_plan ?? row?.plan,
+});
+
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const I = {
   overview: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>,
@@ -1370,7 +1384,7 @@ export default function CLevelPortal() {
     { key: 'teams',         endpoint: '/api/v1/organization/teams',        fallback: [], transform: r => Array.isArray(r) ? r : (r?.data ?? r?.teams ?? []) },
     { key: 'achievements',  endpoint: '/api/v1/achievements',              fallback: [], transform: r => Array.isArray(r) ? r : (r?.data ?? r?.achievements ?? []) },
     { key: 'clients',       endpoint: '/api/v1/clients/all',               fallback: [], transform: r => Array.isArray(r) ? r : (r?.data ?? r?.clients ?? []) },
-    { key: 'teamReports',   endpoint: '/api/v1/daily-reports/team',        fallback: [], transform: r => Array.isArray(r) ? r : (r?.data ?? r?.reports ?? []) },
+    { key: 'teamReports',   endpoint: '/api/v1/daily-reports/team',        fallback: [], transform: r => (Array.isArray(r) ? r : (r?.data ?? r?.reports ?? [])).map(normalizeReportRow) },
     { key: 'budgetRequests',endpoint: '/api/v1/budget-requests',           fallback: [], transform: r => Array.isArray(r) ? r : (r?.data ?? r?.budgetRequests ?? []) },
     { key: 'expenseReports',endpoint: '/api/v1/expense-reports',           fallback: [], transform: r => Array.isArray(r) ? r : (r?.data ?? r?.expenseReports ?? []) },
     { key: 'contracts',     endpoint: '/api/v1/contracts',                 fallback: [], transform: r => Array.isArray(r) ? r : (r?.data ?? r?.contracts ?? []) },

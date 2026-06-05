@@ -1384,7 +1384,7 @@ export default function CLevelPortal() {
     { key: 'teams',         endpoint: '/api/v1/organization/teams',        fallback: [], transform: r => Array.isArray(r) ? r : (r?.data ?? r?.teams ?? []) },
     { key: 'achievements',  endpoint: '/api/v1/achievements',              fallback: [], transform: r => Array.isArray(r) ? r : (r?.data ?? r?.achievements ?? []) },
     { key: 'clients',       endpoint: '/api/v1/clients/all',               fallback: [], transform: r => Array.isArray(r) ? r : (r?.data ?? r?.clients ?? []) },
-    { key: 'teamReports',   endpoint: '/api/v1/daily-reports/team',        fallback: [], transform: r => (Array.isArray(r) ? r : (r?.data ?? r?.reports ?? [])).map(normalizeReportRow) },
+    { key: 'teamReports',   endpoint: '/api/v1/reports/team?limit=500',    fallback: [], transform: r => (Array.isArray(r) ? r : (r?.data ?? r?.reports ?? [])).map(normalizeReportRow) },
     { key: 'budgetRequests',endpoint: '/api/v1/budget-requests',           fallback: [], transform: r => Array.isArray(r) ? r : (r?.data ?? r?.budgetRequests ?? []) },
     { key: 'expenseReports',endpoint: '/api/v1/expense-reports',           fallback: [], transform: r => Array.isArray(r) ? r : (r?.data ?? r?.expenseReports ?? []) },
     { key: 'contracts',     endpoint: '/api/v1/contracts',                 fallback: [], transform: r => Array.isArray(r) ? r : (r?.data ?? r?.contracts ?? []) },
@@ -1392,7 +1392,7 @@ export default function CLevelPortal() {
     { key: 'notifications', endpoint: '/api/v1/notifications',             fallback: [], transform: r => Array.isArray(r) ? r : (r?.notifications ?? r?.data ?? []) },
   ], [
     'data:project:created', 'data:project:updated', 'data:client:status_changed',
-    'data:metrics:updated', 'data:notification:new', 'data:contract:generated',
+    'data:metrics:updated', 'data:notification:new', 'data:contract:generated', 'data:report:submitted',
   ]);
 
   if (loading) {

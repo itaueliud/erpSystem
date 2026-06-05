@@ -17,6 +17,28 @@ const cardStyle: React.CSSProperties = { background: 'rgba(255,255,255,0.75)', b
 const inputCls = 'w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 transition-all';
 const labelCls = 'block text-sm font-medium text-gray-700 mb-1.5';
 
+const normalizeRole = (value: unknown) => String(value || '').trim().toUpperCase().replace(/\s+/g, '_');
+const getReportBucket = (row: any) => {
+  const role = normalizeRole(row?.userRole || row?.role || row?.user_role);
+  if (role.includes('REGIONAL') || role === 'RM') return 'regional-manager';
+  if (role === 'AGENT') return 'agent';
+  return 'other';
+};
+const matchesReportSearch = (row: any, query: string) => {
+  if (!query.trim()) return true;
+  const q = query.toLowerCase();
+  return [
+    row?.userName,
+    row?.full_name,
+    row?.userRole,
+    row?.role,
+    row?.accomplishments,
+    row?.challenges,
+    row?.tomorrowPlan,
+    row?.tomorrow_plan,
+  ].some((value) => String(value || '').toLowerCase().includes(q));
+};
+
 const I = {
   overview: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>,
   revenue: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>,
@@ -1102,6 +1124,7 @@ function CoSDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
   const techRequests = data.techRequests || [];
   const plData = data.plData || [];
   const taxReports = data.taxReports || [];
+  const allReports = data.allReports || [];
   const cashFlow = data.cashFlow || []; void cashFlow;
   const pending = (data.payments || []).filter((p: any) => p.status === 'PENDING_APPROVAL' || p.status === 'PENDING');
   const approvedPayments = data.approvedPayments || [];
@@ -1111,6 +1134,10 @@ function CoSDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
   const [escalationOk, setEscalationOk] = React.useState(false);
   const [escalations, setEscalations] = React.useState<any[]>([]);
   const [allReportsFilter, setAllReportsFilter] = React.useState({ portal: '', search: '' });
+  const reportRows = allReports.filter((row: any) => matchesReportSearch(row, allReportsFilter.search));
+  const regionalManagerReports = reportRows.filter((row: any) => getReportBucket(row) === 'regional-manager');
+  const agentReports = reportRows.filter((row: any) => getReportBucket(row) === 'agent');
+  const otherReports = reportRows.filter((row: any) => getReportBucket(row) === 'other');
 
   React.useEffect(() => {
     if (section === 'escalations' && escalations.length === 0) {
@@ -1272,7 +1299,7 @@ function CoSDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
         </div>
       )}
 
-      {section === 'all-reports' && (
+      {false && section === 'all-reports' && (
         <div>
           <SectionHeader title="All Portal Reports" subtitle="Daily reports submitted across all portals" />
           <div className="flex flex-wrap gap-3 mb-4">
@@ -1310,6 +1337,105 @@ function CoSDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
             })}
             emptyMessage="No reports found"
           />
+        </div>
+      )}
+
+      {section === 'all-reports' && (
+        <div>
+          <SectionHeader title="All Portal Reports" subtitle="Daily reports submitted by regional managers and agents" />
+          <div className="flex flex-wrap gap-3 mb-6">
+            <input
+              type="text"
+              placeholder="Search by name, role, or report content..."
+              value={allReportsFilter.search}
+              onChange={e => setAllReportsFilter(f => ({ ...f, search: e.target.value }))}
+              className="px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 w-full sm:w-96"
+            />
+            {allReportsFilter.search && (
+              <button
+                onClick={() => setAllReportsFilter({ portal: '', search: '' })}
+                className="px-3 py-2 rounded-xl border border-gray-200 text-sm text-gray-500 hover:bg-gray-50"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <StatCard label="Total Reports" value={reportRows.length} icon={I.report} color={theme.hex} />
+            <StatCard label="Regional Manager Reports" value={regionalManagerReports.length} icon={I.region} color={theme.hex} />
+            <StatCard label="Agent Reports" value={agentReports.length} icon={I.agent} color={theme.hex} />
+          </div>
+
+          <div className="space-y-8">
+            <div>
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <h3 className="font-semibold text-gray-700">Regional Manager Reports</h3>
+                <span className="text-xs text-gray-500">{regionalManagerReports.length} report{regionalManagerReports.length === 1 ? '' : 's'}</span>
+              </div>
+              <DataTable
+                columns={[
+                  { key: 'userName', label: 'Submitted By', render: (v, r: any) => (
+                    <div>
+                      <p className="font-medium text-gray-900 text-sm">{v || r.full_name || r.user || '—'}</p>
+                      <p className="text-xs text-gray-400">{r.userRole || r.role || 'REGIONAL_MANAGER'}</p>
+                    </div>
+                  )},
+                  { key: 'reportDate', label: 'Date', render: (v, r: any) => { const d = v || r.report_date; return d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'; }},
+                  { key: 'hoursWorked', label: 'Hours', render: (v, r: any) => (v || r.hours_worked) != null ? `${v || r.hours_worked}h` : '—' },
+                  { key: 'accomplishments', label: 'Accomplishments', render: v => <span className="text-xs text-gray-600">{v ? String(v).slice(0, 60) + (String(v).length > 60 ? '...' : '') : '—'}</span> },
+                ]}
+                rows={regionalManagerReports}
+                emptyMessage="No regional manager reports found"
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <h3 className="font-semibold text-gray-700">Agent Reports</h3>
+                <span className="text-xs text-gray-500">{agentReports.length} report{agentReports.length === 1 ? '' : 's'}</span>
+              </div>
+              <DataTable
+                columns={[
+                  { key: 'userName', label: 'Submitted By', render: (v, r: any) => (
+                    <div>
+                      <p className="font-medium text-gray-900 text-sm">{v || r.full_name || r.user || '—'}</p>
+                      <p className="text-xs text-gray-400">{r.userRole || r.role || 'AGENT'}</p>
+                    </div>
+                  )},
+                  { key: 'reportDate', label: 'Date', render: (v, r: any) => { const d = v || r.report_date; return d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'; }},
+                  { key: 'hoursWorked', label: 'Hours', render: (v, r: any) => (v || r.hours_worked) != null ? `${v || r.hours_worked}h` : '—' },
+                  { key: 'accomplishments', label: 'Accomplishments', render: v => <span className="text-xs text-gray-600">{v ? String(v).slice(0, 60) + (String(v).length > 60 ? '...' : '') : '—'}</span> },
+                ]}
+                rows={agentReports}
+                emptyMessage="No agent reports found"
+              />
+            </div>
+
+            {otherReports.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <h3 className="font-semibold text-gray-700">Other Reports</h3>
+                  <span className="text-xs text-gray-500">{otherReports.length} report{otherReports.length === 1 ? '' : 's'}</span>
+                </div>
+                <DataTable
+                  columns={[
+                    { key: 'userName', label: 'Submitted By', render: (v, r: any) => (
+                      <div>
+                        <p className="font-medium text-gray-900 text-sm">{v || r.full_name || r.user || '—'}</p>
+                        <p className="text-xs text-gray-400">{r.userRole || r.role || '—'}</p>
+                      </div>
+                    )},
+                    { key: 'reportDate', label: 'Date', render: (v, r: any) => { const d = v || r.report_date; return d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'; }},
+                    { key: 'hoursWorked', label: 'Hours', render: (v, r: any) => (v || r.hours_worked) != null ? `${v || r.hours_worked}h` : '—' },
+                    { key: 'accomplishments', label: 'Accomplishments', render: v => <span className="text-xs text-gray-600">{v ? String(v).slice(0, 60) + (String(v).length > 60 ? '...' : '') : '—'}</span> },
+                  ]}
+                  rows={otherReports}
+                  emptyMessage="No other reports found"
+                />
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -2012,6 +2138,7 @@ export default function ExecutivePortal() {
     { key: 'budgetRequests',    endpoint: '/api/v1/budget-requests',                   fallback: [], transform: (r: any) => Array.isArray(r) ? r : (r.data || []) },
     { key: 'techRequests',      endpoint: '/api/v1/tech-funding-requests',             fallback: [], transform: (r: any) => Array.isArray(r) ? r : (r.data || []) },
     { key: 'costApprovals',     endpoint: '/api/v1/cost-approvals',                    fallback: [], transform: (r: any) => Array.isArray(r) ? r : (r.data || []) },
+    { key: 'allReports',        endpoint: '/api/v1/reports/team',                      fallback: [], transform: (r: any) => Array.isArray(r) ? r : (r.reports || r.data || []) },
     { key: 'plData',            endpoint: '/api/v1/reports/pl',                        fallback: [], transform: (r: any) => Array.isArray(r) ? r : (r.data || []) },
     { key: 'trainers',          endpoint: '/api/v1/trainers/performance',              fallback: [], transform: (r: any) => Array.isArray(r) ? r : (r.data || []) },
     { key: 'agents',            endpoint: '/api/v1/agents/performance',                fallback: [], transform: (r: any) => Array.isArray(r) ? r : (r.data || []) },
@@ -2026,7 +2153,7 @@ export default function ExecutivePortal() {
   ] as any, [
     'data:payment:created', 'data:payment:approved', 'data:payment:rejected', 'data:payment:executed',
     'data:metrics:updated', 'data:notification:new', 'data:service_amount:changed',
-    'data:contract:generated', 'data:client:status_changed', 'data:property:updated',
+    'data:contract:generated', 'data:report:submitted', 'data:client:status_changed', 'data:property:updated',
   ]);
 
   const handleLogout = () => { logout(); navigate('/login', { state: { from: { pathname: '/gatewaydelta' } } }); };

@@ -15,6 +15,41 @@ import { buildContractHtml, ContractPdfData } from './contractPdfTemplate';
 
 const router = Router();
 
+const PDF_MAGIC = '%PDF';
+
+function isPdfBuffer(buffer: Buffer): boolean {
+  return buffer.subarray(0, PDF_MAGIC.length).toString('utf-8') === PDF_MAGIC;
+}
+
+function toDataUrl(buffer: Buffer, contentType: string): string {
+  return `data:${contentType};base64,${buffer.toString('base64')}`;
+}
+
+function normalizeStoredContractUrl(pdfUrl: string): { downloadUrl: string; pdfDataUrl?: string } {
+  if (!pdfUrl.startsWith('data:')) return { downloadUrl: pdfUrl };
+
+  const match = pdfUrl.match(/^data:([^;,]+)?(;base64)?,(.*)$/);
+  if (!match) return { downloadUrl: pdfUrl, pdfDataUrl: pdfUrl };
+
+  const contentType = match[1] || 'application/octet-stream';
+  const isBase64 = Boolean(match[2]);
+  const payload = match[3] || '';
+
+  if (contentType === 'application/pdf' && isBase64) {
+    try {
+      const buffer = Buffer.from(payload, 'base64');
+      if (!isPdfBuffer(buffer)) {
+        const htmlDataUrl = toDataUrl(buffer, 'text/html');
+        return { downloadUrl: htmlDataUrl };
+      }
+    } catch {
+      return { downloadUrl: pdfUrl, pdfDataUrl: pdfUrl };
+    }
+  }
+
+  return { downloadUrl: pdfUrl, pdfDataUrl: pdfUrl };
+}
+
 // ── Generate contract directly (manual entry — CEO or EA) ─────────────────────
 router.post('/generate-direct', requireRole(Role.CEO, Role.EA), async (req: Request, res: Response) => {
   try {
@@ -92,7 +127,8 @@ router.post('/generate-direct', requireRole(Role.CEO, Role.EA), async (req: Requ
     const html = buildContractHtml(pdfData);
 
     // Generate PDF using Puppeteer
-    let pdfBuffer: Buffer;
+    let contractBuffer: Buffer;
+    let contractContentType = 'application/pdf';
     try {
       const puppeteer = await import('puppeteer');
       const browser = await puppeteer.default.launch({
@@ -109,29 +145,33 @@ router.post('/generate-direct', requireRole(Role.CEO, Role.EA), async (req: Requ
         margin: { top: '0', right: '0', bottom: '56px', left: '0' },
       });
       await browser.close();
-      pdfBuffer = Buffer.from(pdfUint8);
+      contractBuffer = Buffer.from(pdfUint8);
     } catch (puppeteerErr) {
-      logger.warn('Puppeteer unavailable, returning HTML as base64', { error: puppeteerErr });
-      // Fallback: return HTML as data URL so frontend can display it
-      pdfBuffer = Buffer.from(html, 'utf-8');
+      logger.warn('Puppeteer unavailable, returning HTML contract preview', { error: puppeteerErr });
+      contractBuffer = Buffer.from(html, 'utf-8');
+      contractContentType = 'text/html';
     }
 
     // Try to store in S3/R2, fall back to base64 data URL
     let pdfUrl = '';
     let pdfDataUrl = '';
     try {
+      if (contractContentType !== 'application/pdf' || !isPdfBuffer(contractBuffer)) {
+        throw new Error('PDF renderer did not produce PDF bytes');
+      }
+
       const { storageClient } = await import('../services/storage');
       const storageKey = `contracts/direct/${referenceNumber}.pdf`;
       const uploadResult = await storageClient.upload({
         key: storageKey,
-        buffer: pdfBuffer,
+        buffer: contractBuffer,
         contentType: 'application/pdf',
         metadata: { referenceNumber, generatedBy: requesterId },
       });
       pdfUrl = uploadResult.url;
     } catch {
       // Storage not configured — return as base64 data URL for direct download
-      pdfDataUrl = `data:application/pdf;base64,${pdfBuffer.toString('base64')}`;
+      pdfDataUrl = toDataUrl(contractBuffer, contractContentType);
       pdfUrl = pdfDataUrl;
     }
 
@@ -359,7 +399,7 @@ router.get('/:contractId/download', async (req: Request, res: Response) => {
 
     // If it's a data URL (base64), return directly
     if (pdfUrl.startsWith('data:')) {
-      return res.json({ downloadUrl: pdfUrl, pdfDataUrl: pdfUrl });
+      return res.json(normalizeStoredContractUrl(pdfUrl));
     }
 
     // Otherwise try to get a signed URL from storage

@@ -1132,8 +1132,11 @@ function ContractsSection({ data, refetch }: { data: any; refetch: (k?: string[]
     const openDataUrl = (dataUrl: string) => {
       try {
         const [header, b64] = dataUrl.split(',');
-        const mime = header.match(/:(.*?);/)?.[1] || 'application/pdf';
+        let mime = header.match(/:(.*?);/)?.[1] || 'application/pdf';
         const binary = atob(b64);
+        if (mime === 'application/pdf' && binary.slice(0, 4) !== '%PDF') {
+          mime = 'text/html';
+        }
         const bytes = new Uint8Array(binary.length);
         for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
         const blob = new Blob([bytes], { type: mime });

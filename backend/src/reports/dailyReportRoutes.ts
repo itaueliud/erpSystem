@@ -10,6 +10,7 @@ import { Router, Request, Response } from 'express';
 import { requireRole } from '../auth/authorizationMiddleware';
 import { Role } from '../auth/authorizationService';
 import { db } from '../database/connection';
+import { realtimeEvents } from '../realtime/realtimeEvents';
 import logger from '../utils/logger';
 
 const router = Router();
@@ -25,6 +26,10 @@ const REPORT_SUBMITTERS = [
   Role.DEVELOPER,
   Role.COO,
   Role.CTO,
+  Role.CEO,
+  Role.CoS,
+  Role.CFO,
+  Role.EA,
   'SALES_MANAGER',
   'SM',
   'CLIENT_SUCCESS_USER',
@@ -62,6 +67,7 @@ router.post('/', requireRole(...(REPORT_SUBMITTERS as any[])), async (req: Reque
     );
 
     logger.info('Daily report submitted', { userId, date: today, type });
+    realtimeEvents.publish('report:submitted', { reportId: result.rows[0]?.id, userId, reportDate: today });
     return res.status(201).json({ success: true, data: result.rows[0] });
   } catch (error: any) {
     logger.error('Submit daily report error', { error });

@@ -149,7 +149,7 @@ function ExecPaymentRow({ row, themeHex, currentUserId, onRefetch }: { row: any;
 }
 
 // ─── Shared: Daily Report Form ────────────────────────────────────────────────
-function DailyReportForm() {
+function DailyReportForm({ onSubmitted }: { onSubmitted?: () => void } = {}) {
   const [form, setForm] = useState({ accomplishments: '', challenges: '', tomorrowPlan: '', hoursWorked: '' });
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState('');
@@ -161,7 +161,7 @@ function DailyReportForm() {
     try {
       const { apiClient } = await import('../../shared/api/apiClient');
       await apiClient.post('/api/v1/daily-reports', { ...form, hoursWorked: parseFloat(form.hoursWorked) || undefined, reportDate: new Date().toISOString().split('T')[0] });
-      setOk(true); setMsg('Report submitted!'); clear();
+      setOk(true); setMsg('Report submitted!'); clear(); onSubmitted?.();
     } catch (err: any) { setOk(false); setMsg(err?.response?.data?.error || 'Failed to submit'); }
     finally { setSubmitting(false); }
   };
@@ -1092,7 +1092,7 @@ function CFODashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
         </div>
       )}
 
-      {section === 'daily-report' && (<div><SectionHeader title="Daily Report" subtitle="Submit your end-of-day report" /><DailyReportForm /></div>)}
+      {section === 'daily-report' && (<div><SectionHeader title="Daily Report" subtitle="Submit your end-of-day report" /><DailyReportForm onSubmitted={() => refetch(['allReports'])} /></div>)}
     </PortalLayout>
   );
 }
@@ -1500,7 +1500,7 @@ function CoSDashboard({ data, refetch, user, onLogout }: { data: any; refetch: (
       )}
 
       {section === 'chat' && (<div><SectionHeader title="Chat" /><ChatSection token={user?.token || ''} currentUserId={user?.id || ''} portal="Executive Portal" /></div>)}
-      {section === 'daily-report' && (<div><SectionHeader title="Daily Report" subtitle="Submit your end-of-day report" /><DailyReportForm /></div>)}
+      {section === 'daily-report' && (<div><SectionHeader title="Daily Report" subtitle="Submit your end-of-day report" /><DailyReportForm onSubmitted={() => refetch(['allReports'])} /></div>)}
     </PortalLayout>
   );
 }
@@ -1911,6 +1911,7 @@ const EA_NAV = [
   { id: 'agent-comparison',   label: 'Agent Comparison',      icon: I.agent },
   { id: 'service-amounts',    label: 'Pricing',               icon: I.service },
   { id: 'reports',            label: 'Reports',               icon: I.report },
+  { id: 'daily-report',      label: 'Daily Report',          icon: I.report },
   { id: 'chat',               label: 'Chat',                  icon: I.chat },
 ];
 

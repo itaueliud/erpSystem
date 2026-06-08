@@ -61,12 +61,7 @@ router.get('/properties', async (req: Request, res: Response) => {
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
     const result = await db.query(
-      `SELECT id, owner_name, owner_phone, owner_phone2, owner_whatsapp,
-              property_name, property_id_number, county, area, map_link, booking_type,
-              property_types, rooms, package, contact_person,
-              description, website_link, number_of_rooms, price_per_room,
-              status, payment_status, payment_confirmed_at,
-              created_at, updated_at
+      `SELECT *
        FROM marketer_properties
        WHERE submitted_by = $1
        ORDER BY created_at DESC`,
@@ -87,7 +82,7 @@ router.get('/properties', async (req: Request, res: Response) => {
       bookingType:        r.booking_type,
       propertyTypes:      r.property_types || [],
       rooms:              r.rooms || [],
-      package:            r.package,
+      package:            r.package || null,
       contactPerson:      r.contact_person,
       description:        r.description,
       websiteLink:        r.website_link,
@@ -122,7 +117,6 @@ router.post('/properties', upload.array('images', 8), async (req: Request, res: 
     const ownerPhone2   = body.ownerPhone2?.trim() || null;
     const ownerWhatsapp = body.ownerWhatsapp?.trim() || null;
     const propertyName  = body.propertyName?.trim();
-    const propertyIdNumber = body.propertyIdNumber?.trim().toUpperCase() || null;
     const county        = body.county?.trim();
     const area          = body.area?.trim();
     const mapLink       = body.mapLink?.trim() || null;
@@ -139,9 +133,6 @@ router.post('/properties', upload.array('images', 8), async (req: Request, res: 
     let rooms: any[] = [];
     try { rooms = typeof body.rooms === 'string' ? JSON.parse(body.rooms) : (body.rooms || []); } catch { rooms = []; }
 
-    const validPackages = ['BASIC', 'STANDARD', 'ADVANCED'];
-    const pkg = validPackages.includes(body.package) ? body.package : 'BASIC';
-
     // Validation
     if (!ownerName)              return res.status(400).json({ error: 'Owner name is required' });
     if (!ownerPhone)             return res.status(400).json({ error: 'Phone number is required' });
@@ -153,18 +144,18 @@ router.post('/properties', upload.array('images', 8), async (req: Request, res: 
     const result = await db.query(
       `INSERT INTO marketer_properties
          (owner_name, owner_phone, owner_phone2, owner_whatsapp,
-          property_name, property_id_number, county, area, map_link, booking_type,
-          property_types, rooms, package,
+          property_name, county, area, map_link, booking_type,
+          property_types, rooms,
           contact_person, description, website_link,
           number_of_rooms, price_per_room,
           status, payment_status, submitted_by, created_at, updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,
-               'PENDING','UNPAID',$19,NOW(),NOW())
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,
+               'PENDING','UNPAID',$17,NOW(),NOW())
        RETURNING id, created_at`,
       [
         ownerName, ownerPhone, ownerPhone2, ownerWhatsapp,
-        propertyName, propertyIdNumber, county, area, mapLink, bookingType,
-        JSON.stringify(propertyTypes), JSON.stringify(rooms), pkg,
+        propertyName, county, area, mapLink, bookingType,
+        JSON.stringify(propertyTypes), JSON.stringify(rooms),
         contactPerson, description, websiteLink,
         numberOfRooms, pricePerRoom,
         userId,
@@ -204,9 +195,47 @@ router.post('/properties', upload.array('images', 8), async (req: Request, res: 
   } catch (err: any) {
     logger.error('marketer: create property', { err });
     if (err?.code === '23505') {
-      return res.status(409).json({ error: 'Property ID number is already in use' });
+      return res.status(409).json({ error: 'Duplicate property data detected' });
     }
     return res.status(500).json({ error: 'Failed to submit property' });
+  }
+});
+
+// PATCH /api/v1/marketer/properties/:id/package
+// Agents choose the package after the property is submitted.
+router.patch('/properties/:id/package', async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.id;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const validPackages = ['BASIC', 'STANDARD', 'ADVANCED'];
+    const selectedPackage = typeof req.body?.package === 'string' ? req.body.package.toUpperCase() : '';
+    if (!validPackages.includes(selectedPackage)) {
+      return res.status(400).json({ error: 'Invalid package selected' });
+    }
+
+    const check = await db.query(
+      `SELECT id, payment_status
+       FROM marketer_properties
+       WHERE id = $1 AND submitted_by = $2`,
+      [req.params.id, userId]
+    );
+    if (!check.rows.length) return res.status(404).json({ error: 'Property not found' });
+    if (check.rows[0].payment_status === 'PAID') {
+      return res.status(400).json({ error: 'Paid properties cannot change package' });
+    }
+
+    await db.query(
+      `UPDATE marketer_properties
+       SET package = $1, updated_at = NOW()
+       WHERE id = $2`,
+      [selectedPackage, req.params.id]
+    );
+
+    return res.json({ success: true, package: selectedPackage });
+  } catch (err: any) {
+    logger.error('marketer: update package', { err });
+    return res.status(500).json({ error: 'Failed to update package' });
   }
 });
 

@@ -130,7 +130,7 @@ function PropertyModal({ prop, themeHex, canApprove, canPublish, canSetTier, can
       <div class="row"><div class="k">Location</div><div class="v">${safe(prop.area)}, ${safe(prop.county)}</div></div>
       <div class="row"><div class="k">Status</div><div class="v">${safe(prop.status)}</div></div>
       <div class="row"><div class="k">Payment</div><div class="v">${safe(prop.paymentStatus)}</div></div>
-      <div class="row"><div class="k">Package</div><div class="v">${safe(prop.package)}</div></div>
+      <div class="row"><div class="k">Package</div><div class="v">${safe(prop.package || 'Not selected')}</div></div>
       <h2>Details</h2>
       <div class="row"><div class="k">Booking Type</div><div class="v">${safe(prop.bookingType)}</div></div>
       <div class="row"><div class="k">Types</div><div class="v">${safe((prop.propertyTypes || []).join(', '))}</div></div>
@@ -219,8 +219,8 @@ function PropertyModal({ prop, themeHex, canApprove, canPublish, canSetTier, can
           <div className="flex flex-wrap gap-2">
             <StatusBadge status={prop.status || 'PENDING'} />
             <PayBadge status={prop.paymentStatus || 'UNPAID'} />
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-700">
-              {prop.package}
+            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold ${prop.package ? 'bg-indigo-50 text-indigo-700' : 'bg-amber-50 text-amber-700'}`}>
+              {prop.package || 'Not selected'}
             </span>
           </div>
 
@@ -526,6 +526,7 @@ function PackageManager({ themeHex }: { themeHex: string }) {
 export default function PlotConnectProperties({
   themeHex, canApprove = false, canPublish = false, canSetTier = false,
   canManagePkg = false, canEdit = false, showAgent = true, showRevenue = false, summaryOnly = false,
+  allowPdfExport = false,
 }: Props) {
   const [properties, setProperties] = useState<PlotProperty[]>([]);
   const [stats,      setStats]      = useState<any>({});
@@ -566,11 +567,76 @@ export default function PlotConnectProperties({
 
   const inp = 'px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2';
 
+  const exportPdf = () => {
+    if (!properties.length) return;
+
+    const safe = (v: any) => String(v ?? '—').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const rowsHtml = properties.map((prop) => `
+      <tr>
+        <td>${safe(prop.propertyName)}</td>
+        <td>${safe(prop.ownerName)}</td>
+        <td>${safe(prop.area)}, ${safe(prop.county)}</td>
+        <td>${safe((prop.propertyTypes || []).map((t: string) => PROPERTY_TYPE_LABELS[t] || t).join(', '))}</td>
+        <td>${safe(prop.package || 'Not selected')}</td>
+        <td>${safe(prop.paymentStatus || 'UNPAID')}</td>
+        <td>${safe(prop.agentName || '—')}</td>
+        <td>${safe(prop.createdAt ? new Date(prop.createdAt).toLocaleDateString() : '—')}</td>
+      </tr>
+    `).join('');
+
+    const html = `<!doctype html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>TST PlotConnect Properties</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 24px; color: #0f172a; }
+            h1 { font-size: 20px; margin: 0 0 8px; }
+            p { margin: 0 0 16px; color: #475569; font-size: 12px; }
+            table { width: 100%; border-collapse: collapse; font-size: 11px; }
+            th, td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: left; vertical-align: top; }
+            th { background: #f8fafc; }
+          </style>
+        </head>
+        <body>
+          <h1>TST PlotConnect Properties</h1>
+          <p>Exported from the management dashboard.</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Property</th>
+                <th>Owner</th>
+                <th>Location</th>
+                <th>Types</th>
+                <th>Package</th>
+                <th>Payment</th>
+                <th>Agent</th>
+                <th>Submitted</th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        </body>
+      </html>`;
+
+    const win = window.open('', '_blank');
+    if (!win) return;
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    win.print();
+  };
+
   return (
     <div>
       <SectionHeader
         title="TST PlotConnect Properties"
         subtitle="Agent-submitted property listings"
+        action={allowPdfExport ? (
+          <PortalButton variant="secondary" onClick={exportPdf}>
+            Export PDF
+          </PortalButton>
+        ) : undefined}
       />
 
       {/* Stats row */}
@@ -646,7 +712,7 @@ export default function PlotConnectProperties({
                 { key: 'county',       label: 'Location', render: (v, r: any) => `${r.area}, ${v}` },
                 { key: 'propertyTypes', label: 'Types',
                   render: (v: string[]) => (v || []).map(t => PROPERTY_TYPE_LABELS[t] || t).join(', ') || '—' },
-                { key: 'package',      label: 'Package' },
+                { key: 'package',      label: 'Package', render: v => v || 'Not selected' },
                 { key: 'status',       label: 'Status',  render: v => <StatusBadge status={v || 'PENDING'} /> },
                 { key: 'paymentStatus', label: 'Payment', render: v => <PayBadge status={v || 'UNPAID'} /> },
                 ...(showAgent ? [{ key: 'agentName', label: 'Agent', render: (v: any) => v || '—' }] : []),

@@ -26,7 +26,7 @@ export interface MarketerProperty {
   bookingType: 'MONTHLY' | 'DAILY' | 'BOTH';
   propertyTypes: string[];
   rooms: RoomRow[];
-  package: 'BASIC' | 'STANDARD' | 'ADVANCED';
+  package?: 'BASIC' | 'STANDARD' | 'ADVANCED' | null;
   // Section 14: Student Single Rooms use a separate package pricing path
   isStudentType?: boolean;
   contactPerson?: string;
@@ -189,6 +189,7 @@ function compressImage(file: File, maxPx = 1280, quality = 0.82): Promise<Blob> 
 }
 
 function visibleRooms(propTypes: string[]): RoomRow[] {
+  if (propTypes.includes('STUDENT_SINGLE')) return [];
   return ROOM_TYPE_MAP
     .filter(r => r.forTypes.some(t => propTypes.includes(t)))
     .map(r => ({ type: r.type, price: '', availability: '', selected: false }));
@@ -203,7 +204,6 @@ function AddPropertyForm({ themeHex, onSuccess }: { themeHex: string; onSuccess:
   const [ownerPhone2, setOwnerPhone2] = useState('');
   const [ownerWa,     setOwnerWa]     = useState('');
   const [propName,    setPropName]    = useState('');
-  const [propertyIdNumber, setPropertyIdNumber] = useState('');
   // Section B — Location
   const [county,      setCounty]      = useState('');
   const [area,        setArea]        = useState('');
@@ -221,10 +221,6 @@ function AddPropertyForm({ themeHex, onSuccess }: { themeHex: string; onSuccess:
   // Section 14 Type 1 (Student) extra fields
   const [numberOfRooms, setNumberOfRooms] = useState('');
   const [pricePerRoom,  setPricePerRoom]  = useState('');
-  // Section E — Package
-  const [pkg, setPkg] = useState<'BASIC'|'STANDARD'|'ADVANCED'>('BASIC');
-  // Packages loaded from API (EA-editable amounts)
-  const [livePackages, setLivePackages] = useState(STD_PACKAGES);
   // Form state
   const [busy,   setBusy]   = useState(false);
   const [msg,    setMsg]    = useState('');
@@ -234,17 +230,6 @@ function AddPropertyForm({ themeHex, onSuccess }: { themeHex: string; onSuccess:
   const hasStudent    = propTypes.includes('STUDENT_SINGLE');
   const hasOther      = propTypes.some(t => t !== 'STUDENT_SINGLE');
 
-  // Load live package amounts from API (EA-editable, CEO-confirmed)
-  useEffect(() => {
-    (async () => {
-      try {
-        const { apiClient } = await import('../../../shared/api/apiClient');
-        const res = await apiClient.get('/api/v1/marketer/packages');
-        const pkgs = (res.data as any)?.data || (res.data as any)?.packages;
-        if (Array.isArray(pkgs) && pkgs.length) setLivePackages(pkgs);
-      } catch { /* use defaults */ }
-    })();
-  }, []);
 
   // Section D: room rows update when property types change
   useEffect(() => {
@@ -268,11 +253,10 @@ function AddPropertyForm({ themeHex, onSuccess }: { themeHex: string; onSuccess:
   const clearForm = () => {
     setOwnerName(''); setOwnerPhone(''); setOwnerPhone2(''); setOwnerWa('');
     setPropName(''); setCounty(''); setArea(''); setMapLink('');
-    setPropertyIdNumber('');
     setBookingType('MONTHLY'); setImages([]); setPropTypes([]); setRooms([]);
     setContactPerson(''); setDescription(''); setWebsiteLink('');
     setNumberOfRooms(''); setPricePerRoom('');
-    setPkg('BASIC'); setMsg(''); setOk(false); setErrors({});
+    setMsg(''); setOk(false); setErrors({});
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -282,7 +266,6 @@ function AddPropertyForm({ themeHex, onSuccess }: { themeHex: string; onSuccess:
     if (!ownerName.trim())      errs.ownerName  = 'Owner name is required.';
     if (!ownerPhone.trim())     errs.ownerPhone = 'Phone number is required.';
     if (!propName.trim())       errs.propName   = 'Property name is required.';
-    if (!propertyIdNumber.trim()) errs.propertyIdNumber = 'Property ID number is required.';
     if (!county)                errs.county     = 'County is required.';
     if (!area.trim())           errs.area       = 'Area is required.';
     if (propTypes.length === 0) errs.propTypes  = 'Select at least one property type.';
@@ -308,14 +291,12 @@ function AddPropertyForm({ themeHex, onSuccess }: { themeHex: string; onSuccess:
       formData.append('ownerPhone2',   ownerPhone2.trim());
       formData.append('ownerWhatsapp', ownerWa.trim());
       formData.append('propertyName',  propName.trim());
-      formData.append('propertyIdNumber', propertyIdNumber.trim().toUpperCase());
       formData.append('county',        county);
       formData.append('area',          area.trim());
       formData.append('mapLink',       mapLink.trim());
       formData.append('bookingType',   bookingType);
       formData.append('propertyTypes', JSON.stringify(propTypes));
       formData.append('rooms',         JSON.stringify(selectedRooms));
-      formData.append('package',       pkg);
       formData.append('contactPerson', contactPerson.trim());
       formData.append('description',   description.trim());
       formData.append('websiteLink',   websiteLink.trim());
@@ -393,13 +374,6 @@ function AddPropertyForm({ themeHex, onSuccess }: { themeHex: string; onSuccess:
               onBlur={e => !e.target.value.trim() && setErrors(p => ({ ...p, propName: 'Required.' }))}
               placeholder="e.g. Sunrise Apartments" />
             {fieldErr(errors.propName)}
-          </div>
-          <div className="sm:col-span-2">
-            <label className={lbl}>Property ID Number <span className="text-red-500">*</span></label>
-            <input className={`${inp} ${errCls(errors.propertyIdNumber)}`} value={propertyIdNumber}
-              onChange={e => setPropertyIdNumber(e.target.value.toUpperCase())}
-              placeholder="Unique Property ID (different from Client ID)" />
-            {fieldErr(errors.propertyIdNumber)}
           </div>
         </div>
       </div>
@@ -554,7 +528,7 @@ function AddPropertyForm({ themeHex, onSuccess }: { themeHex: string; onSuccess:
       )}
 
       {/* Section D — Rooms Table */}
-      {propTypes.length > 0 && rooms.length > 0 && (
+      {!hasStudent && propTypes.length > 0 && rooms.length > 0 && (
         <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-3">
           <div>
             <h3 className="font-semibold text-slate-800 text-sm uppercase tracking-wide">Section D — Rooms Table</h3>
@@ -599,37 +573,6 @@ function AddPropertyForm({ themeHex, onSuccess }: { themeHex: string; onSuccess:
         </div>
       )}
 
-      {/* Section E — Package Selection */}
-      {propTypes.length > 0 && (
-        <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
-          <div>
-            <h3 className="font-semibold text-slate-800 text-sm uppercase tracking-wide">Section E — Select Package</h3>
-            <p className="text-xs text-slate-400 mt-1">
-              The package determines your property's visibility and placement on TST PlotConnect.
-              {hasStudent && ' Student Single Rooms follow a separate pricing path — amounts shown are configured by EA.'}
-              {' '}Package cannot be changed after submission — only a Trainer can modify it.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {livePackages.map(p => (
-              <div key={p.key}
-                role="radio" aria-checked={pkg === p.key} tabIndex={0}
-                onClick={() => setPkg(p.key as any)}
-                onKeyDown={e => (e.key === ' ' || e.key === 'Enter') && setPkg(p.key as any)}
-                className={`rounded-xl border-2 p-4 cursor-pointer transition-all
-                  ${pkg === p.key ? 'bg-white shadow-sm' : 'border-slate-200 bg-slate-50 hover:bg-white hover:shadow-sm'}`}
-                style={pkg === p.key ? { borderColor: themeHex } : {}}>
-                <p className="font-semibold text-slate-800">{p.label}</p>
-                <p className="text-xl font-bold mt-1" style={pkg === p.key ? { color: themeHex } : { color: '#64748b' }}>
-                  KSh {p.price.toLocaleString()}
-                </p>
-                <p className="text-xs text-slate-500 mt-1">{p.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Section F — Form Actions */}
       <div className="flex gap-3">
         <PortalButton color={themeHex} type="submit" disabled={busy}>
@@ -653,8 +596,18 @@ function PropertyPaymentPanel({ prop, themeHex, onRefetch }: {
   const [payBusy,    setPayBusy]    = useState(false);
   const [polling,    setPolling]    = useState(false);
   const [countdown,  setCountdown]  = useState(0); // seconds until resend is allowed
+  const [selectedPackage, setSelectedPackage] = useState(prop.package || '');
+  const [packageBusy, setPackageBusy] = useState(false);
+  const [packageMsg, setPackageMsg] = useState('');
+  const [packageOk, setPackageOk] = useState(false);
   const pollRef      = useRef<ReturnType<typeof setInterval> | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    setSelectedPackage(prop.package || '');
+    setPackageMsg('');
+    setPackageOk(false);
+  }, [prop.package, prop.id]);
 
   const stopPoll = () => {
     if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
@@ -692,18 +645,54 @@ function PropertyPaymentPanel({ prop, themeHex, onRefetch }: {
     }, 5000);
   };
 
+  const savePackage = async (nextPackage?: string) => {
+    const value = (nextPackage || selectedPackage || '').toUpperCase();
+    if (!value) {
+      setPackageOk(false);
+      setPackageMsg('Select a package first.');
+      return false;
+    }
+    setPackageBusy(true);
+    setPackageMsg('');
+    try {
+      const { apiClient } = await import('../../../shared/api/apiClient');
+      await apiClient.patch(`/api/v1/marketer/properties/${prop.id}/package`, { package: value });
+      setSelectedPackage(value);
+      setPackageOk(true);
+      setPackageMsg(`Package saved as ${value}.`);
+      onRefetch();
+      return true;
+    } catch (err: any) {
+      setPackageOk(false);
+      setPackageMsg(err?.response?.data?.error || 'Failed to save package.');
+      return false;
+    } finally {
+      setPackageBusy(false);
+    }
+  };
+
   const sendStk = async () => {
     if (!mpesa.trim()) { setPayMsg('Enter the M-Pesa number first.'); setPayOk(false); return; }
+    const activePackage = (selectedPackage || prop.package || '').toUpperCase();
+    if (!activePackage) {
+      setPayMsg('Select a package before starting payment.');
+      setPayOk(false);
+      return;
+    }
+    if (activePackage !== (prop.package || '').toUpperCase()) {
+      const saved = await savePackage(activePackage);
+      if (!saved) return;
+    }
     setPayBusy(true); setPayMsg('');
     try {
       const { apiClient } = await import('../../../shared/api/apiClient');
-      const pkgPrice = STD_PACKAGES.find(p => p.key === prop.package)?.price || 4000;
+      const pkgPrice = STD_PACKAGES.find(p => p.key === activePackage)?.price || 4000;
       const payRes = await apiClient.post('/api/v1/payments/mpesa', {
         phoneNumber: mpesa.trim(),
         amount: pkgPrice,
         currency: 'KES',
         reference: `PROP-${prop.id}-${Date.now()}`,
-        description: `TST PlotConnect — ${prop.package} package`,
+        description: `TST PlotConnect — ${activePackage} package`,
         propertyId: prop.id,
       });
       const checkoutRequestId = (payRes.data as any)?.transactionId;
@@ -741,6 +730,40 @@ function PropertyPaymentPanel({ prop, themeHex, onRefetch }: {
 
   return (
     <div className="mt-4 pt-4 border-t border-slate-100 space-y-3">
+      <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <p className="text-sm font-semibold text-slate-700">Package Selection</p>
+            <p className="text-xs text-slate-500">Choose a package here, then continue with payment.</p>
+          </div>
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-white border border-slate-200 text-slate-600">
+            {selectedPackage || 'Not selected'}
+          </span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          {STD_PACKAGES.map((p) => (
+            <button
+              key={p.key}
+              type="button"
+              onClick={() => setSelectedPackage(p.key)}
+              className={`rounded-xl border-2 p-3 text-left transition-all ${selectedPackage === p.key ? 'bg-white shadow-sm' : 'bg-white/70 hover:bg-white'}`}
+              style={selectedPackage === p.key ? { borderColor: themeHex } : undefined}
+            >
+              <p className="text-sm font-semibold text-slate-800">{p.label}</p>
+              <p className="text-base font-bold mt-0.5" style={selectedPackage === p.key ? { color: themeHex } : { color: '#64748b' }}>
+                KSh {p.price.toLocaleString()}
+              </p>
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <PortalButton color={themeHex} disabled={packageBusy || !selectedPackage} onClick={() => savePackage()}>
+            {packageBusy ? 'Saving packageâ€¦' : 'Save Package'}
+          </PortalButton>
+          <span className={`text-xs ${packageOk ? 'text-green-600' : 'text-slate-500'}`}>{packageMsg || 'Package must be saved before payment.'}</span>
+        </div>
+      </div>
+
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-sm font-medium text-slate-600">Payment Status:</span>
         <PayBadge status={prop.paymentStatus || 'UNPAID'} polling={isAwaiting} />

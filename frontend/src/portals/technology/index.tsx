@@ -462,6 +462,7 @@ function InfraSecurityDashboard({ data, refetch, user, onLogout }: { data: any; 
             themeHex={theme.hex}
             showAgent={true}
             showRevenue={false}
+            allowPdfExport={true}
           />
         </div>
       )}

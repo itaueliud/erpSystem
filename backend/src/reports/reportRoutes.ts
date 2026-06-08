@@ -5,7 +5,7 @@ import { reportAnalyticsService, ReportFilters } from './reportAnalyticsService'
 import { realtimeEvents } from '../realtime/realtimeEvents';
 import logger from '../utils/logger';
 
-const EXECUTIVE_ROLES = ['CEO', 'CoS', 'COO', 'CTO'];
+const EXECUTIVE_ROLES = ['CEO', 'CoS', 'COO', 'CTO', 'EA'];
 
 const router = Router();
 

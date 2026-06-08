@@ -1910,16 +1910,25 @@ const EA_NAV = [
   { id: 'agent-performance',  label: 'Agent Performance',     icon: I.agent },
   { id: 'agent-comparison',   label: 'Agent Comparison',      icon: I.agent },
   { id: 'service-amounts',    label: 'Pricing',               icon: I.service },
+  { id: 'reports',            label: 'Reports',               icon: I.report },
   { id: 'chat',               label: 'Chat',                  icon: I.chat },
 ];
 
 const AFRICAN_COUNTRIES = ['Algeria','Angola','Benin','Botswana','Burkina Faso','Burundi','Cabo Verde','Cameroon','Central African Republic','Chad','Comoros','Congo','DR Congo','Djibouti','Egypt','Equatorial Guinea','Eritrea','Eswatini','Ethiopia','Gabon','Gambia','Ghana','Guinea','Guinea-Bissau','Ivory Coast','Kenya','Lesotho','Liberia','Libya','Madagascar','Malawi','Mali','Mauritania','Mauritius','Morocco','Mozambique','Namibia','Niger','Nigeria','Rwanda','São Tomé and Príncipe','Senegal','Seychelles','Sierra Leone','Somalia','South Africa','South Sudan','Sudan','Tanzania','Togo','Tunisia','Uganda','Zambia','Zimbabwe'];
+
+function fmtEaReportDate(value: any) {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
 
 function EADashboard({ data, refetch, user, onLogout }: { data: any; refetch: (keys?: string[]) => void; user: any; onLogout: () => void }) {
   const [section, setSection] = useState('overview');
   const [regionForm, setRegionForm] = useState({ name: '' });
   const [countryForm, setCountryForm] = useState({ name: '', region: '' });
   const [regionMsg, setRegionMsg] = useState('');
+  const [selectedReport, setSelectedReport] = useState<any | null>(null);
 
   const notifs = data.notifications || [];
   const serviceAmounts = data.serviceAmounts || [];
@@ -1930,6 +1939,7 @@ function EADashboard({ data, refetch, user, onLogout }: { data: any; refetch: (k
   const clients = data.clients || [];
   const teams = data.teams || [];
   const properties = data.properties || [];
+  const reports = data.allReports || [];
 
   const nav = EA_NAV.map(n => n.id === 'notifications' ? { ...n, badge: notifs.filter((x: any) => !x.read).length } : n);
 
@@ -2024,6 +2034,88 @@ function EADashboard({ data, refetch, user, onLogout }: { data: any; refetch: (k
             <p className="text-sm text-slate-500 mb-4">Propose changes to PlotConnect listing package prices. CEO must confirm before changes take effect.</p>
             <PlotConnectProperties themeHex={theme.hex} canManagePkg={true} showAgent={false} showRevenue={false} summaryOnly={true} />
           </div>
+        </div>
+      )}
+
+      {section === 'reports' && (
+        <div>
+          <SectionHeader title="Reports" subtitle="Team daily reports — who submitted, when, and what they did" />
+          <DataTable
+            columns={[
+              { key: 'userName', label: 'Submitted By', render: (v, r: any) => (
+                <div>
+                  <p className="font-medium text-gray-900 text-sm">{v || r.user || r.userId || '—'}</p>
+                  <p className="text-xs text-gray-400">{r.userEmail || r.userRole || '—'}</p>
+                </div>
+              )},
+              { key: 'userRole', label: 'Role', render: v => v ? <StatusBadge status={v} /> : <span className="text-gray-400 text-xs">—</span> },
+              { key: 'reportDate', label: 'Report Date', render: v => v ? new Date(v).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—' },
+              { key: 'submittedAt', label: 'Submitted At', render: v => fmtEaReportDate(v) },
+              { key: 'hoursWorked', label: 'Hours', render: v => v != null ? `${v}h` : '—' },
+              { key: 'accomplishments', label: 'Summary', render: v => <span className="text-xs text-gray-600">{v ? String(v).slice(0, 55) + (String(v).length > 55 ? '…' : '') : '—'}</span> },
+              { key: 'id', label: 'Actions', render: (_v, row: any) => (
+                <PortalButton size="sm" variant="secondary" onClick={() => setSelectedReport(row)}>View</PortalButton>
+              )},
+            ]}
+            rows={reports}
+            emptyMessage="No team reports submitted yet"
+          />
+
+          {selectedReport && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.45)' }} onClick={() => setSelectedReport(null)}>
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+                <div className="px-6 py-4 border-b border-gray-100">
+                  <p className="text-lg font-bold text-gray-900">Daily Report</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {selectedReport.userName || selectedReport.user || '—'} · {selectedReport.userRole || '—'} · {selectedReport.userDepartment || '—'}
+                  </p>
+                </div>
+                <div className="p-6 space-y-4 max-h-[72vh] overflow-y-auto">
+                  <div className="grid grid-cols-2 gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                    <div>
+                      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Submitted by</p>
+                      <p className="text-sm font-semibold text-slate-800 mt-0.5">{selectedReport.userName || selectedReport.user || '—'}</p>
+                      <p className="text-xs text-slate-500">{selectedReport.userEmail || '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Role / Dept</p>
+                      <p className="text-sm font-medium text-slate-700 mt-0.5">{selectedReport.userRole || '—'}</p>
+                      <p className="text-xs text-slate-500">{selectedReport.userDepartment || '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Report Date</p>
+                      <p className="text-sm font-medium text-slate-700 mt-0.5">
+                        {selectedReport.reportDate ? new Date(selectedReport.reportDate).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Submitted At</p>
+                      <p className="text-sm font-medium text-slate-700 mt-0.5">{fmtEaReportDate(selectedReport.submittedAt)}</p>
+                    </div>
+                    {selectedReport.hoursWorked != null && (
+                      <div>
+                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Hours worked</p>
+                        <p className="text-sm font-medium text-slate-700 mt-0.5">{selectedReport.hoursWorked}h</p>
+                      </div>
+                    )}
+                  </div>
+                  {[
+                    { label: 'Accomplishments', value: selectedReport.accomplishments },
+                    { label: 'Challenges', value: selectedReport.challenges },
+                    { label: 'Plan for tomorrow', value: selectedReport.tomorrowPlan || selectedReport.tomorrow_plan },
+                  ].filter((f) => f.value).map((f) => (
+                    <div key={f.label}>
+                      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">{f.label}</p>
+                      <p className="text-sm text-slate-700 bg-slate-50 rounded-xl p-3 leading-relaxed whitespace-pre-wrap">{f.value}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="px-6 py-4 border-t border-slate-100 flex justify-end">
+                  <PortalButton variant="secondary" onClick={() => setSelectedReport(null)}>Close</PortalButton>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

@@ -2120,6 +2120,13 @@ function EADashboard({ data, refetch, user, onLogout }: { data: any; refetch: (k
         </div>
       )}
 
+      {section === 'daily-report' && (
+        <div>
+          <SectionHeader title="Daily Report" subtitle="Submit your end-of-day report" />
+          <DailyReportForm onSubmitted={() => refetch(['allReports'])} />
+        </div>
+      )}
+
       {section === 'contract-status' && (
         <div>
           <SectionHeader title="Contract Status Board" subtitle="All contracts grouped by status" />

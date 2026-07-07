@@ -722,7 +722,7 @@ function SalesSection({ data, refetch }: { data: any; refetch: () => void }) {
                 >
                   <option value="">All agents</option>
                   {uniqueAgents.map((agent) => (
-                    <option key={agent} value={agent}>{agent}</option>
+                    <option key={String(agent)} value={String(agent)}>{String(agent)}</option>
                   ))}
                 </select>
               </div>
@@ -762,14 +762,14 @@ function SalesSection({ data, refetch }: { data: any; refetch: () => void }) {
               {filteredClients.map((client: any) => {
                 const editing = editingClientId === client.id;
                 return (
-                  <div key={client.id || client.referenceNumber || client.email || client.phone} className={`${darkCard} p-6 transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_25px_60px_-35px_rgba(15,23,42,0.35)]`}>
+                  <div key={String(client.id ?? client.referenceNumber ?? client.email ?? client.phone ?? '')} className={`${darkCard} p-6 transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_25px_60px_-35px_rgba(15,23,42,0.35)]`}>
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Lead / Client</p>
                         <h3 className="mt-3 text-xl font-semibold tracking-tight text-white">
-                          {client.name || client.referenceNumber || 'Unnamed client'}
+                          {String(client.name ?? client.referenceNumber ?? 'Unnamed client')}
                         </h3>
-                        <p className="mt-1 text-sm text-slate-300">{client.email || client.phone || 'No contact details'}</p>
+                        <p className="mt-1 text-sm text-slate-300">{String(client.email ?? client.phone ?? 'No contact details')}</p>
                       </div>
                       <div className="flex flex-col items-start gap-3 sm:items-end">
                         <span className="rounded-full bg-slate-900/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-slate-300 border border-slate-700">

@@ -97,7 +97,8 @@ const NAV_GROUPS = [
     items: [
       { id: 'overview',   label: 'Overview',       icon: Ic.overview },
       { id: 'finance',    label: 'Finance',         icon: Ic.finance },
-      { id: 'sales',      label: 'Sales & Leads',   icon: Ic.sales },
+      { id: 'sales',      label: 'Sales',           icon: Ic.sales },
+      { id: 'leads',      label: 'Leads',           icon: Ic.users2 },
       { id: 'operations', label: 'Operations',      icon: Ic.ops },
     ],
   },
@@ -339,7 +340,7 @@ function Sidebar({ section, setSection, pendingCount, user, onLogout, onProfileO
 // ─── Top bar ──────────────────────────────────────────────────────────────────
 function TopBar({ section, onFaqOpen, onMenuToggle }: { section: string; onFaqOpen: () => void; onMenuToggle?: () => void }) {
   const titles: Record<string, string> = {
-    overview: 'Overview', finance: 'Finance', sales: 'Sales & Leads',
+    overview: 'Overview', finance: 'Finance', sales: 'Sales', leads: 'Leads',
     operations: 'Operations', people: 'People', contracts: 'Contracts',
     approvals: 'Approvals Queue', reports: 'Reports',
     chat: 'Chat', notifications: 'Notifications', admin: 'Control Panel',
@@ -585,7 +586,6 @@ function SalesSection({ data, refetch }: { data: any; refetch: () => void }) {
   const detailFields = [
     { key: 'name', label: 'Client Name', editable: true },
     { key: 'referenceNumber', label: 'Reference' },
-    { key: 'status', label: 'Status', editable: true },
     { key: 'email', label: 'Email', editable: true },
     { key: 'phone', label: 'Phone', editable: true },
     { key: 'country', label: 'Country', editable: true },
@@ -593,9 +593,6 @@ function SalesSection({ data, refetch }: { data: any; refetch: () => void }) {
     { key: 'serviceDescription', label: 'Service Description', editable: true },
     { key: 'agentName', label: 'Agent' },
     { key: 'trainerId', label: 'Trainer ID', editable: true },
-    { key: 'estimatedValue', label: 'Estimated Value (KSh)', editable: true },
-    { key: 'priority', label: 'Priority', editable: true },
-    { key: 'expectedStartDate', label: 'Expected Start Date', editable: true },
     { key: 'createdAt', label: 'Created At' },
     { key: 'updatedAt', label: 'Last Updated' },
   ];
@@ -718,7 +715,7 @@ function SalesSection({ data, refetch }: { data: any; refetch: () => void }) {
                   id="ceo-agent-filter"
                   value={agentFilter}
                   onChange={(e) => setAgentFilter(e.target.value)}
-                  className={darkInp}
+                  className={inp}
                 >
                   <option value="">All agents</option>
                   {uniqueAgents.map((agent) => (
@@ -735,7 +732,7 @@ function SalesSection({ data, refetch }: { data: any; refetch: () => void }) {
                   onChange={(e) => setSearchInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') setSearchTerm(searchInput.trim()); }}
                   placeholder="Search by name, phone, industry"
-                  className={darkInp}
+                  className={inp}
                 />
               </div>
             </div>
@@ -764,17 +761,43 @@ function SalesSection({ data, refetch }: { data: any; refetch: () => void }) {
                 return (
                   <div key={String(client.id ?? client.referenceNumber ?? client.email ?? client.phone ?? '')} className={`${darkCard} p-6 transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_25px_60px_-35px_rgba(15,23,42,0.35)]`}>
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Lead / Client</p>
-                        <h3 className="mt-3 text-xl font-semibold tracking-tight text-white">
-                          {String(client.name ?? client.referenceNumber ?? 'Unnamed client')}
-                        </h3>
-                        <p className="mt-1 text-sm text-slate-300">{String(client.email ?? client.phone ?? 'No contact details')}</p>
+                      <div className="flex items-start gap-4">
+                        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl text-base font-bold text-white"
+                          style={{ background: `linear-gradient(135deg, ${C.blue} 0%, ${C.purple} 100%)` }}>
+                          {(String(client.name || '?').trim().split(/\s+/).slice(0,2).map((w:string)=>w[0]).join('').toUpperCase())}
+                        </div>
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="text-lg font-semibold text-white">{client.name || 'Unnamed client'}</h3>
+                            <Badge status={client.status || 'NEW_LEAD'} />
+                          </div>
+                          <p className="mt-1 text-sm text-slate-400">{client.email || client.phone || 'No contact details'}</p>
+                          <p className="mt-0.5 text-xs text-slate-500">{client.referenceNumber || 'No ref'} · {client.industryCategory || '—'}</p>
+                        </div>
                       </div>
                       <div className="flex flex-col items-start gap-3 sm:items-end">
-                        <span className="rounded-full bg-slate-900/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-slate-300 border border-slate-700">
-                          {client.referenceNumber || 'No ref'}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          {!editing && client.phone && (
+                            <>
+                              <a href={`tel:${String(client.phone).trim().replace(/\s+/g, '')}`}
+                                className="rounded-full bg-slate-900 border border-slate-700 p-2 text-slate-200 hover:bg-slate-800"
+                                title="Call client">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h2.18a2 2 0 011.8 1.1l1.2 2.4a2 2 0 01-.45 2.3l-1.2 1.2a16 16 0 006.6 6.6l1.2-1.2a2 2 0 012.3-.45l2.4 1.2A2 2 0 0119 18.82V21a2 2 0 01-2 2h-1C7.82 23 1 16.18 1 8V7a2 2 0 012-2h0z" />
+                                </svg>
+                              </a>
+                              <a href={`https://wa.me/${String(client.phone).replace(/\D/g,'')}`}
+                                target="_blank" rel="noreferrer"
+                                className="rounded-full bg-slate-900 border border-slate-700 p-2 text-emerald-400 hover:bg-slate-800"
+                                title="WhatsApp client">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16.66 7.34a5 5 0 10-7.07 7.07l.02.02L7 19l4.58-2.12a5 5 0 007.08-7.07z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.15 8.85c.2.38.32.8.32 1.23 0 1.95-1.58 3.53-3.53 3.53-.43 0-.85-.1-1.23-.32L10 12.6l-.95 2.7 2.72-.73c.39.18.8.29 1.24.29 2.2 0 4-1.8 4-4 0-.44-.11-.85-.31-1.22" />
+                                </svg>
+                              </a>
+                            </>
+                          )}
+                        </div>
                         <button
                           type="button"
                           onClick={() => (editing ? cancelEditing() : startEditing(client))}
@@ -785,9 +808,26 @@ function SalesSection({ data, refetch }: { data: any; refetch: () => void }) {
                       </div>
                     </div>
 
-                    <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                    <div className="mt-5 grid grid-cols-3 gap-3 rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Est. Value</p>
+                        <p className="mt-1 text-sm font-semibold text-emerald-400">
+                          {client.estimatedValue ? `KSh ${Number(client.estimatedValue).toLocaleString()}` : '—'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Priority</p>
+                        <p className="mt-1 text-sm font-semibold text-white">{client.priority || '—'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Start Date</p>
+                        <p className="mt-1 text-sm font-semibold text-white">{fmtDate(client.expectedStartDate)}</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 grid gap-3 sm:grid-cols-2">
                       {detailFields.map((field) => (
-                        <div key={field.key} className="rounded-3xl bg-slate-950/90 border border-slate-800 p-4 shadow-sm">
+                        <div key={field.key} className="grid gap-1">
                           <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-slate-400">
                             {field.label}
                           </p>
@@ -827,7 +867,7 @@ function SalesSection({ data, refetch }: { data: any; refetch: () => void }) {
                               />
                             )
                           ) : (
-                            <div className="mt-2 text-sm text-slate-200">
+                            <div className="text-sm text-slate-200">
                               {renderValue(client, field.key)}
                             </div>
                           )}
@@ -845,6 +885,430 @@ function SalesSection({ data, refetch }: { data: any; refetch: () => void }) {
                           className="inline-flex items-center justify-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
                         >
                           {savingId === client.id ? 'Saving...' : 'Save changes'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LeadsSection({ data, refetch }: { data: any; refetch: () => void }) {
+  const leads = data.ceoLeads || [];
+  const [showForm, setShowForm] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<any>({});
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [saveMsg, setSaveMsg] = useState('');
+
+  const statusOptions = ['NEW_LEAD', 'FOLLOW_UP', 'QUALIFIED', 'CONVERTED', 'DISQUALIFIED'];
+  const statuses = statusOptions.map((status) => ({ label: status.replace(/_/g, ' '), value: status }));
+  const filteredLeads = leads.filter((lead: any) => {
+    if (statusFilter && lead.status !== statusFilter) return false;
+    if (!searchTerm) return true;
+    const q = searchTerm.toLowerCase();
+    return [lead.name, lead.phone, lead.email, lead.industry, lead.description].some((value: any) => String(value || '').toLowerCase().includes(q));
+  });
+
+  const resetLeadForm = () => {
+    setEditingId(null);
+    setEditForm({ name: '', phone: '', email: '', status: 'NEW_LEAD', industry: '', description: '' });
+    setSaveMsg('');
+  };
+
+  const startEditing = (lead: any) => {
+    setShowForm(true);
+    setSaveMsg('');
+    setEditingId(lead.id);
+    setEditForm({
+      name: lead.name || '',
+      phone: lead.phone || '',
+      email: lead.email || '',
+      status: lead.status || 'NEW_LEAD',
+      industry: lead.industry || '',
+      description: lead.description || '',
+    });
+  };
+
+  const cancelEditing = () => {
+    setShowForm(false);
+    resetLeadForm();
+  };
+
+  const saveLead = async (lead: any) => {
+    setSaveMsg('');
+    setSavingId(lead.id);
+    try {
+      await apiClient.put(`/api/v1/ceo-leads/${lead.id}`, {
+        name: editForm.name,
+        phone: editForm.phone,
+        email: editForm.email,
+        status: editForm.status,
+        industry: editForm.industry,
+        description: editForm.description,
+      });
+      setSaveMsg('Lead updated successfully.');
+      cancelEditing();
+      refetch();
+    } catch (err: any) {
+      setSaveMsg(err?.response?.data?.error || 'Failed to save lead.');
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const createLead = async () => {
+    setSaveMsg('');
+    setSavingId('new');
+    if (!editForm.name.trim() || !editForm.phone.trim()) {
+      setSaveMsg('Name and phone are required.');
+      setSavingId(null);
+      return;
+    }
+    try {
+      await apiClient.post('/api/v1/ceo-leads', {
+        name: editForm.name.trim(),
+        phone: editForm.phone.trim(),
+        email: editForm.email?.trim() || undefined,
+        status: editForm.status || 'NEW_LEAD',
+        industry: editForm.industry?.trim() || undefined,
+        description: editForm.description?.trim() || undefined,
+      });
+      setSaveMsg('Lead created successfully.');
+      resetLeadForm();
+      setShowForm(false);
+      refetch();
+    } catch (err: any) {
+      setSaveMsg(err?.response?.data?.error || 'Failed to create lead.');
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const logFollowUp = async (id: string, method: 'CALL' | 'MESSAGE' | 'WHATSAPP') => {
+    try {
+      await apiClient.post(`/api/v1/ceo-leads/${id}/follow-up`, { method });
+      refetch();
+    } catch {
+      // silent failure; still open link
+    }
+  };
+
+  const waLink = (phone: string) => `https://wa.me/${String(phone).replace(/\D/g, '')}`;
+
+  const renderLeadValue = (lead: any, key: string) => {
+    if (key === 'status') return <Badge status={lead.status || 'NEW_LEAD'} />;
+    if (key === 'createdAt' || key === 'updatedAt') return fmtDateTime(lead[key]);
+    return lead[key] || '—';
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className={`${card} p-5`}> 
+        <SectionTitle
+          title="CEO Leads"
+          sub="Private lead pipeline for executive review"
+          action={<Btn icon={Ic.plus} onClick={() => { resetLeadForm(); setShowForm((prev) => !prev); }}>{showForm ? 'Close' : 'Add Lead'}</Btn>}
+        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5">
+          <div className="rounded-3xl border border-slate-100 bg-slate-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Total Leads</p>
+            <p className="mt-3 text-3xl font-semibold text-slate-900">{leads.length}</p>
+            <p className="text-sm text-slate-500 mt-1">Executive-only pipeline review</p>
+          </div>
+          <div className="rounded-3xl border border-slate-100 bg-slate-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Conversion</p>
+            <p className="mt-3 text-3xl font-semibold text-slate-900">{Math.round((leads.filter((l: any) => l.status === 'CONVERTED').length / Math.max(1, leads.length)) * 100)}%</p>
+            <p className="text-sm text-slate-500 mt-1">Converted leads / total leads</p>
+          </div>
+        </div>
+      </div>
+
+      <div className={card}>
+        <div className="p-5 border-b border-slate-100">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <SectionTitle title="Lead roster" sub={`${filteredLeads.length} leads shown`} />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3 w-full max-w-3xl">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className={inp}
+              >
+                <option value="">All statuses</option>
+                {statuses.map((status) => (
+                  <option key={status.value} value={status.value}>{status.label}</option>
+                ))}
+              </select>
+              <input
+                type="search"
+                placeholder="Search leads..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') setSearchTerm(searchInput.trim()); }}
+                className={inp}
+              />
+              <button
+                type="button"
+                onClick={() => setSearchTerm(searchInput.trim())}
+                className="rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
+        <div className="p-5 space-y-4">
+          {saveMsg && (
+            <div className={`rounded-2xl p-3 text-sm ${saveMsg.includes('Failed') ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>
+              {saveMsg}
+            </div>
+          )}
+
+          {showForm && !editingId && (
+            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900">New lead</h3>
+                  <p className="text-sm text-slate-500">Add a CEO-only lead to your private pipeline.</p>
+                </div>
+                <button type="button" onClick={cancelEditing} className="text-sm font-semibold text-slate-600 hover:text-slate-900">
+                  Cancel
+                </button>
+              </div>
+              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className={lbl} htmlFor="lead-name">Name</label>
+                  <input
+                    id="lead-name"
+                    type="text"
+                    value={editForm.name}
+                    onChange={(e) => setEditForm((f: any) => ({ ...f, name: e.target.value }))}
+                    className={inp}
+                    placeholder="Lead name"
+                  />
+                </div>
+                <div>
+                  <label className={lbl} htmlFor="lead-phone">Phone</label>
+                  <input
+                    id="lead-phone"
+                    type="tel"
+                    value={editForm.phone}
+                    onChange={(e) => setEditForm((f: any) => ({ ...f, phone: e.target.value }))}
+                    className={inp}
+                    placeholder="07xx xxx xxx"
+                  />
+                </div>
+                <div>
+                  <label className={lbl} htmlFor="lead-email">Email</label>
+                  <input
+                    id="lead-email"
+                    type="email"
+                    value={editForm.email}
+                    onChange={(e) => setEditForm((f: any) => ({ ...f, email: e.target.value }))}
+                    className={inp}
+                    placeholder="name@example.com"
+                  />
+                </div>
+                <div>
+                  <label className={lbl} htmlFor="lead-industry">Industry</label>
+                  <input
+                    id="lead-industry"
+                    type="text"
+                    value={editForm.industry}
+                    onChange={(e) => setEditForm((f: any) => ({ ...f, industry: e.target.value }))}
+                    className={inp}
+                    placeholder="Industry"
+                  />
+                </div>
+                <div>
+                  <label className={lbl} htmlFor="lead-status">Status</label>
+                  <select
+                    id="lead-status"
+                    value={editForm.status}
+                    onChange={(e) => setEditForm((f: any) => ({ ...f, status: e.target.value }))}
+                    className={inp}
+                  >
+                    {statuses.map((status) => (
+                      <option key={status.value} value={status.value}>{status.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="sm:col-span-2">
+                  <label className={lbl} htmlFor="lead-description">Notes</label>
+                  <textarea
+                    id="lead-description"
+                    value={editForm.description}
+                    onChange={(e) => setEditForm((f: any) => ({ ...f, description: e.target.value }))}
+                    className={`${inp} min-h-[128px] resize-none`}
+                    placeholder="Lead summary or follow-up context"
+                  />
+                </div>
+              </div>
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={createLead}
+                  disabled={savingId === 'new'}
+                  className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-60"
+                >
+                  {savingId === 'new' ? 'Saving...' : 'Create lead'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {editingId && (
+            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
+              Updating lead details below. Click Cancel to stop editing.
+            </div>
+          )}
+
+          {leads.length === 0 && !showForm ? (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-500">
+              No leads yet — click Add Lead to start your own pipeline.
+            </div>
+          ) : filteredLeads.length === 0 ? (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-500">
+              No matching leads found.
+            </div>
+          ) : (
+            <div className="grid gap-4 xl:grid-cols-2">
+              {filteredLeads.map((lead: any) => {
+                const editing = editingId === lead.id;
+                return (
+                  <div key={lead.id} className={`${darkCard} p-6`}>
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="flex items-start gap-4">
+                        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl text-base font-bold text-white"
+                          style={{ background: `linear-gradient(135deg, ${C.purple} 0%, ${C.blue} 100%)` }}>
+                          {(String(lead.name || '?').trim().split(/\s+/).slice(0,2).map((w:string)=>w[0]).join('').toUpperCase())}
+                        </div>
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="text-lg font-semibold text-white">{lead.name || 'Unnamed lead'}</h3>
+                            <Badge status={lead.status || 'NEW_LEAD'} />
+                          </div>
+                          <p className="mt-1 text-sm text-slate-300">{lead.industry || 'Industry not specified'}</p>
+                          <p className="mt-0.5 text-xs text-slate-500">{lead.email || 'No email'} · {lead.phone || 'No phone'}</p>
+                          <p className="mt-1 text-xs text-slate-400">
+                            {lead.lastContactedAt ? `Last contacted ${fmtDateTime(lead.lastContactedAt)} via ${lead.lastContactMethod || 'unknown'}` : 'No contact logged yet'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-start gap-3 sm:items-end">
+                        <button
+                          type="button"
+                          onClick={() => (editing ? cancelEditing() : startEditing(lead))}
+                          className="inline-flex items-center justify-center rounded-full border border-slate-700 bg-slate-950 px-4 py-2 text-sm font-semibold text-slate-100 shadow-sm transition hover:border-slate-500 hover:bg-slate-900"
+                        >
+                          {editing ? 'Cancel' : 'Edit'}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="mt-5 grid grid-cols-3 gap-3 rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Est. Value</p>
+                        <p className="mt-1 text-sm font-semibold text-emerald-400">
+                          {lead.estimatedValue ? `KSh ${Number(lead.estimatedValue).toLocaleString()}` : '—'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Priority</p>
+                        <p className="mt-1 text-sm font-semibold text-white">{lead.priority || '—'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Start Date</p>
+                        <p className="mt-1 text-sm font-semibold text-white">{fmtDate(lead.expectedStartDate)}</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                      {[
+                        { key: 'email', label: 'Email' },
+                        { key: 'phone', label: 'Phone' },
+                        { key: 'industry', label: 'Industry' },
+                        { key: 'description', label: 'Notes' },
+                        { key: 'createdAt', label: 'Created' },
+                        { key: 'updatedAt', label: 'Updated' },
+                      ].map((field) => (
+                        <div key={field.key} className="rounded-3xl bg-slate-950/90 border border-slate-800 p-4 shadow-sm">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-slate-400">{field.label}</p>
+                          {editing && field.key !== 'createdAt' && field.key !== 'updatedAt' ? (
+                            field.key === 'description' ? (
+                              <textarea
+                                value={editForm.description}
+                                onChange={(e) => setEditForm((f: any) => ({ ...f, description: e.target.value }))}
+                                className={`${darkInp} min-h-[96px] mt-2`}
+                              />
+                            ) : field.key === 'email' ? (
+                              <input
+                                type="email"
+                                value={editForm.email}
+                                onChange={(e) => setEditForm((f: any) => ({ ...f, email: e.target.value }))}
+                                className={`${darkInp} mt-2`}
+                              />
+                            ) : field.key === 'phone' ? (
+                              <input
+                                type="tel"
+                                value={editForm.phone}
+                                onChange={(e) => setEditForm((f: any) => ({ ...f, phone: e.target.value }))}
+                                className={`${darkInp} mt-2`}
+                              />
+                            ) : (
+                              <input
+                                type="text"
+                                value={editForm[field.key] || ''}
+                                onChange={(e) => setEditForm((f: any) => ({ ...f, [field.key]: e.target.value }))}
+                                className={`${darkInp} mt-2`}
+                              />
+                            )
+                          ) : (
+                            <div className="mt-2 text-sm text-slate-200">{renderLeadValue(lead, field.key)}</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-3 gap-2">
+                      <a href={`tel:${String(lead.phone).trim().replace(/\s+/g, '')}`}
+                        onClick={() => logFollowUp(lead.id, 'CALL')}
+                        className="flex items-center justify-center gap-1.5 rounded-xl bg-slate-100 px-2 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200">
+                        <span>Call</span>
+                      </a>
+                      <a href={`sms:${String(lead.phone).trim().replace(/\s+/g, '')}`}
+                        onClick={() => logFollowUp(lead.id, 'MESSAGE')}
+                        className="flex items-center justify-center gap-1.5 rounded-xl bg-blue-50 px-2 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100">
+                        <span>Message</span>
+                      </a>
+                      <a href={waLink(lead.phone)}
+                        target="_blank" rel="noreferrer"
+                        onClick={() => logFollowUp(lead.id, 'WHATSAPP')}
+                        className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-50 px-2 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100">
+                        <span>WhatsApp</span>
+                      </a>
+                    </div>
+                    {editing && (
+                      <div className="mt-6 flex flex-col gap-3 rounded-[28px] border border-slate-800 bg-slate-900/95 p-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="text-sm text-slate-300">Save your lead updates here.</div>
+                        <button
+                          type="button"
+                          onClick={() => saveLead(lead)}
+                          disabled={savingId === lead.id}
+                          className="inline-flex items-center justify-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
+                        >
+                          {savingId === lead.id ? 'Saving...' : 'Save changes'}
                         </button>
                       </div>
                     )}
@@ -3165,6 +3629,7 @@ export default function CEOPortal() {
     { key: 'techRequests',       endpoint: '/api/v1/tech-funding-requests',        fallback: [], transform: (r: any) => Array.isArray(r) ? r : r.data || [] },
     { key: 'complianceReports',  endpoint: '/api/v1/reports/compliance',          fallback: [], transform: (r: any) => Array.isArray(r) ? r : r.data || [] },
     { key: 'clients',            endpoint: '/api/v1/clients/all',                 fallback: [], transform: (r: any) => Array.isArray(r) ? r : r.data || r.clients || [] },
+    { key: 'ceoLeads',           endpoint: '/api/v1/ceo-leads',                    fallback: [], transform: (r: any) => Array.isArray(r) ? r : r.data || r.leads || [] },
     { key: 'projects',           endpoint: '/api/v1/projects?limit=200',              fallback: [], transform: (r: any) => Array.isArray(r) ? r : r.projects || r.data || [] },
     { key: 'repos',              endpoint: '/api/v1/github/repos',                fallback: [], transform: (r: any) => Array.isArray(r) ? r : r.data || [] },
     { key: 'commissions',        endpoint: '/api/v1/commissions',                 fallback: [], transform: (r: any) => Array.isArray(r) ? r : r.data || [] },
@@ -3311,6 +3776,7 @@ export default function CEOPortal() {
           {section === 'overview'       && <OverviewSection      {...sectionProps} />}
           {section === 'finance'        && <FinanceSection       {...sectionProps} />}
           {section === 'sales'          && <SalesSection         {...sectionProps} />}
+          {section === 'leads'          && <LeadsSection         {...sectionProps} />}
           {section === 'operations'     && <OperationsSection    {...sectionProps} />}
           {section === 'people'         && <PeopleSection        {...sectionProps} />}
           {section === 'contracts'      && <ContractsSection     {...sectionProps} />}

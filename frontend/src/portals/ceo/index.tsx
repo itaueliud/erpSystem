@@ -97,7 +97,7 @@ const NAV_GROUPS = [
     items: [
       { id: 'overview',   label: 'Overview',       icon: Ic.overview },
       { id: 'finance',    label: 'Finance',         icon: Ic.finance },
-      { id: 'sales',      label: 'Sales',           icon: Ic.sales },
+      { id: 'sales',      label: 'Sales and Leads',           icon: Ic.sales },
       { id: 'leads',      label: 'Leads',           icon: Ic.users2 },
       { id: 'operations', label: 'Operations',      icon: Ic.ops },
     ],
@@ -298,7 +298,7 @@ function Sidebar({ section, setSection, pendingCount, user, onLogout, onProfileO
                     onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLElement).style.color = '#e2e8f0'; }}
                     onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#94a3b8'; } }}>
                     <span className="flex-shrink-0 opacity-90">{item.icon}</span>
-                    <span className="flex-1 text-left">{item.label}</span>
+                    <span className="flex-1 text-left whitespace-nowrap overflow-visible">{item.label}</span>
                     {badge > 0 && (
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center"
                         style={{ background: item.id === 'admin' ? C.blue2 : '#ef4444', color: '#fff' }}>
@@ -340,7 +340,7 @@ function Sidebar({ section, setSection, pendingCount, user, onLogout, onProfileO
 // ─── Top bar ──────────────────────────────────────────────────────────────────
 function TopBar({ section, onFaqOpen, onMenuToggle }: { section: string; onFaqOpen: () => void; onMenuToggle?: () => void }) {
   const titles: Record<string, string> = {
-    overview: 'Overview', finance: 'Finance', sales: 'Sales', leads: 'Leads',
+    overview: 'Overview', finance: 'Finance', sales: 'Sales and Leads', leads: 'Leads',
     operations: 'Operations', people: 'People', contracts: 'Contracts',
     approvals: 'Approvals Queue', reports: 'Reports',
     chat: 'Chat', notifications: 'Notifications', admin: 'Control Panel',
@@ -558,6 +558,61 @@ function FinanceSection({ data }: { data: any }) {
   );
 }
 
+// ─── Modal: Send Message ──────────────────────────────────────────────────────
+function MessageModal({ phone, name, onClose, onSent }: { phone: string; name?: string; onClose: () => void; onSent?: () => void }) {
+  const [text, setText] = useState('');
+  const [sending, setSending] = useState(false);
+  const [err, setErr] = useState('');
+
+  const send = async () => {
+    if (!text.trim()) { setErr('Message cannot be empty.'); return; }
+    setSending(true);
+    setErr('');
+    try {
+      await apiClient.post('/api/v1/messaging/send-sms', { to: phone, message: text.trim() });
+      onSent?.();
+      onClose();
+    } catch (e: any) {
+      setErr(e?.response?.data?.error || 'Failed to send message.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
+        <p className="text-sm font-semibold text-slate-900">Message {name || phone}</p>
+        <p className="text-xs text-slate-400 mb-3">{phone}</p>
+        <textarea
+          className={`${inp} min-h-[110px]`}
+          value={text}
+          onChange={e => setText(e.target.value)}
+          placeholder="Type your message..."
+        />
+        {err && <p className="mt-2 text-sm text-red-600">{err}</p>}
+        <div className="mt-4 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex items-center justify-center rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-200 transition"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={send}
+            disabled={sending}
+            className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-60 transition"
+          >
+            {sending ? 'Sending...' : 'Send'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Section: Sales ───────────────────────────────────────────────────────────
 function SalesSection({ data, refetch }: { data: any; refetch: () => void }) {
   const clients = data.clients || [];
@@ -569,6 +624,7 @@ function SalesSection({ data, refetch }: { data: any; refetch: () => void }) {
   const [editForm, setEditForm] = useState<any>({});
   const [savingId, setSavingId] = useState<string | null>(null);
   const [saveMsg, setSaveMsg] = useState<string>('');
+  const [messagingClient, setMessagingClient] = useState<any>(null);
 
   const byStatus = (s: string) => clients.filter((c: any) => c.status === s).length;
   const uniqueAgents = Array.from(new Set(clients.map((c: any) => c.agentName || c.agentId).filter(Boolean))).sort();
@@ -664,7 +720,8 @@ function SalesSection({ data, refetch }: { data: any; refetch: () => void }) {
   ];
 
   return (
-    <div className="space-y-5">
+    <>
+      <div className="space-y-5">
       {/* Pipeline funnel */}
       <div className={`${card} p-5`}>
         <SectionTitle title="Lead Pipeline" sub="Current status distribution" />
@@ -786,6 +843,13 @@ function SalesSection({ data, refetch }: { data: any; refetch: () => void }) {
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h2.18a2 2 0 011.8 1.1l1.2 2.4a2 2 0 01-.45 2.3l-1.2 1.2a16 16 0 006.6 6.6l1.2-1.2a2 2 0 012.3-.45l2.4 1.2A2 2 0 0119 18.82V21a2 2 0 01-2 2h-1C7.82 23 1 16.18 1 8V7a2 2 0 012-2h0z" />
                                 </svg>
                               </a>
+                              <button
+                                type="button"
+                                onClick={() => setMessagingClient(client)}
+                                className="rounded-full bg-slate-900 border border-slate-700 p-2 text-blue-400 hover:bg-slate-800"
+                                title="Message">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                              </button>
                               <a href={`https://wa.me/${String(client.phone).replace(/\D/g,'')}`}
                                 target="_blank" rel="noreferrer"
                                 className="rounded-full bg-slate-900 border border-slate-700 p-2 text-emerald-400 hover:bg-slate-800"
@@ -895,7 +959,11 @@ function SalesSection({ data, refetch }: { data: any; refetch: () => void }) {
           )}
         </div>
       </div>
+      {messagingClient && (
+        <MessageModal phone={messagingClient.phone} name={messagingClient.name} onClose={() => setMessagingClient(null)} />
+      )}
     </div>
+    </>
   );
 }
 
@@ -909,12 +977,22 @@ function LeadsSection({ data, refetch }: { data: any; refetch: () => void }) {
   const [editForm, setEditForm] = useState<any>({});
   const [savingId, setSavingId] = useState<string | null>(null);
   const [saveMsg, setSaveMsg] = useState('');
+  const [messagingLead, setMessagingLead] = useState<any>(null);
+  const [industryFilter, setIndustryFilter] = useState('');
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [duplicateStrategy, setDuplicateStrategy] = useState<'SKIP' | 'UPDATE' | 'MERGE'>('SKIP');
+  const [importing, setImporting] = useState(false);
+  const [importSummary, setImportSummary] = useState<any | null>(null);
+  const [importError, setImportError] = useState('');
 
   const statusOptions = ['NEW_LEAD', 'FOLLOW_UP', 'QUALIFIED', 'CONVERTED', 'DISQUALIFIED'];
   const statuses = statusOptions.map((status) => ({ label: status.replace(/_/g, ' '), value: status }));
   const industryOptions = ['Technology', 'Real Estate', 'Finance', 'Healthcare', 'Retail', 'Manufacturing', 'Hospitality'];
+  const uniqueIndustries = Array.from(new Set<string>(leads.map((l: any) => l.industry).filter(Boolean) as string[])).sort();
+  
   const filteredLeads = leads.filter((lead: any) => {
     if (statusFilter && lead.status !== statusFilter) return false;
+    if (industryFilter && lead.industry !== industryFilter) return false;
     if (!searchTerm) return true;
     const q = searchTerm.toLowerCase();
     return [lead.name, lead.phone, lead.email, lead.industry, lead.description].some((value: any) => String(value || '').toLowerCase().includes(q));
@@ -1006,6 +1084,31 @@ function LeadsSection({ data, refetch }: { data: any; refetch: () => void }) {
 
   const waLink = (phone: string) => `https://wa.me/${String(phone).replace(/\D/g, '')}`;
 
+  const runImport = async () => {
+    if (!importFile) {
+      setImportError('Please select a file to import.');
+      return;
+    }
+    setImportError('');
+    setImportSummary(null);
+    setImporting(true);
+    try {
+      const payload = new FormData();
+      payload.append('file', importFile);
+      payload.append('duplicateStrategy', duplicateStrategy);
+      const response = await apiClient.post('/api/v1/ceo-leads/import', payload, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setImportSummary(response.data);
+      setImportError('');
+      refetch();
+    } catch (err: any) {
+      setImportError(err?.response?.data?.error || 'Failed to import leads.');
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const renderLeadValue = (lead: any, key: string) => {
     if (key === 'status') return <Badge status={lead.status || 'NEW_LEAD'} />;
     if (key === 'createdAt' || key === 'updatedAt') return fmtDateTime(lead[key]);
@@ -1040,7 +1143,7 @@ function LeadsSection({ data, refetch }: { data: any; refetch: () => void }) {
             <div>
               <SectionTitle title="Lead roster" sub={`${filteredLeads.length} leads shown`} />
             </div>
-            <div className="grid gap-3 sm:grid-cols-3 w-full max-w-3xl">
+            <div className="grid gap-3 sm:grid-cols-4 w-full max-w-4xl">
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
@@ -1049,6 +1152,16 @@ function LeadsSection({ data, refetch }: { data: any; refetch: () => void }) {
                 <option value="">All statuses</option>
                 {statuses.map((status) => (
                   <option key={status.value} value={status.value}>{status.label}</option>
+                ))}
+              </select>
+              <select
+                value={industryFilter}
+                onChange={(e) => setIndustryFilter(e.target.value)}
+                className={inp}
+              >
+                <option value="">All industries</option>
+                {uniqueIndustries.map((ind: string) => (
+                  <option key={ind} value={ind}>{ind}</option>
                 ))}
               </select>
               <input
@@ -1075,6 +1188,65 @@ function LeadsSection({ data, refetch }: { data: any; refetch: () => void }) {
               {saveMsg}
             </div>
           )}
+
+          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">Bulk lead import</h3>
+                <p className="text-sm text-slate-500">Upload .xlsx, .csv or .txt files and choose how duplicates are handled.</p>
+              </div>
+            </div>
+            <div className="mt-5 grid gap-4">
+              <label className={lbl} htmlFor="ceo-import-file">Upload file</label>
+              <input
+                id="ceo-import-file"
+                type="file"
+                accept=".xlsx,.csv,.txt"
+                onChange={(e) => setImportFile(e.target.files?.[0] ?? null)}
+                className={inp}
+              />
+              <div className="grid gap-3 sm:grid-cols-3">
+                {(['SKIP', 'UPDATE', 'MERGE'] as const).map((strategy) => (
+                  <label key={strategy} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 flex items-center gap-3 cursor-pointer hover:border-slate-400">
+                    <input
+                      type="radio"
+                      name="duplicateStrategy"
+                      value={strategy}
+                      checked={duplicateStrategy === strategy}
+                      onChange={() => setDuplicateStrategy(strategy)}
+                      className="h-4 w-4 text-blue-600"
+                    />
+                    <span>{strategy === 'SKIP' ? 'Skip duplicates' : strategy === 'UPDATE' ? 'Update duplicates' : 'Merge duplicates'}</span>
+                  </label>
+                ))}
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="text-sm text-slate-500">
+                  {importFile ? importFile.name : 'No file selected yet.'}
+                </div>
+                <button
+                  type="button"
+                  onClick={runImport}
+                  disabled={importing}
+                  className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-60 transition"
+                >
+                  {importing ? 'Importing...' : 'Import leads'}
+                </button>
+              </div>
+              {importError && <div className="rounded-2xl bg-red-50 p-3 text-sm text-red-700">{importError}</div>}
+              {importSummary && (
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
+                  <p className="font-semibold text-slate-900">Import summary</p>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    <div className="rounded-2xl bg-slate-50 p-3">Found: <span className="font-semibold text-slate-900">{importSummary.totalFound}</span></div>
+                    <div className="rounded-2xl bg-slate-50 p-3">Imported: <span className="font-semibold text-slate-900">{importSummary.imported}</span></div>
+                    <div className="rounded-2xl bg-slate-50 p-3">Duplicates skipped: <span className="font-semibold text-slate-900">{importSummary.duplicatesSkipped}</span></div>
+                    <div className="rounded-2xl bg-slate-50 p-3">Invalid rows: <span className="font-semibold text-slate-900">{importSummary.invalid}</span></div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
 
           {showForm && !editingId && (
             <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
@@ -1302,11 +1474,12 @@ function LeadsSection({ data, refetch }: { data: any; refetch: () => void }) {
                         className="flex items-center justify-center gap-1.5 rounded-xl bg-slate-100 px-2 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200">
                         <span>Call</span>
                       </a>
-                      <a href={`sms:${String(lead.phone).trim().replace(/\s+/g, '')}`}
-                        onClick={() => logFollowUp(lead.id, 'MESSAGE')}
+                      <button
+                        type="button"
+                        onClick={() => setMessagingLead(lead)}
                         className="flex items-center justify-center gap-1.5 rounded-xl bg-blue-50 px-2 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100">
                         <span>Message</span>
-                      </a>
+                      </button>
                       <a href={waLink(lead.phone)}
                         target="_blank" rel="noreferrer"
                         onClick={() => logFollowUp(lead.id, 'WHATSAPP')}
@@ -1334,6 +1507,14 @@ function LeadsSection({ data, refetch }: { data: any; refetch: () => void }) {
           )}
         </div>
       </div>
+      {messagingLead && (
+        <MessageModal
+          phone={messagingLead.phone}
+          name={messagingLead.name}
+          onClose={() => setMessagingLead(null)}
+          onSent={() => logFollowUp(messagingLead.id, 'MESSAGE')}
+        />
+      )}
     </div>
   );
 }
@@ -3887,4 +4068,6 @@ export default function CEOPortal() {
     </div>
   );
 }
+
+
 

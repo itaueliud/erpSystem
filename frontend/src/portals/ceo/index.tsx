@@ -710,28 +710,33 @@ function SalesSection({ data, refetch }: { data: any; refetch: () => void }) {
               {filteredClients.map((client: any) => {
                 const editing = editingClientId === client.id;
                 return (
-                  <div key={client.id || client.referenceNumber || client.email || client.phone} className="rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                  <div key={client.id || client.referenceNumber || client.email || client.phone} className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_14px_40px_-30px_rgba(15,23,42,0.15)] transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_25px_60px_-35px_rgba(15,23,42,0.25)]">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                       <div>
-                        <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Lead / Client</p>
-                        <h3 className="mt-2 text-lg font-semibold text-slate-900">
+                        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Lead / Client</p>
+                        <h3 className="mt-3 text-xl font-semibold tracking-tight text-slate-900">
                           {client.name || client.referenceNumber || 'Unnamed client'}
                         </h3>
                         <p className="mt-1 text-sm text-slate-500">{client.email || client.phone || 'No contact details'}</p>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => (editing ? cancelEditing() : startEditing(client))}
-                        className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
-                      >
-                        {editing ? 'Cancel' : 'Edit'}
-                      </button>
+                      <div className="flex flex-col items-start gap-3 sm:items-end">
+                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
+                          {client.referenceNumber || 'No ref'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => (editing ? cancelEditing() : startEditing(client))}
+                          className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+                        >
+                          {editing ? 'Cancel' : 'Edit'}
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="mt-5 grid gap-3">
+                    <div className="mt-6 grid gap-4 sm:grid-cols-2">
                       {detailFields.map((field) => (
-                        <div key={field.key} className="grid gap-1">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                        <div key={field.key} className="rounded-3xl bg-slate-50 p-4 shadow-sm">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-slate-400">
                             {field.label}
                           </p>
                           {editing && field.editable ? (
@@ -752,7 +757,7 @@ function SalesSection({ data, refetch }: { data: any; refetch: () => void }) {
                               <textarea
                                 value={editForm.serviceDescription}
                                 onChange={(e) => setEditForm((f: any) => ({ ...f, serviceDescription: e.target.value }))}
-                                className={`${inp} min-h-[90px]`}
+                                className={`${inp} min-h-[96px]`}
                               />
                             ) : field.key === 'expectedStartDate' ? (
                               <input
@@ -770,7 +775,7 @@ function SalesSection({ data, refetch }: { data: any; refetch: () => void }) {
                               />
                             )
                           ) : (
-                            <div className="text-sm text-slate-700">
+                            <div className="mt-2 text-sm text-slate-700">
                               {renderValue(client, field.key)}
                             </div>
                           )}
@@ -779,13 +784,13 @@ function SalesSection({ data, refetch }: { data: any; refetch: () => void }) {
                     </div>
 
                     {editing && (
-                      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="mt-6 flex flex-col gap-3 rounded-[28px] border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
                         <div className="text-sm text-slate-500">Save all edited fields for this client.</div>
                         <button
                           type="button"
                           onClick={() => saveClient(client)}
                           disabled={savingId === client.id}
-                          className="inline-flex items-center justify-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
+                          className="inline-flex items-center justify-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
                         >
                           {savingId === client.id ? 'Saving...' : 'Save changes'}
                         </button>

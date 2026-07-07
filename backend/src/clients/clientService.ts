@@ -20,6 +20,8 @@ export interface UpdateClientInput {
   country?: string;
   industryCategory?: IndustryCategory;
   serviceDescription?: string;
+  status?: ClientStatus;
+  trainerId?: string;
   estimatedValue?: number;
   priority?: Priority;
   expectedStartDate?: Date;
@@ -214,6 +216,8 @@ export class ClientService {
       if (updates.country !== undefined)           { fields.push(`country = $${p++}`);            values.push(updates.country); }
       if (updates.industryCategory !== undefined)  { fields.push(`industry_category = $${p++}`);  values.push(normalizedUpdateIndustry); }
       if (updates.serviceDescription !== undefined){ fields.push(`service_description = $${p++}`);values.push(updates.serviceDescription); }
+      if (updates.status !== undefined)             { fields.push(`status = $${p++}`);              values.push(updates.status); }
+      if (updates.trainerId !== undefined)          { fields.push(`trainer_id = $${p++}`);          values.push(updates.trainerId); }
       if (updates.estimatedValue !== undefined)    { fields.push(`estimated_value = $${p++}`);    values.push(updates.estimatedValue); }
       if (updates.priority !== undefined)          { fields.push(`priority = $${p++}`);           values.push(updates.priority); }
       if (updates.expectedStartDate !== undefined) { fields.push(`expected_start_date = $${p++}`);values.push(updates.expectedStartDate); }

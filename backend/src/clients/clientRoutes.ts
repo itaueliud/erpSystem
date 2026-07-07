@@ -109,7 +109,7 @@ router.get('/all', async (req: Request, res: Response) => {
     }
     const { search, limit, offset } = req.query;
 
-    // Trainers only see clients assigned to them
+    // Trainers see clients assigned to them, created by them, or created by their agents
     if (role === 'TRAINER') {
       const { db } = await import('../database/connection');
       const result = await db.query(
@@ -121,6 +121,8 @@ router.get('/all', async (req: Request, res: Response) => {
          FROM clients c
          LEFT JOIN users u ON u.id = c.agent_id
          WHERE c.trainer_id = $1
+            OR c.agent_id = $1
+            OR c.agent_id IN (SELECT id FROM users WHERE trainer_id = $1)
          ORDER BY c.updated_at DESC`,
         [userId]
       );
@@ -221,6 +223,8 @@ router.put('/:id', async (req: Request, res: Response) => {
     if (req.body.country !== undefined) updates.country = req.body.country;
     if (req.body.industryCategory !== undefined) updates.industryCategory = req.body.industryCategory;
     if (req.body.serviceDescription !== undefined) updates.serviceDescription = req.body.serviceDescription;
+    if (req.body.status !== undefined) updates.status = req.body.status;
+    if (req.body.trainerId !== undefined) updates.trainerId = req.body.trainerId;
     if (req.body.estimatedValue !== undefined) updates.estimatedValue = req.body.estimatedValue;
     if (req.body.priority !== undefined) updates.priority = req.body.priority;
     if (req.body.expectedStartDate !== undefined) updates.expectedStartDate = req.body.expectedStartDate;

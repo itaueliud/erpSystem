@@ -556,12 +556,100 @@ function FinanceSection({ data }: { data: any }) {
 }
 
 // ─── Section: Sales ───────────────────────────────────────────────────────────
-function SalesSection({ data }: { data: any }) {
-  const clients     = data.clients  || [];
+function SalesSection({ data, refetch }: { data: any; refetch: () => void }) {
+  const clients = data.clients || [];
   const [activeStatus, setActiveStatus] = useState<string | null>(null);
+  const [editingClientId, setEditingClientId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<any>({});
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [saveMsg, setSaveMsg] = useState<string>('');
 
   const byStatus = (s: string) => clients.filter((c: any) => c.status === s).length;
   const filteredClients = activeStatus ? clients.filter((c: any) => c.status === activeStatus) : clients;
+
+  const detailFields = [
+    { key: 'name', label: 'Client Name', editable: true },
+    { key: 'referenceNumber', label: 'Reference' },
+    { key: 'status', label: 'Status', editable: true },
+    { key: 'email', label: 'Email', editable: true },
+    { key: 'phone', label: 'Phone', editable: true },
+    { key: 'country', label: 'Country', editable: true },
+    { key: 'industryCategory', label: 'Industry', editable: true },
+    { key: 'serviceDescription', label: 'Service Description', editable: true },
+    { key: 'agentName', label: 'Agent' },
+    { key: 'trainerId', label: 'Trainer ID', editable: true },
+    { key: 'estimatedValue', label: 'Estimated Value (KSh)', editable: true },
+    { key: 'priority', label: 'Priority', editable: true },
+    { key: 'expectedStartDate', label: 'Expected Start Date', editable: true },
+    { key: 'createdAt', label: 'Created At' },
+    { key: 'updatedAt', label: 'Last Updated' },
+  ];
+
+  const startEditing = (client: any) => {
+    setSaveMsg('');
+    setEditingClientId(client.id);
+    setEditForm({
+      name: client.name || '',
+      status: client.status || '',
+      email: client.email || '',
+      phone: client.phone || '',
+      country: client.country || '',
+      industryCategory: client.industryCategory || '',
+      serviceDescription: client.serviceDescription || '',
+      trainerId: client.trainerId || '',
+      estimatedValue: client.estimatedValue ?? '',
+      priority: client.priority || '',
+      expectedStartDate: client.expectedStartDate ? String(client.expectedStartDate).slice(0, 10) : '',
+    });
+  };
+
+  const cancelEditing = () => {
+    setEditingClientId(null);
+    setEditForm({});
+    setSaveMsg('');
+  };
+
+  const saveClient = async (client: any) => {
+    setSaveMsg('');
+    setSavingId(client.id);
+    try {
+      const payload: any = {
+        name: editForm.name,
+        status: editForm.status,
+        email: editForm.email,
+        phone: editForm.phone,
+        country: editForm.country,
+        industryCategory: editForm.industryCategory,
+        serviceDescription: editForm.serviceDescription,
+        trainerId: editForm.trainerId || undefined,
+        estimatedValue: editForm.estimatedValue !== '' ? Number(editForm.estimatedValue) : undefined,
+        priority: editForm.priority || undefined,
+        expectedStartDate: editForm.expectedStartDate || undefined,
+      };
+
+      await apiClient.put(`/api/v1/clients/${client.id}`, payload);
+      setSaveMsg('Client details saved successfully.');
+      cancelEditing();
+      refetch();
+    } catch (err: any) {
+      const message = err?.response?.data?.error || 'Failed to save client details.';
+      setSaveMsg(message);
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const renderValue = (client: any, key: string) => {
+    const value = client[key];
+    if (key === 'status') return <Badge status={String(value || 'NEW_LEAD')} />;
+    if (key === 'expectedStartDate' || key === 'createdAt' || key === 'updatedAt') return fmtDate(value);
+    if (key === 'estimatedValue') return value != null && value !== '' ? `KSh ${Number(value).toLocaleString()}` : '—';
+    return value ?? '—';
+  };
+
+  const statusOptions = [
+    'NEW_LEAD', 'CONVERTED', 'LEAD_ACTIVATED', 'LEAD_QUALIFIED', 'NEGOTIATION', 'CLOSED_WON',
+  ];
 
   return (
     <div className="space-y-5">
@@ -570,23 +658,29 @@ function SalesSection({ data }: { data: any }) {
         <SectionTitle title="Lead Pipeline" sub="Current status distribution" />
         <div className="grid grid-cols-3 lg:grid-cols-6 gap-3">
           {[
-            { label: 'New Lead',       status: 'NEW_LEAD',       color: C.purple },
-            { label: 'Converted',      status: 'CONVERTED',      color: C.blue2  },
-            { label: 'Activated',      status: 'LEAD_ACTIVATED', color: '#0891b2' },
-            { label: 'Qualified',      status: 'LEAD_QUALIFIED', color: C.amber  },
-            { label: 'Negotiation',    status: 'NEGOTIATION',    color: '#ea580c' },
-            { label: 'Closed Won',     status: 'CLOSED_WON',     color: C.green  },
-          ].map(s => {
+            { label: 'New Lead', status: 'NEW_LEAD', color: C.purple },
+            { label: 'Converted', status: 'CONVERTED', color: C.blue2 },
+            { label: 'Activated', status: 'LEAD_ACTIVATED', color: '#0891b2' },
+            { label: 'Qualified', status: 'LEAD_QUALIFIED', color: C.amber },
+            { label: 'Negotiation', status: 'NEGOTIATION', color: '#ea580c' },
+            { label: 'Closed Won', status: 'CLOSED_WON', color: C.green },
+          ].map((s) => {
             const isActive = activeStatus === s.status;
             return (
-            <button type="button" key={s.status}
-              onClick={() => setActiveStatus(prev => prev === s.status ? null : s.status)}
-              className={`rounded-xl p-3 text-center border transition-all w-full ${isActive ? 'shadow-sm border-current' : 'border-slate-100 hover:border-slate-300'}`}
-              style={{ background: s.color + '10', borderColor: isActive ? s.color : undefined }}>
-              <p className="text-2xl font-bold" style={{ color: s.color }}>{byStatus(s.status)}</p>
-              <p className="text-xs text-slate-500 mt-1 font-medium">{s.label}</p>
-            </button>
-          )})}
+              <button
+                type="button"
+                key={s.status}
+                onClick={() => setActiveStatus((prev) => (prev === s.status ? null : s.status))}
+                className={`rounded-xl p-3 text-center border transition-all w-full ${isActive ? 'shadow-sm border-current' : 'border-slate-100 hover:border-slate-300'}`}
+                style={{ background: s.color + '10', borderColor: isActive ? s.color : undefined }}
+              >
+                <p className="text-2xl font-bold" style={{ color: s.color }}>
+                  {byStatus(s.status)}
+                </p>
+                <p className="text-xs text-slate-500 mt-1 font-medium">{s.label}</p>
+              </button>
+            );
+          })}
         </div>
         {activeStatus && (
           <div className="mt-3">
@@ -597,23 +691,112 @@ function SalesSection({ data }: { data: any }) {
         )}
       </div>
 
-      {/* Clients table */}
+      {/* Clients cards */}
       <div className={card}>
         <div className="p-5 border-b border-slate-100">
           <SectionTitle title="All Clients" sub={`${filteredClients.length} ${activeStatus ? `(${activeStatus})` : 'total'}`} />
         </div>
-        <Table
-          cols={[
-            { key: 'name',             label: 'Client' },
-            { key: 'phone',            label: 'Phone' },
-            { key: 'country',          label: 'Country' },
-            { key: 'industryCategory', label: 'Industry', render: v => v || '—' },
-            { key: 'status',           label: 'Status',   render: v => <Badge status={v || 'NEW_LEAD'} /> },
-            { key: 'createdAt',        label: 'Added',    render: v => v ? new Date(v).toLocaleDateString() : '—' },
-          ]}
-          rows={filteredClients}
-          empty="No clients yet"
-        />
+        <div className="p-5 space-y-4">
+          {saveMsg && (
+            <div className={`rounded-2xl p-3 text-sm ${saveMsg.includes('Failed') ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>
+              {saveMsg}
+            </div>
+          )}
+
+          {filteredClients.length === 0 ? (
+            <p className="text-sm text-slate-500">No clients yet.</p>
+          ) : (
+            <div className="grid gap-4 xl:grid-cols-2">
+              {filteredClients.map((client: any) => {
+                const editing = editingClientId === client.id;
+                return (
+                  <div key={client.id || client.referenceNumber || client.email || client.phone} className="rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Lead / Client</p>
+                        <h3 className="mt-2 text-lg font-semibold text-slate-900">
+                          {client.name || client.referenceNumber || 'Unnamed client'}
+                        </h3>
+                        <p className="mt-1 text-sm text-slate-500">{client.email || client.phone || 'No contact details'}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => (editing ? cancelEditing() : startEditing(client))}
+                        className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+                      >
+                        {editing ? 'Cancel' : 'Edit'}
+                      </button>
+                    </div>
+
+                    <div className="mt-5 grid gap-3">
+                      {detailFields.map((field) => (
+                        <div key={field.key} className="grid gap-1">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                            {field.label}
+                          </p>
+                          {editing && field.editable ? (
+                            field.key === 'status' ? (
+                              <select
+                                value={editForm.status}
+                                onChange={(e) => setEditForm((f: any) => ({ ...f, status: e.target.value }))}
+                                className={inp}
+                              >
+                                <option value="">Select status</option>
+                                {statusOptions.map((option) => (
+                                  <option key={option} value={option}>
+                                    {option.replace(/_/g, ' ')}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : field.key === 'serviceDescription' ? (
+                              <textarea
+                                value={editForm.serviceDescription}
+                                onChange={(e) => setEditForm((f: any) => ({ ...f, serviceDescription: e.target.value }))}
+                                className={`${inp} min-h-[90px]`}
+                              />
+                            ) : field.key === 'expectedStartDate' ? (
+                              <input
+                                type="date"
+                                value={editForm.expectedStartDate}
+                                onChange={(e) => setEditForm((f: any) => ({ ...f, expectedStartDate: e.target.value }))}
+                                className={inp}
+                              />
+                            ) : (
+                              <input
+                                type={field.key === 'email' ? 'email' : field.key === 'estimatedValue' ? 'number' : 'text'}
+                                value={editForm[field.key] ?? ''}
+                                onChange={(e) => setEditForm((f: any) => ({ ...f, [field.key]: e.target.value }))}
+                                className={inp}
+                              />
+                            )
+                          ) : (
+                            <div className="text-sm text-slate-700">
+                              {renderValue(client, field.key)}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {editing && (
+                      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="text-sm text-slate-500">Save all edited fields for this client.</div>
+                        <button
+                          type="button"
+                          onClick={() => saveClient(client)}
+                          disabled={savingId === client.id}
+                          className="inline-flex items-center justify-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
+                        >
+                          {savingId === client.id ? 'Saving...' : 'Save changes'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

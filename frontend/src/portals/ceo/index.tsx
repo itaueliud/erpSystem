@@ -34,7 +34,9 @@ const C = {
 
 // ─── Shared primitives ────────────────────────────────────────────────────────
 const card = 'bg-white rounded-2xl border border-slate-100 shadow-sm';
+const darkCard = 'rounded-[28px] border border-slate-800 bg-slate-950 text-slate-100 shadow-[0_14px_40px_-30px_rgba(15,23,42,0.25)]';
 const inp  = 'w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all';
+const darkInp = 'w-full px-4 py-3 rounded-2xl border border-slate-700 bg-slate-900 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all';
 const lbl  = 'block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5';
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
@@ -261,7 +263,7 @@ function Sidebar({ section, setSection, pendingCount, user, onLogout, onProfileO
       {mobileOpen && (
         <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={onMobileClose} />
       )}
-      <aside className={`fixed lg:relative z-50 lg:z-auto w-60 flex-shrink-0 flex flex-col h-full lg:h-screen lg:sticky lg:top-0 overflow-y-auto transition-transform duration-300
+      <aside className={`fixed z-50 lg:z-auto w-60 flex-shrink-0 flex flex-col h-full lg:h-screen lg:sticky lg:top-0 overflow-y-auto transition-transform duration-300
         ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       style={{ background: C.navy, borderRight: `1px solid rgba(255,255,255,0.06)` }}>
 
@@ -559,13 +561,26 @@ function FinanceSection({ data }: { data: any }) {
 function SalesSection({ data, refetch }: { data: any; refetch: () => void }) {
   const clients = data.clients || [];
   const [activeStatus, setActiveStatus] = useState<string | null>(null);
+  const [agentFilter, setAgentFilter] = useState<string>('');
+  const [searchInput, setSearchInput] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [editingClientId, setEditingClientId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<any>({});
   const [savingId, setSavingId] = useState<string | null>(null);
   const [saveMsg, setSaveMsg] = useState<string>('');
 
   const byStatus = (s: string) => clients.filter((c: any) => c.status === s).length;
-  const filteredClients = activeStatus ? clients.filter((c: any) => c.status === activeStatus) : clients;
+  const uniqueAgents = Array.from(new Set(clients.map((c: any) => c.agentName || c.agentId).filter(Boolean))).sort();
+  const matchesSearch = (client: any, query: string) => {
+    if (!query) return true;
+    const q = query.toLowerCase();
+    return [client.name, client.phone, client.industryCategory].some((value: any) => String(value || '').toLowerCase().includes(q));
+  };
+  const filteredClients = clients.filter((client: any) => {
+    if (activeStatus && client.status !== activeStatus) return false;
+    if (agentFilter && (client.agentName || client.agentId) !== agentFilter) return false;
+    return matchesSearch(client, searchTerm);
+  });
 
   const detailFields = [
     { key: 'name', label: 'Client Name', editable: true },
@@ -695,6 +710,43 @@ function SalesSection({ data, refetch }: { data: any; refetch: () => void }) {
       <div className={card}>
         <div className="p-5 border-b border-slate-100">
           <SectionTitle title="All Clients" sub={`${filteredClients.length} ${activeStatus ? `(${activeStatus})` : 'total'}`} />
+          <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] xl:grid-cols-[minmax(0,1fr)_auto_auto] items-end">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="sr-only" htmlFor="ceo-agent-filter">Filter by agent</label>
+                <select
+                  id="ceo-agent-filter"
+                  value={agentFilter}
+                  onChange={(e) => setAgentFilter(e.target.value)}
+                  className={darkInp}
+                >
+                  <option value="">All agents</option>
+                  {uniqueAgents.map((agent) => (
+                    <option key={agent} value={agent}>{agent}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="sr-only" htmlFor="ceo-client-search">Search clients</label>
+                <input
+                  id="ceo-client-search"
+                  type="search"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') setSearchTerm(searchInput.trim()); }}
+                  placeholder="Search by name, phone, industry"
+                  className={darkInp}
+                />
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSearchTerm(searchInput.trim())}
+              className="whitespace-nowrap rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+            >
+              Search
+            </button>
+          </div>
         </div>
         <div className="p-5 space-y-4">
           {saveMsg && (
@@ -710,23 +762,23 @@ function SalesSection({ data, refetch }: { data: any; refetch: () => void }) {
               {filteredClients.map((client: any) => {
                 const editing = editingClientId === client.id;
                 return (
-                  <div key={client.id || client.referenceNumber || client.email || client.phone} className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_14px_40px_-30px_rgba(15,23,42,0.15)] transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_25px_60px_-35px_rgba(15,23,42,0.25)]">
+                  <div key={client.id || client.referenceNumber || client.email || client.phone} className={`${darkCard} p-6 transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_25px_60px_-35px_rgba(15,23,42,0.35)]`}>
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Lead / Client</p>
-                        <h3 className="mt-3 text-xl font-semibold tracking-tight text-slate-900">
+                        <h3 className="mt-3 text-xl font-semibold tracking-tight text-white">
                           {client.name || client.referenceNumber || 'Unnamed client'}
                         </h3>
-                        <p className="mt-1 text-sm text-slate-500">{client.email || client.phone || 'No contact details'}</p>
+                        <p className="mt-1 text-sm text-slate-300">{client.email || client.phone || 'No contact details'}</p>
                       </div>
                       <div className="flex flex-col items-start gap-3 sm:items-end">
-                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
+                        <span className="rounded-full bg-slate-900/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-slate-300 border border-slate-700">
                           {client.referenceNumber || 'No ref'}
                         </span>
                         <button
                           type="button"
                           onClick={() => (editing ? cancelEditing() : startEditing(client))}
-                          className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+                          className="inline-flex items-center justify-center rounded-full border border-slate-700 bg-slate-950 px-4 py-2 text-sm font-semibold text-slate-100 shadow-sm transition hover:border-slate-500 hover:bg-slate-900"
                         >
                           {editing ? 'Cancel' : 'Edit'}
                         </button>
@@ -735,7 +787,7 @@ function SalesSection({ data, refetch }: { data: any; refetch: () => void }) {
 
                     <div className="mt-6 grid gap-4 sm:grid-cols-2">
                       {detailFields.map((field) => (
-                        <div key={field.key} className="rounded-3xl bg-slate-50 p-4 shadow-sm">
+                        <div key={field.key} className="rounded-3xl bg-slate-950/90 border border-slate-800 p-4 shadow-sm">
                           <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-slate-400">
                             {field.label}
                           </p>
@@ -744,7 +796,7 @@ function SalesSection({ data, refetch }: { data: any; refetch: () => void }) {
                               <select
                                 value={editForm.status}
                                 onChange={(e) => setEditForm((f: any) => ({ ...f, status: e.target.value }))}
-                                className={inp}
+                                className={darkInp}
                               >
                                 <option value="">Select status</option>
                                 {statusOptions.map((option) => (
@@ -757,25 +809,25 @@ function SalesSection({ data, refetch }: { data: any; refetch: () => void }) {
                               <textarea
                                 value={editForm.serviceDescription}
                                 onChange={(e) => setEditForm((f: any) => ({ ...f, serviceDescription: e.target.value }))}
-                                className={`${inp} min-h-[96px]`}
+                                className={`${darkInp} min-h-[96px]`}
                               />
                             ) : field.key === 'expectedStartDate' ? (
                               <input
                                 type="date"
                                 value={editForm.expectedStartDate}
                                 onChange={(e) => setEditForm((f: any) => ({ ...f, expectedStartDate: e.target.value }))}
-                                className={inp}
+                                className={darkInp}
                               />
                             ) : (
                               <input
                                 type={field.key === 'email' ? 'email' : field.key === 'estimatedValue' ? 'number' : 'text'}
                                 value={editForm[field.key] ?? ''}
                                 onChange={(e) => setEditForm((f: any) => ({ ...f, [field.key]: e.target.value }))}
-                                className={inp}
+                                className={darkInp}
                               />
                             )
                           ) : (
-                            <div className="mt-2 text-sm text-slate-700">
+                            <div className="mt-2 text-sm text-slate-200">
                               {renderValue(client, field.key)}
                             </div>
                           )}
@@ -784,8 +836,8 @@ function SalesSection({ data, refetch }: { data: any; refetch: () => void }) {
                     </div>
 
                     {editing && (
-                      <div className="mt-6 flex flex-col gap-3 rounded-[28px] border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="text-sm text-slate-500">Save all edited fields for this client.</div>
+                      <div className="mt-6 flex flex-col gap-3 rounded-[28px] border border-slate-800 bg-slate-900/95 p-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="text-sm text-slate-300">Save all edited fields for this client.</div>
                         <button
                           type="button"
                           onClick={() => saveClient(client)}

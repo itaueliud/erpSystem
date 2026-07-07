@@ -912,6 +912,7 @@ function LeadsSection({ data, refetch }: { data: any; refetch: () => void }) {
 
   const statusOptions = ['NEW_LEAD', 'FOLLOW_UP', 'QUALIFIED', 'CONVERTED', 'DISQUALIFIED'];
   const statuses = statusOptions.map((status) => ({ label: status.replace(/_/g, ' '), value: status }));
+  const industryOptions = ['Technology', 'Real Estate', 'Finance', 'Healthcare', 'Retail', 'Manufacturing', 'Hospitality'];
   const filteredLeads = leads.filter((lead: any) => {
     if (statusFilter && lead.status !== statusFilter) return false;
     if (!searchTerm) return true;
@@ -1122,14 +1123,17 @@ function LeadsSection({ data, refetch }: { data: any; refetch: () => void }) {
                 </div>
                 <div>
                   <label className={lbl} htmlFor="lead-industry">Industry</label>
-                  <input
+                  <select
                     id="lead-industry"
-                    type="text"
                     value={editForm.industry}
                     onChange={(e) => setEditForm((f: any) => ({ ...f, industry: e.target.value }))}
                     className={inp}
-                    placeholder="Industry"
-                  />
+                  >
+                    <option value="">Select industry</option>
+                    {industryOptions.map((industry) => (
+                      <option key={industry} value={industry}>{industry}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className={lbl} htmlFor="lead-status">Status</label>
@@ -1266,6 +1270,17 @@ function LeadsSection({ data, refetch }: { data: any; refetch: () => void }) {
                                 onChange={(e) => setEditForm((f: any) => ({ ...f, phone: e.target.value }))}
                                 className={`${darkInp} mt-2`}
                               />
+                            ) : field.key === 'industry' ? (
+                              <select
+                                value={editForm.industry}
+                                onChange={(e) => setEditForm((f: any) => ({ ...f, industry: e.target.value }))}
+                                className={`${darkInp} mt-2`}
+                              >
+                                <option value="">Select industry</option>
+                                {industryOptions.map((industry) => (
+                                  <option key={industry} value={industry}>{industry}</option>
+                                ))}
+                              </select>
                             ) : (
                               <input
                                 type="text"

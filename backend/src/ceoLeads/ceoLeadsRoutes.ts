@@ -25,9 +25,9 @@ router.get('/', async (req: Request, res: Response) => {
     const userId = getUserId(req as AuthRequest);
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
     const leads = await ceoLeadsService.list(userId);
-    res.json({ data: leads });
+    return res.json({ data: leads });
   } catch (err: unknown) {
-    res.status(500).json({ error: 'Failed to fetch leads' });
+    return res.status(500).json({ error: 'Failed to fetch leads' });
   }
 });
 
@@ -38,9 +38,9 @@ router.post('/', async (req: Request, res: Response) => {
     const { name, phone, description, industry } = req.body as CeoLeadBody;
     if (!name || !phone) return res.status(400).json({ error: 'name and phone are required' });
     const lead = await ceoLeadsService.create(userId, { name, phone, description, industry });
-    res.status(201).json({ data: lead });
+    return res.status(201).json({ data: lead });
   } catch (err: unknown) {
-    res.status(500).json({ error: 'Failed to create lead' });
+    return res.status(500).json({ error: 'Failed to create lead' });
   }
 });
 
@@ -51,9 +51,9 @@ router.put('/:id', async (req: Request, res: Response) => {
     const payload = req.body as Partial<CeoLeadBody>;
     const lead = await ceoLeadsService.update(req.params.id, userId, payload);
     if (!lead) return res.status(404).json({ error: 'Lead not found' });
-    res.json({ data: lead });
+    return res.json({ data: lead });
   } catch (err: unknown) {
-    res.status(500).json({ error: 'Failed to update lead' });
+    return res.status(500).json({ error: 'Failed to update lead' });
   }
 });
 
@@ -64,9 +64,9 @@ router.post('/:id/follow-up', async (req: Request, res: Response) => {
     const { method } = req.body as CeoLeadBody;
     const lead = await ceoLeadsService.logFollowUp(req.params.id, userId, method as 'CALL' | 'MESSAGE' | 'WHATSAPP');
     if (!lead) return res.status(404).json({ error: 'Lead not found' });
-    res.json({ data: lead });
+    return res.json({ data: lead });
   } catch (err: unknown) {
-    res.status(500).json({ error: 'Failed to log follow-up' });
+    return res.status(500).json({ error: 'Failed to log follow-up' });
   }
 });
 
